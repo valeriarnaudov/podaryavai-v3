@@ -68,34 +68,50 @@ serve(async (req) => {
 
     const openAiKey = Deno.env.get('OPENAI_API_KEY');
     
-    // 3. Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { 
-              role: 'system', 
-              content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. 
-Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL that matches the item, e.g. https://images.unsplash.com/photo-1542291026-7eec264c27ff for shoes). Do not include markdown formatting like \`\`\`json.` 
-          },
-          { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
-        ],
-      }),
-    });
-
-    const aiData = await response.json();
-    let suggestions = [];
+    // 3. Call OpenAI API if key is present
+    let suggestions: any[] = [];
     
-    try {
-      suggestions = JSON.parse(aiData.choices[0].message.content);
-    } catch {
-       const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
-       suggestions = JSON.parse(clean);
+    if (openAiKey) {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { 
+                  role: 'system', 
+                  content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. 
+Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL that matches the item, e.g. https://images.unsplash.com/photo-1542291026-7eec264c27ff for shoes). Do not include markdown formatting like \`\`\`json.` 
+              },
+              { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
+            ],
+          }),
+        });
+
+        const aiData = await response.json();
+        try {
+          if (aiData.choices && aiData.choices[0]) {
+              suggestions = JSON.parse(aiData.choices[0].message.content);
+          }
+        } catch {
+           if (aiData.choices && aiData.choices[0]) {
+               const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
+               suggestions = JSON.parse(clean);
+           }
+        }
+    }
+
+    // 3.b Fallback if OpenAI failed or no key
+    if (!suggestions || suggestions.length === 0) {
+        suggestions = Array.from({ length: amountToGenerate }).map((_, i) => ({
+            title: `Trendy Gift Idea ${i + 1}`,
+            description: "A personalized gift idea placeholder. The AI engine is currently resting!",
+            price_range: "$50 - $150",
+            image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop'
+        }));
     }
 
     // 4. Insert generated ideas into gift_ideas with is_saved = false

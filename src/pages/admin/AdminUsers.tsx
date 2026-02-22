@@ -36,29 +36,26 @@ export default function AdminUsers() {
     };
 
     const toggleAdmin = async (userId: string, currentStatus: boolean) => {
-        if (!confirm(`Are you sure you want to ${currentStatus ? 'revoke' : 'grant'} Admin rights?`)) return;
-
         await supabase.from('users').update({ is_admin: !currentStatus }).eq('id', userId);
         fetchUsers();
     };
 
     const toggleBan = async (userId: string, currentStatus: boolean) => {
-        if (!confirm(`Are you sure you want to ${currentStatus ? 'unban' : 'ban'} this user?`)) return;
-
         const { error } = await supabase.from('users').update({ is_banned: !currentStatus }).eq('id', userId);
         if (error) {
-            alert('Failed to update ban status. Ensure `is_banned` column exists.');
+            console.error('Failed to update ban status:', error);
         } else {
             fetchUsers();
         }
     };
 
-    const resetGiftinder = async (userId: string) => {
-        if (!confirm(`Reset this user's daily Giftinder AI limit so they can generate more ideas today?`)) return;
+    const resetGiftinder = async (e: React.MouseEvent, userId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
 
         const { error } = await supabase.from('users').update({ last_giftinder_generation: null }).eq('id', userId);
         if (error) {
-            alert('Failed to reset counter.');
+            console.error('Failed to reset counter:', error);
         } else {
             fetchUsers();
         }
@@ -147,7 +144,7 @@ export default function AdminUsers() {
                                                     )}
 
                                                     <button
-                                                        onClick={() => resetGiftinder(user.id)}
+                                                        onClick={(e) => resetGiftinder(e, user.id)}
                                                         className="p-1.5 text-slate-400 hover:text-accent bg-white border border-slate-200 hover:border-accent hover:bg-accent/5 rounded-lg transition-all"
                                                         title="Reset Daily Limit"
                                                     >
