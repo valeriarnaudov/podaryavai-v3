@@ -1,0 +1,108 @@
+import { Outlet, NavLink } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import BottomNavigation from './BottomNavigation';
+import { LayoutDashboard, Package, Bell, Users, Heart, Settings } from 'lucide-react';
+
+export default function AdminLayout() {
+    return (
+        <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden">
+            {/* Desktop Sidebar (Main Navigation) */}
+            <Sidebar />
+
+            {/* Main Content Area */}
+            <div className="flex flex-col flex-1 h-[100dvh] w-full relative sm:px-4 md:px-8 sm:py-4">
+
+                {/* Secondary Admin Navigation */}
+                <div className="sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md pt-4 pb-2 px-6 border-b border-slate-200/50 mb-4 md:bg-white/80 md:rounded-t-3xl md:mt-0 md:pt-6 md:px-8">
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-4">Admin Hub</h1>
+
+                    <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-2">
+                        <NavLink
+                            to="/admin"
+                            end
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <LayoutDashboard className="w-4 h-4" />
+                            <span>Dashboard</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/orders"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Package className="w-4 h-4" />
+                            <span>Concierge Orders</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/logs"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Bell className="w-4 h-4" />
+                            <span>Logs</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/users"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Users className="w-4 h-4" />
+                            <span>Users</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/gifts"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Heart className="w-4 h-4" />
+                            <span>Gifts DB</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/settings"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Settings className="w-4 h-4" />
+                            <span>Settings</span>
+                        </NavLink>
+                    </div>
+                </div>
+
+                {/* Outlet for Admin Pages */}
+                <main className="flex-1 w-full max-w-5xl mx-auto overflow-y-auto pb-24 px-4 sm:px-0 relative z-0 md:pb-8 md:bg-white/50 md:rounded-b-3xl md:shadow-soft">
+                    <Outlet />
+                </main>
+
+                {/* Mobile Bottom Navigation Component (Main Navigation) */}
+                <div className="absolute bottom-0 w-full z-50 md:hidden left-0">
+                    <BottomNavigation />
+                </div>
+            </div>
+        </div>
+    );
+}
