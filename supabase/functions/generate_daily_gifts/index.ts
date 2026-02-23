@@ -72,6 +72,7 @@ serve(async (req) => {
     let suggestions: any[] = [];
     
     if (openAiKey) {
+      try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -83,25 +84,29 @@ serve(async (req) => {
             messages: [
               { 
                   role: 'system', 
-                  content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. 
-Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL that matches the item, e.g. https://images.unsplash.com/photo-1542291026-7eec264c27ff for shoes). Do not include markdown formatting like \`\`\`json.` 
+                  content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL). Do not include markdown formatting like \`\`\`json.` 
               },
               { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
             ],
           }),
         });
 
-        const aiData = await response.json();
-        try {
+        const rawText = await response.text();
+        if (rawText) {
+          const aiData = JSON.parse(rawText);
           if (aiData.choices && aiData.choices[0]) {
-              suggestions = JSON.parse(aiData.choices[0].message.content);
+             try {
+                suggestions = JSON.parse(aiData.choices[0].message.content);
+             } catch {
+                const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
+                suggestions = JSON.parse(clean);
+             }
           }
-        } catch {
-           if (aiData.choices && aiData.choices[0]) {
-               const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
-               suggestions = JSON.parse(clean);
-           }
         }
+      } catch (err) {
+        console.error("OpenAI Fetch Error:", err.message);
+        // Will seamlessly fallback to placeholders below
+      }
     }
 
     // 3.b Fallback if OpenAI failed or no key
