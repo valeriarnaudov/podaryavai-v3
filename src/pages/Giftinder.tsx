@@ -19,11 +19,18 @@ export default function Giftinder() {
             setLoadingGifts(true);
 
             try {
-                // 1. Check if we need to generate today's gifts
-                const today = new Date().toDateString();
-                const lastGen = lastGiftinderGeneration ? new Date(lastGiftinderGeneration).toDateString() : null;
+                // 1. Bypass React state and fetch directly from DB to prevent Admin Reset caching issues
+                const { data: profile } = await supabase
+                    .from('users')
+                    .select('last_giftinder_generation')
+                    .eq('id', user.id)
+                    .single();
 
-                if (lastGen !== today) {
+                const trueLastGen = profile?.last_giftinder_generation;
+                const today = new Date().toDateString();
+                const lastGenStr = trueLastGen ? new Date(trueLastGen).toDateString() : null;
+
+                if (lastGenStr !== today) {
                     console.log("Generating today's personalized gifts...");
                     const { error } = await supabase.functions.invoke('generate_daily_gifts');
                     if (error) {
@@ -34,31 +41,38 @@ export default function Giftinder() {
                     }
                 }
 
-                // 2. Fetch the unsaved personalized ideas
-                const { data, error } = await supabase
-                    .from('gift_ideas')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .eq('is_saved', false)
-                    .order('created_at', { ascending: false });
+                // 2. Fetch the unsaved personalized ideas AFTER potential generation
+                await fetchCardsFromDB();
 
-                if (!error && data) {
-                    const mappedData = data.map(item => ({
-                        id: item.id,
-                        title: item.title,
-                        price: item.price_range,
-                        image: item.image_url,
-                        desc: item.description,
-                        isVip: false // We can handle VIP flags separately if needed later
-                    }));
-                    setCards(mappedData);
-                } else {
-                    console.error("Error loading personalized gifts:", error, data);
-                }
             } catch (err) {
                 console.error("Giftinder load error:", err);
             } finally {
                 setLoadingGifts(false);
+            }
+        };
+
+        const fetchCardsFromDB = async () => {
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('gift_ideas')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('is_saved', false)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                const mappedData = data.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    price: item.price_range,
+                    image: item.image_url,
+                    desc: item.description,
+                    isVip: false
+                }));
+                setCards(mappedData);
+            } else {
+                console.error("Error loading personalized gifts:", error, data);
             }
         };
 
