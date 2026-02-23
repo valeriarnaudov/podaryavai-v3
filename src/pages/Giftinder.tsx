@@ -63,11 +63,9 @@ export default function Giftinder() {
 CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
 2. Suggest CONCRETE, SPECIFIC products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of just "Headphones").
-3. For "image_url", you MUST return EXACTLY THIS STRING FORMAT, replacing the word KEYWORD with a SINGLE English word describing the item (like "headphones", "bag", "perfume", "coffee"):
-"https://loremflickr.com/400/500/keyword"
-4. Return ONLY a valid JSON array of ${amountToGenerate} objects, where each object has "title", "description", "price_range", and "image_url". Do not wrap in markdown quotes.`
+3. Return ONLY a valid JSON array of ${amountToGenerate} objects, where each object has "title", "description", and "price_range". Do not wrap in markdown quotes.`
                                             },
-                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Ensure the image_url uses the exact loremflickr.com format with a single keyword. Keep descriptions engaging and under 100 characters.` }
+                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Keep titles descriptive but under 6 words. Keep descriptions engaging and under 100 characters.` }
                                         ],
                                     }),
                                 });
@@ -95,7 +93,7 @@ CRITICAL RULES:
                                         title: gift.title,
                                         description: gift.description,
                                         price_range: gift.price_range,
-                                        image_url: gift.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop',
+                                        image_url: `https://image.pollinations.ai/prompt/A%20high%20quality%20product%20photo%20of%20${encodeURIComponent(gift.title)}%20on%20a%20clean%20background?nologo=true&width=400&height=500`,
                                         is_saved: false,
                                         is_manual: false
                                     }));
