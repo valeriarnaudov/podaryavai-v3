@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw } from 'lucide-react';
+import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, Edit2, Check, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface UserData {
@@ -18,6 +18,10 @@ export default function AdminUsers() {
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Karma editing state
+    const [editingKarmaId, setEditingKarmaId] = useState<string | null>(null);
+    const [editKarmaValue, setEditKarmaValue] = useState<number>(0);
 
     useEffect(() => {
         fetchUsers();
@@ -57,6 +61,16 @@ export default function AdminUsers() {
         if (error) {
             console.error('Failed to reset counter:', error);
         } else {
+            fetchUsers();
+        }
+    };
+
+    const saveKarma = async (userId: string) => {
+        const { error } = await supabase.from('users').update({ karma_points: editKarmaValue }).eq('id', userId);
+        if (error) {
+            console.error('Failed to update karma:', error);
+        } else {
+            setEditingKarmaId(null);
             fetchUsers();
         }
     };
@@ -121,9 +135,43 @@ export default function AdminUsers() {
                                                 <div className="text-xs text-slate-500">{user.email}</div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">
-                                                    {user.karma_points || 0} pts
-                                                </span>
+                                                {editingKarmaId === user.id ? (
+                                                    <div className="flex items-center space-x-2">
+                                                        <input
+                                                            type="number"
+                                                            value={editKarmaValue}
+                                                            onChange={(e) => setEditKarmaValue(Number(e.target.value))}
+                                                            className="w-24 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-amber-400"
+                                                        />
+                                                        <button
+                                                            onClick={() => saveKarma(user.id)}
+                                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                            title="Save"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingKarmaId(null)}
+                                                            className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            title="Cancel"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center space-x-2 group">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">
+                                                            {user.karma_points || 0} pts
+                                                        </span>
+                                                        <button
+                                                            onClick={() => { setEditingKarmaId(user.id); setEditKarmaValue(user.karma_points || 0); }}
+                                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                                                            title="Edit Karma"
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {user.is_admin ? (
