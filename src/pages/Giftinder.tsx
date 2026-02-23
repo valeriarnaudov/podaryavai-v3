@@ -234,10 +234,21 @@ CRITICAL RULES:
                             ) : (
                                 <motion.div
                                     key={card.id}
-                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-white rounded-3xl shadow-soft overflow-hidden filter brightness-95"
-                                    style={{ scale: 1 - (activeIndex - index) * 0.05, top: (activeIndex - index) * -10 }}
+                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-slate-200 rounded-[2rem] shadow-soft overflow-hidden filter brightness-95"
+                                    style={{
+                                        scale: 1 - (activeIndex - index) * 0.05,
+                                        top: (activeIndex - index) * -10,
+                                        background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
+                                    }}
                                 >
-                                    <img src={card.image} alt="" className="w-full h-[60%] object-cover grayscale opacity-50" />
+                                    <img
+                                        src={card.image}
+                                        alt=""
+                                        className="w-full h-[60%] object-cover grayscale opacity-50 transition-opacity duration-300 pointer-events-none"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.opacity = '0';
+                                        }}
+                                    />
                                 </motion.div>
                             );
                         })
@@ -291,12 +302,26 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
             exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
             className="absolute w-full h-[60dvh] max-h-[500px] bg-white rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50"
         >
-            <div className="relative w-full h-[60%]">
-                <img src={card.image} alt={card.title} className="w-full h-full object-cover pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-4 left-6 text-white">
-                    <h2 className="text-2xl font-bold">{card.title}</h2>
-                    <p className="text-white/80 font-medium">{card.price}</p>
+            {/* Image Container with Fallback Gradient */}
+            <div
+                className="relative w-full h-[60%] bg-slate-200"
+                style={{
+                    background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
+                }}
+            >
+                <img
+                    src={card.image}
+                    alt={card.title}
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300"
+                    onError={(e) => {
+                        // Hide broken image so the beautiful gradient background shows through
+                        (e.target as HTMLImageElement).style.opacity = '0';
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
+                <div className="absolute bottom-4 left-6 right-6 text-white pointer-events-none">
+                    <h2 className="text-3xl font-bold leading-tight drop-shadow-md">{card.title}</h2>
+                    <p className="text-xl font-medium text-white/90 drop-shadow-md mt-1">{card.price}</p>
                 </div>
             </div>
             <div className="p-6 h-[40%] flex flex-col justify-between">
