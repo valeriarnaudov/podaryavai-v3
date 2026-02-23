@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, Edit2, Check, X } from 'lucide-react';
+import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, Edit2, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface UserData {
@@ -22,6 +22,9 @@ export default function AdminUsers() {
     // Karma editing state
     const [editingKarmaId, setEditingKarmaId] = useState<string | null>(null);
     const [editKarmaValue, setEditKarmaValue] = useState<number>(0);
+
+    type SortKey = 'full_name' | 'karma_points' | 'is_admin' | 'last_giftinder_generation';
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'is_admin', direction: 'desc' });
 
     useEffect(() => {
         fetchUsers();
@@ -80,6 +83,54 @@ export default function AdminUsers() {
         (u.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
 
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+        let aVal: any = a[sortConfig.key];
+        let bVal: any = b[sortConfig.key];
+
+        if (sortConfig.key === 'full_name') {
+            aVal = (a.full_name || a.email || '').toLowerCase();
+            bVal = (b.full_name || b.email || '').toLowerCase();
+            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        }
+
+        if (sortConfig.key === 'is_admin') {
+            aVal = a.is_admin ? 1 : 0;
+            bVal = b.is_admin ? 1 : 0;
+            return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        if (sortConfig.key === 'last_giftinder_generation') {
+            const aDate = a.last_giftinder_generation ? new Date(a.last_giftinder_generation).getTime() : 0;
+            const bDate = b.last_giftinder_generation ? new Date(b.last_giftinder_generation).getTime() : 0;
+            return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+        }
+
+        if (sortConfig.key === 'karma_points') {
+            aVal = a.karma_points || 0;
+            bVal = b.karma_points || 0;
+            return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        return 0;
+    });
+
+    const handleSort = (key: SortKey) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
+        if (sortConfig.key !== columnKey) return <ChevronDown className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-50 transition-opacity" />;
+        return sortConfig.direction === 'asc'
+            ? <ChevronUp className="w-4 h-4 text-accent" />
+            : <ChevronDown className="w-4 h-4 text-accent" />;
+    };
+
     return (
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -115,17 +166,37 @@ export default function AdminUsers() {
                 <div className="bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 select-none">
                                 <tr>
-                                    <th className="px-6 py-4">User</th>
-                                    <th className="px-6 py-4">Karma Points</th>
-                                    <th className="px-6 py-4">Role</th>
-                                    <th className="px-6 py-4">AI Filter</th>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('full_name')}>
+                                        <div className="flex items-center space-x-1">
+                                            <span>User</span>
+                                            <SortIcon columnKey="full_name" />
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('karma_points')}>
+                                        <div className="flex items-center space-x-1">
+                                            <span>Karma Points</span>
+                                            <SortIcon columnKey="karma_points" />
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('is_admin')}>
+                                        <div className="flex items-center space-x-1">
+                                            <span>Role</span>
+                                            <SortIcon columnKey="is_admin" />
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('last_giftinder_generation')}>
+                                        <div className="flex items-center space-x-1">
+                                            <span>AI Filter</span>
+                                            <SortIcon columnKey="last_giftinder_generation" />
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {filteredUsers.map((user) => {
+                                {sortedUsers.map((user) => {
                                     const isGeneratedToday = user.last_giftinder_generation
                                         ? new Date(user.last_giftinder_generation).toDateString() === new Date().toDateString()
                                         : false;
@@ -207,21 +278,24 @@ export default function AdminUsers() {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right space-x-2">
-                                                <button
-                                                    onClick={() => toggleAdmin(user.id, user.is_admin)}
-                                                    className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
-                                                    title={user.is_admin ? "Revoke Admin" : "Make Admin"}
-                                                >
-                                                    <ShieldAlert className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => toggleBan(user.id, user.is_banned)}
-                                                    className={`p-2 rounded-lg transition-colors ${user.is_banned ? 'text-green-600 hover:bg-green-100' : 'text-red-400 hover:bg-red-50 hover:text-red-600'}`}
-                                                    title={user.is_banned ? "Unban User" : "Ban User"}
-                                                >
-                                                    <UserMinus className="w-4 h-4" />
-                                                </button>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end space-x-2">
+                                                    <button
+                                                        onClick={() => toggleAdmin(user.id, user.is_admin)}
+                                                        className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100' : 'text-accent hover:bg-accent/10'}`}
+                                                        title={user.is_admin ? "Revoke Admin Role" : "Grant Admin Role"}
+                                                    >
+                                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                                        <span>{user.is_admin ? "Demote" : "Make Admin"}</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => toggleBan(user.id, user.is_banned)}
+                                                        className={`p-2 rounded-lg transition-colors ${user.is_banned ? 'text-green-600 hover:bg-green-100' : 'text-red-400 hover:bg-red-50 hover:text-red-600'}`}
+                                                        title={user.is_banned ? "Unban User" : "Ban User"}
+                                                    >
+                                                        <UserMinus className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </motion.tr>
                                     )
@@ -229,7 +303,7 @@ export default function AdminUsers() {
                             </tbody>
                         </table>
 
-                        {filteredUsers.length === 0 && (
+                        {sortedUsers.length === 0 && (
                             <div className="p-8 text-center text-slate-500">
                                 No users found matching "{searchTerm}"
                             </div>
