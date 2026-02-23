@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Loader2, User as UserIcon } from 'lucide-react';
+import { Mail, Lock, Loader2, User as UserIcon, Calendar } from 'lucide-react';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -20,6 +20,7 @@ export default function Register() {
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [dob, setDob] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,12 +29,35 @@ export default function Register() {
         setLoading(true);
         setError(null);
 
+        // Age validation
+        if (dob) {
+            const today = new Date();
+            const birthDate = new Date(dob);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                setError('You must be at least 18 years old to register.');
+                setLoading(false);
+                return;
+            }
+        } else {
+            setError('Please enter your date of birth.');
+            setLoading(false);
+            return;
+        }
+
         const { error: signUpError } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
                     full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+                    dob: dob,
                 },
             },
         });
@@ -119,6 +143,17 @@ export default function Register() {
                             placeholder="Email address"
                             required
                             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
+                        />
+                    </div>
+
+                    <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                            type="date"
+                            value={dob}
+                            onChange={(e) => setDob(e.target.value)}
+                            required
+                            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm text-slate-700"
                         />
                     </div>
 

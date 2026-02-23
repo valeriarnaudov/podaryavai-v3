@@ -12,7 +12,8 @@ export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
 
     // Form fields
-    const [fullName, setFullName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [dob, setDob] = useState('');
     const [password, setPassword] = useState('');
@@ -25,7 +26,8 @@ export default function Profile() {
 
     useEffect(() => {
         if (user) {
-            setFullName(user.user_metadata?.full_name || '');
+            setFirstName(user.user_metadata?.first_name || (user.user_metadata?.full_name?.split(' ')[0] || ''));
+            setLastName(user.user_metadata?.last_name || (user.user_metadata?.full_name?.split(' ')?.slice(1)?.join(' ') || ''));
             setEmail(user.email || '');
             setDob(user.user_metadata?.dob || '');
         }
@@ -42,7 +44,9 @@ export default function Profile() {
             // 1. Update metadata (Name and DOB)
             const updates: any = {
                 data: {
-                    full_name: fullName,
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
+                    full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
                     dob: dob
                 }
             };
@@ -83,8 +87,9 @@ export default function Profile() {
     };
 
     // Calculate initial logo or avatar
+    const displayFullName = `${firstName} ${lastName}`.trim();
     const avatarUrl = user?.user_metadata?.avatar_url;
-    const initial = fullName ? fullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
+    const initial = firstName ? firstName.charAt(0).toUpperCase() : displayFullName ? displayFullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
 
     return (
         <motion.div
@@ -123,7 +128,7 @@ export default function Profile() {
                             )}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-textMain">{fullName || 'Unknown User'}</h2>
+                            <h2 className="text-2xl font-bold text-textMain">{displayFullName || 'Unknown User'}</h2>
                             <p className="text-slate-500 text-sm font-medium">{email}</p>
                         </div>
                     </div>
@@ -142,7 +147,7 @@ export default function Profile() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl">
                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><User className="w-3 h-3 mr-1" /> Full Name</p>
-                                    <p className="font-semibold text-textMain">{fullName || '-'}</p>
+                                    <p className="font-semibold text-textMain">{displayFullName || '-'}</p>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl">
                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> Date of Birth</p>
@@ -159,15 +164,27 @@ export default function Profile() {
                         <motion.form key="edit" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} onSubmit={handleUpdateProfile} className="space-y-5">
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
-                                    <input
-                                        type="text"
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        placeholder="e.g. Ivan Ivanov"
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
+                                        <input
+                                            type="text"
+                                            value={firstName}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                            placeholder="e.g. Ivan"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Last Name</label>
+                                        <input
+                                            type="text"
+                                            value={lastName}
+                                            onChange={(e) => setLastName(e.target.value)}
+                                            placeholder="e.g. Ivanov"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
