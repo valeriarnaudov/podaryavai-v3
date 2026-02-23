@@ -22,7 +22,7 @@ export default function Giftinder() {
                 // 1. Bypass React state and fetch directly from DB to prevent Admin Reset caching issues
                 const { data: profile } = await supabase
                     .from('users')
-                    .select('last_giftinder_generation')
+                    .select('last_giftinder_generation, subscription_plan')
                     .eq('id', user.id)
                     .single();
 
@@ -35,21 +35,81 @@ export default function Giftinder() {
                     const { error } = await supabase.functions.invoke('generate_daily_gifts');
 
                     if (error) {
-                        console.error("Edge Function blocked/failed. Using Frontend Fallback:", error);
+                        console.error("Edge Function blocked/failed. Using Frontend OpenAI Fallback:", error);
 
-                        // FRONTEND FALLBACK: If the Edge function fails (CORS, 401, JWT), 
-                        // we manually insert 3 dummy ideas directly into the DB so the screen is NEVER empty.
-                        const fallbackIdeas = Array.from({ length: 3 }).map((_, i) => ({
-                            user_id: user.id,
-                            title: `Trendy Gift Idea ${i + 1}`,
-                            description: "A personalized gift idea placeholder. The AI engine is currently resting!",
-                            price_range: "$50 - $150",
-                            image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop',
-                            is_saved: false,
-                            is_manual: false
-                        }));
+                        try {
+                            const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+                            let amountToGenerate = 3;
+                            if (profile?.subscription_plan === 'STANDARD') amountToGenerate = 5;
+                            if (profile?.subscription_plan === 'PRO') amountToGenerate = 7;
+                            if (profile?.subscription_plan === 'ULTRA') amountToGenerate = 10;
+                            if (profile?.subscription_plan === 'BUSINESS') amountToGenerate = 15;
 
-                        await supabase.from('gift_ideas').insert(fallbackIdeas);
+                            if (openAiKey) {
+                                console.log("Directly calling OpenAI API...");
+                                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${openAiKey}`,
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        model: 'gpt-4o',
+                                        messages: [
+                                            {
+                                                role: 'system',
+                                                content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL).`
+                                            },
+                                            { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Keep descriptions engaging and under 100 characters.` }
+                                        ],
+                                    }),
+                                });
+
+                                const rawText = await response.text();
+                                let suggestions: any[] = [];
+                                if (rawText) {
+                                    const aiData = JSON.parse(rawText);
+                                    if (aiData.choices && aiData.choices[0]) {
+                                        try {
+                                            suggestions = JSON.parse(aiData.choices[0].message.content);
+                                        } catch {
+                                            const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
+                                            suggestions = JSON.parse(clean);
+                                        }
+                                    }
+                                }
+
+                                if (suggestions && suggestions.length > 0) {
+                                    const fallbackIdeas = suggestions.map((gift: any) => ({
+                                        user_id: user.id,
+                                        title: gift.title,
+                                        description: gift.description,
+                                        price_range: gift.price_range,
+                                        image_url: gift.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop',
+                                        is_saved: false,
+                                        is_manual: false
+                                    }));
+                                    await supabase.from('gift_ideas').insert(fallbackIdeas);
+                                    console.log("Successfully inserted direct OpenAI gifts!");
+                                } else {
+                                    throw new Error("No suggestions returned from OpenAI direct call");
+                                }
+                            } else {
+                                throw new Error("No VITE_OPENAI_API_KEY found in frontend .env");
+                            }
+                        } catch (fallbackError) {
+                            console.error("Critical Fallback Failed too! Inserting placebo cards.", fallbackError);
+                            const placeboIdeas = Array.from({ length: 3 }).map((_, i) => ({
+                                user_id: user.id,
+                                title: `Trendy Gift Idea ${i + 1}`,
+                                description: "A personalized gift idea placeholder. The AI engine is currently resting!",
+                                price_range: "$50 - $150",
+                                image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop',
+                                is_saved: false,
+                                is_manual: false
+                            }));
+                            await supabase.from('gift_ideas').insert(placeboIdeas);
+                        }
                     }
 
                     // Always update the Generation Timestamp (whether Edge succeeded or Fallback succeeded)
