@@ -9,6 +9,7 @@ import Wishlist from './pages/Wishlist';
 import Karma from './pages/Karma';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import CheckEmail from './pages/CheckEmail';
 import ContactsList from './pages/ContactsList';
 import NewContact from './pages/NewContact';
 import Checkout from './pages/Checkout';
@@ -79,6 +80,14 @@ const router = createBrowserRouter([
         element: (
             <AuthRoute>
                 <Register />
+            </AuthRoute>
+        ),
+    },
+    {
+        path: '/check-email',
+        element: (
+            <AuthRoute>
+                <CheckEmail />
             </AuthRoute>
         ),
     },

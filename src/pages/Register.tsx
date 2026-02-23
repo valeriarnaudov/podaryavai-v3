@@ -42,8 +42,8 @@ export default function Register() {
             setError(signUpError.message);
             setLoading(false);
         } else {
-            // Assuming successful signup
-            navigate('/');
+            // Require email confirmation
+            navigate('/check-email');
         }
     };
 
