@@ -203,10 +203,8 @@ CRITICAL RULES:
             console.error("Error handling swipe:", err);
         }
 
-        // Remove card from deck
-        setTimeout(() => {
-            setCards(prev => prev.filter(c => c.id !== id));
-        }, 200);
+        // Remove card from deck immediately to trigger AnimatePresence exit
+        setCards(prev => prev.filter(c => c.id !== id));
     };
 
     return (
@@ -266,7 +264,7 @@ CRITICAL RULES:
                                     <img
                                         src={card.image}
                                         alt=""
-                                        className="w-full h-[60%] object-cover grayscale opacity-50 transition-opacity duration-300 pointer-events-none"
+                                        className="w-full h-[60%] object-cover object-center transition-opacity duration-300 pointer-events-none opacity-100"
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.opacity = '0';
                                         }}
@@ -334,7 +332,7 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
                 <img
                     src={card.image}
                     alt={card.title}
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300"
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300 opacity-100"
                     onError={(e) => {
                         // Hide broken image so the beautiful gradient background shows through
                         (e.target as HTMLImageElement).style.opacity = '0';
