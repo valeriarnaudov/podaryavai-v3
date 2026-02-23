@@ -62,10 +62,10 @@ export default function Giftinder() {
                                                 
 CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
-2. Suggest CONCRETE, SPECIFIC products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of just "Headphones").
-3. Return ONLY a valid JSON array of ${amountToGenerate} objects, where each object has "title", "description", and "price_range". Do not wrap in markdown quotes.`
+2. Suggest CONCRETE products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of "Headphones").
+3. Return ONLY a valid JSON array of ${amountToGenerate} objects. Each object MUST have "title", "description", "price_range", and "image_keyword" (a SINGLE English word describing the item for a photo search, e.g. "headphones", "perfume", "watch"). Do not wrap in markdown quotes.`
                                             },
-                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Keep titles descriptive but under 6 words. Keep descriptions engaging and under 100 characters.` }
+                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Keep titles descriptive but under 6 words. Keep descriptions engaging and under 100 characters. Make sure image_keyword is a single visually descriptive word.` }
                                         ],
                                     }),
                                 });
@@ -87,18 +87,40 @@ CRITICAL RULES:
                                 if (suggestions && suggestions.length > 0) {
                                     // FORCE EXACT LENGTH LIMIT
                                     const limitedSuggestions = suggestions.slice(0, amountToGenerate);
+                                    const pexelsKey = import.meta.env.VITE_PEXELS_API_KEY;
 
-                                    const fallbackIdeas = limitedSuggestions.map((gift: any) => ({
-                                        user_id: user.id,
-                                        title: gift.title,
-                                        description: gift.description,
-                                        price_range: gift.price_range,
-                                        image_url: `https://image.pollinations.ai/prompt/A%20high%20quality%20product%20photo%20of%20${encodeURIComponent(gift.title)}%20on%20a%20clean%20background?nologo=true&width=400&height=500`,
-                                        is_saved: false,
-                                        is_manual: false
+                                    const fallbackIdeas = await Promise.all(limitedSuggestions.map(async (gift: any) => {
+                                        let finalImageUrl = '';
+
+                                        if (pexelsKey && gift.image_keyword) {
+                                            try {
+                                                const pexRes = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(gift.image_keyword)}&per_page=1`, {
+                                                    headers: { Authorization: pexelsKey }
+                                                });
+                                                const pexData = await pexRes.json();
+                                                if (pexData.photos && pexData.photos.length > 0) {
+                                                    // Use portrait or large image for the card
+                                                    finalImageUrl = pexData.photos[0].src.portrait || pexData.photos[0].src.large;
+                                                }
+                                            } catch (e) {
+                                                console.error("Failed to fetch from Pexels", e);
+                                            }
+                                        } else {
+                                            console.warn("No Pexels API Key found. Falling back to gradient UI.");
+                                        }
+
+                                        return {
+                                            user_id: user.id,
+                                            title: gift.title,
+                                            description: gift.description,
+                                            price_range: gift.price_range,
+                                            image_url: finalImageUrl,
+                                            is_saved: false,
+                                            is_manual: false
+                                        };
                                     }));
                                     await supabase.from('gift_ideas').insert(fallbackIdeas);
-                                    console.log("Successfully inserted direct OpenAI gifts!");
+                                    console.log("Successfully inserted direct OpenAI gifts with Pexels images!");
                                 } else {
                                     throw new Error("No suggestions returned from OpenAI direct call");
                                 }
