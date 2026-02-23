@@ -84,8 +84,15 @@ export default function AdminUsers() {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">Users Management</h2>
-                    <p className="text-sm text-slate-500">View and manage all registered accounts</p>
+                    <div className="flex items-center space-x-3">
+                        <h2 className="text-xl font-bold text-slate-800 tracking-tight">Users Management</h2>
+                        {!loading && (
+                            <span className="px-3 py-1 bg-accent/10 text-accent text-sm font-bold rounded-full border border-accent/20">
+                                {users.length} Total
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1">View and manage all registered accounts</p>
                 </div>
 
                 <div className="relative w-full sm:w-64">
