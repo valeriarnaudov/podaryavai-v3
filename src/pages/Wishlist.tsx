@@ -25,7 +25,9 @@ export default function Wishlist() {
     const [newItemPrice, setNewItemPrice] = useState('');
     const [newItemUrl, setNewItemUrl] = useState('');
     const [newItemImage, setNewItemImage] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [addingItem, setAddingItem] = useState(false);
+    const [isScraping, setIsScraping] = useState(false);
 
     useEffect(() => {
         fetchWishlist();
@@ -73,18 +75,65 @@ export default function Wishlist() {
         await supabase.from('gift_ideas').delete().eq('id', id);
     };
 
+    const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const url = e.target.value;
+        setNewItemUrl(url);
+
+        if (url.startsWith('http') && !newItemTitle.trim() && !newItemImage.trim()) {
+            setIsScraping(true);
+            try {
+                const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+                const json = await res.json();
+                if (json.status === 'success' && json.data) {
+                    if (json.data.title) setNewItemTitle(json.data.title);
+                    if (json.data.image?.url) setNewItemImage(json.data.image.url);
+                }
+            } catch (err) {
+                console.error("Failed to auto-extract url metadata", err);
+            } finally {
+                setIsScraping(false);
+            }
+        }
+    };
+
     const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user || !newItemTitle.trim()) return;
+        if (!user || !newItemTitle.trim() || !newItemPrice) return;
 
         setAddingItem(true);
         try {
+            let finalImageUrl = newItemImage.trim();
+
+            // 1. Upload file if user selected one
+            if (imageFile) {
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                const filePath = `${user.id}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('wishlist_images')
+                    .upload(filePath, imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('wishlist_images')
+                    .getPublicUrl(filePath);
+
+                finalImageUrl = publicUrl;
+            }
+
+            // 2. Format price cleanly
+            const numericPrice = parseFloat(newItemPrice);
+            const formattedPrice = isNaN(numericPrice) ? '€0.00' : `€${numericPrice.toFixed(2)}`;
+
+            // 3. Save to database
             const { data, error } = await supabase.from('gift_ideas').insert([{
                 user_id: user.id,
                 title: newItemTitle.trim(),
-                price_range: newItemPrice.trim(),
+                price_range: formattedPrice,
                 source_url: newItemUrl.trim(),
-                image_url: newItemImage.trim(),
+                image_url: finalImageUrl,
                 is_saved: true,
                 is_manual: true
             }]).select().single();
@@ -99,9 +148,10 @@ export default function Wishlist() {
             setNewItemPrice('');
             setNewItemUrl('');
             setNewItemImage('');
+            setImageFile(null);
         } catch (err) {
             console.error('Failed to add item:', err);
-            alert('Failed to add item to wishlist.');
+            alert('Failed to add item to wishlist. (Did you create the wishlist_images bucket?)');
         } finally {
             setAddingItem(false);
         }
@@ -232,14 +282,17 @@ export default function Wishlist() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Estimated Price</label>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Estimated Price (€)</label>
                                         <div className="relative">
                                             <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                             <input
-                                                type="text"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                required
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
-                                                placeholder="e.g. $150 or 250 BGN"
+                                                placeholder="e.g. 150.00"
                                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                         </div>
@@ -252,22 +305,43 @@ export default function Wishlist() {
                                             <input
                                                 type="url"
                                                 value={newItemUrl}
-                                                onChange={(e) => setNewItemUrl(e.target.value)}
+                                                onChange={handleUrlChange}
                                                 placeholder="https://..."
-                                                className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                                className="w-full pl-12 pr-12 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
+                                            {isScraping && (
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                    <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Image URL (Optional)</label>
-                                        <input
-                                            type="url"
-                                            value={newItemImage}
-                                            onChange={(e) => setNewItemImage(e.target.value)}
-                                            placeholder="https://.../image.png"
-                                            className="w-full px-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                                        />
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Image (Optional)</label>
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                value={newItemImage}
+                                                onChange={(e) => setNewItemImage(e.target.value)}
+                                                placeholder="https://.../image.png"
+                                                className="flex-1 min-w-0 px-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                            />
+                                            <label className="flex-shrink-0 flex items-center justify-center px-4 bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-200 transition-colors active:scale-95">
+                                                <span className="text-sm font-semibold text-slate-600">Upload File</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        if (e.target.files && e.target.files[0]) {
+                                                            setImageFile(e.target.files[0]);
+                                                            setNewItemImage(e.target.files[0].name);
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
