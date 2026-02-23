@@ -38,23 +38,23 @@ export default function Giftinder() {
                         console.error("Edge Function blocked/failed. Using Frontend OpenAI Fallback:", error);
 
                         try {
-                            const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+                            const groqKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
                             let amountToGenerate = 3;
                             if (profile?.subscription_plan === 'STANDARD') amountToGenerate = 5;
                             if (profile?.subscription_plan === 'PRO') amountToGenerate = 7;
                             if (profile?.subscription_plan === 'ULTRA') amountToGenerate = 10;
                             if (profile?.subscription_plan === 'BUSINESS') amountToGenerate = 15;
 
-                            if (openAiKey) {
-                                console.log("Directly calling OpenAI API...");
-                                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                            if (groqKey) {
+                                console.log("Directly calling Groq API...");
+                                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                                     method: 'POST',
                                     headers: {
-                                        'Authorization': `Bearer ${openAiKey}`,
+                                        'Authorization': `Bearer ${groqKey}`,
                                         'Content-Type': 'application/json',
                                     },
                                     body: JSON.stringify({
-                                        model: 'gpt-4o',
+                                        model: 'llama3-70b-8192',
                                         messages: [
                                             {
                                                 role: 'system',
