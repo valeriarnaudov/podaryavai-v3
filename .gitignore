@@ -46,3 +46,8 @@ out
 # OS Metadata
 .DS_Store
 Thumbs.db
+
+
+test*
+test_db.js
+test_bg_name_days.cjs

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { Users, ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
+import { findNameDay } from '../lib/nameDaysBg';
 
 interface Event {
     id: string;
@@ -11,6 +12,7 @@ interface Event {
     event_date: string;
     event_type: string;
     contacts: { id: string; first_name: string; last_name: string; avatar_url: string | null };
+    holiday?: string;
 }
 
 export default function Home() {
@@ -72,6 +74,7 @@ export default function Home() {
     }, [user]);
 
     const fetchEvents = async () => {
+        if (!user) return;
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -83,12 +86,19 @@ export default function Home() {
 
             if (error) throw error;
 
+            const { data: contactsData, error: contactsError } = await supabase
+                .from('contacts')
+                .select('id, first_name, last_name, avatar_url')
+                .eq('user_id', user.id);
+
+            const currentViewYear = currentDate.getFullYear();
+
             // Map the events to create virtual occurrences for the current year
             const parsedEvents = (data as unknown as Event[]).map((e) => {
                 if (['BIRTHDAY', 'NAME_DAY', 'ANNIVERSARY'].includes(e.event_type)) {
                     // It's a recurring event, so force it into the currently viewed year
                     const originalDate = new Date(e.event_date);
-                    const virtualDate = new Date(year, originalDate.getMonth(), originalDate.getDate());
+                    const virtualDate = new Date(currentViewYear, originalDate.getMonth(), originalDate.getDate());
                     // Keep original time component or normalize to noon
                     return {
                         ...e,
@@ -96,10 +106,29 @@ export default function Home() {
                         original_date: e.event_date // keep reference if needed
                     };
                 }
-                // Discard "OTHER" events that happened in previous years if they aren't meant to recur
-                // Or just return them as-is (they won't match the current year/month calendar view anyway)
                 return e;
             });
+
+            // Append AI virtual Namesdays
+            if (!contactsError && contactsData) {
+                contactsData.forEach(contact => {
+                    const nd = findNameDay(contact.first_name);
+                    if (nd) {
+                        const virtualDateStr = `${currentViewYear}-${nd.date}T00:00:00`;
+                        const manuallyAdded = parsedEvents.some(e => e.contacts?.id === contact.id && e.event_type === 'NAME_DAY' && e.event_date.startsWith(virtualDateStr.split('T')[0]));
+                        if (!manuallyAdded) {
+                            parsedEvents.push({
+                                id: `ai-nd-${contact.id}-${currentViewYear}`,
+                                title: `${contact.first_name}'s Name Day`,
+                                event_date: virtualDateStr,
+                                event_type: 'AI_NAME_DAY',
+                                contacts: contact,
+                                holiday: nd.holiday
+                            });
+                        }
+                    }
+                });
+            }
 
             setEvents(parsedEvents);
         } catch (error) {
@@ -223,7 +252,11 @@ export default function Home() {
                         if (!day) return <div key={`empty-${idx}`} className="h-10" />;
 
                         const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                        const hasEvent = events.some(e => e.event_date.startsWith(dateString));
+                        const dayEvents = events.filter(e => e.event_date.startsWith(dateString));
+                        const hasEvent = dayEvents.length > 0;
+                        const hasNormal = dayEvents.some(e => e.event_type !== 'AI_NAME_DAY');
+                        const hasAINameDay = dayEvents.some(e => e.event_type === 'AI_NAME_DAY');
+
                         const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
                         const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
 
@@ -238,7 +271,10 @@ export default function Home() {
                             >
                                 {day}
                                 {hasEvent && (
-                                    <div className={`absolute bottom-1 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-accent'}`} />
+                                    <div className="absolute bottom-1 flex space-x-0.5 mt-1">
+                                        {hasNormal && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-accent'}`} />}
+                                        {hasAINameDay && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`} />}
+                                    </div>
                                 )}
                             </button>
                         );
@@ -280,12 +316,13 @@ export default function Home() {
                                 )}
                                 <div className="relative z-10 flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-semibold mb-1 text-rose-500">
-                                            {event.event_type}
+                                        <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
+                                            {event.event_type === 'AI_NAME_DAY' ? 'NAME DAY (AI)' : event.event_type}
                                         </p>
                                         <h3 className="text-lg font-bold text-textMain">{event.title} - {event.contacts?.first_name} {event.contacts?.last_name}</h3>
+                                        {event.holiday && <p className="text-xs text-slate-500 font-medium mt-0.5">{event.holiday}</p>}
                                     </div>
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-rose-100 text-rose-600 overflow-hidden shadow-sm">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
                                         {event.contacts?.avatar_url ? (
                                             <img src={event.contacts.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -336,7 +373,7 @@ export default function Home() {
                                 className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
                             >
                                 <div className="flex items-center space-x-4">
-                                    <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center font-bold text-sm text-rose-500 overflow-hidden shrink-0">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-50 text-purple-600' : 'bg-rose-50 text-rose-500'}`}>
                                         {event.contacts?.avatar_url ? (
                                             <img src={event.contacts.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -347,7 +384,7 @@ export default function Home() {
                                         <h4 className="font-semibold text-textMain text-sm">
                                             {event.title} - {event.contacts?.first_name} {event.contacts?.last_name}
                                         </h4>
-                                        <p className="text-xs text-rose-500 font-medium">
+                                        <p className={`text-xs font-medium ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
                                             {new Date(event.event_date).toLocaleDateString('default', { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>
