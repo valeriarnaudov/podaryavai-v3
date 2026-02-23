@@ -64,10 +64,10 @@ CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
 2. Suggest CONCRETE, SPECIFIC products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of just "Headphones").
 3. For "image_url", you MUST return EXACTLY THIS STRING FORMAT, replacing the word KEYWORD with a SINGLE English word describing the item (like "headphones", "bag", "perfume", "coffee"):
-"https://source.unsplash.com/400x500/?KEYWORD"
-4. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url". Do not wrap in markdown quotes.`
+"https://loremflickr.com/400/500/keyword"
+4. Return ONLY a valid JSON array of ${amountToGenerate} objects, where each object has "title", "description", "price_range", and "image_url". Do not wrap in markdown quotes.`
                                             },
-                                            { role: 'user', content: `Generate ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Ensure the image_url uses the exact source.unsplash.com format with a single keyword. Keep descriptions engaging and under 100 characters.` }
+                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Ensure the image_url uses the exact loremflickr.com format with a single keyword. Keep descriptions engaging and under 100 characters.` }
                                         ],
                                     }),
                                 });
@@ -87,7 +87,10 @@ CRITICAL RULES:
                                 }
 
                                 if (suggestions && suggestions.length > 0) {
-                                    const fallbackIdeas = suggestions.map((gift: any) => ({
+                                    // FORCE EXACT LENGTH LIMIT
+                                    const limitedSuggestions = suggestions.slice(0, amountToGenerate);
+
+                                    const fallbackIdeas = limitedSuggestions.map((gift: any) => ({
                                         user_id: user.id,
                                         title: gift.title,
                                         description: gift.description,
