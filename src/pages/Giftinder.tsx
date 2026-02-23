@@ -58,9 +58,16 @@ export default function Giftinder() {
                                         messages: [
                                             {
                                                 role: 'system',
-                                                content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL).`
+                                                content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. 
+                                                
+CRITICAL RULES:
+1. Prices MUST be in EUR (e.g., "€100 - €150").
+2. Suggest CONCRETE, SPECIFIC products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of just "Headphones").
+3. For "image_url", you MUST return EXACTLY THIS STRING FORMAT, replacing the word KEYWORD with a SINGLE English word describing the item (like "headphones", "bag", "perfume", "coffee"):
+"https://source.unsplash.com/400x500/?KEYWORD"
+4. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url". Do not wrap in markdown quotes.`
                                             },
-                                            { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Keep descriptions engaging and under 100 characters.` }
+                                            { role: 'user', content: `Generate ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Ensure the image_url uses the exact source.unsplash.com format with a single keyword. Keep descriptions engaging and under 100 characters.` }
                                         ],
                                     }),
                                 });
