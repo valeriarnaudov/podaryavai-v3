@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { motion } from 'framer-motion';
-import { Mail, Lock, Loader2, User as UserIcon, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, Loader2, User as UserIcon, Calendar, AlertCircle } from 'lucide-react';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -39,13 +39,15 @@ export default function Register() {
                 age--;
             }
             if (age < 18) {
-                setError('You must be at least 18 years old to register.');
+                setError('Age requirement not met. You must be at least 18 years old to register.');
                 setLoading(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
         } else {
             setError('Please enter your date of birth.');
             setLoading(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -65,6 +67,7 @@ export default function Register() {
         if (signUpError) {
             setError(signUpError.message);
             setLoading(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             // Require email confirmation
             navigate('/check-email');
@@ -84,6 +87,7 @@ export default function Register() {
         if (error) {
             setError(error.message);
             setLoading(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -104,11 +108,19 @@ export default function Register() {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
-                    {error && (
-                        <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100/50">
-                            {error}
-                        </div>
-                    )}
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium border border-red-100/50 flex items-start space-x-3"
+                            >
+                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
+                                <span>{error}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="flex space-x-2">
                         <div className="relative flex-1">
