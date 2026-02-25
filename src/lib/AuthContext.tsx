@@ -13,6 +13,7 @@ interface AuthContextType {
     hasVipGiftinder: boolean;
     karmaBoostUntil: string | null;
     lastGiftinderGeneration: string | null;
+    dailyGenerationsCount: number;
     subscriptionPlan: 'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS';
     refreshUserData: () => Promise<void>;
     signOut: () => Promise<void>;
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
     hasVipGiftinder: false,
     karmaBoostUntil: null,
     lastGiftinderGeneration: null,
+    dailyGenerationsCount: 0,
     subscriptionPlan: 'FREE',
     refreshUserData: async () => { },
     signOut: async () => { },
@@ -45,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [hasVipGiftinder, setHasVipGiftinder] = useState(false);
     const [karmaBoostUntil, setKarmaBoostUntil] = useState<string | null>(null);
     const [lastGiftinderGeneration, setLastGiftinderGeneration] = useState<string | null>(null);
+    const [dailyGenerationsCount, setDailyGenerationsCount] = useState(0);
     const [subscriptionPlan, setSubscriptionPlan] = useState<'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS'>('FREE');
 
     const checkUserData = async (userId: string, isMounted: boolean = true) => {
@@ -56,12 +59,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setFreeDeliveriesCount(0);
                 setHasVipGiftinder(false);
                 setKarmaBoostUntil(null);
+                setDailyGenerationsCount(0);
             }
             return;
         }
 
         try {
-            const { data, error } = await supabase.from('users').select('is_admin, karma_points, has_golden_aura, free_deliveries_count, has_vip_giftinder, karma_boost_until, subscription_plan, last_giftinder_generation').eq('id', userId).maybeSingle();
+            const { data, error } = await supabase.from('users').select('is_admin, karma_points, has_golden_aura, free_deliveries_count, has_vip_giftinder, karma_boost_until, subscription_plan, last_giftinder_generation, daily_generations_count').eq('id', userId).maybeSingle();
             if (error) console.warn("Could not fetch user data:", error);
 
             if (isMounted) {
@@ -73,6 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setKarmaBoostUntil(data?.karma_boost_until || null);
                 setSubscriptionPlan(data?.subscription_plan as any || 'FREE');
                 setLastGiftinderGeneration(data?.last_giftinder_generation || null);
+                setDailyGenerationsCount(data?.daily_generations_count || 0);
             }
         } catch (err) {
             console.error("Error fetching user data", err);
@@ -85,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setKarmaBoostUntil(null);
                 setSubscriptionPlan('FREE');
                 setLastGiftinderGeneration(null);
+                setDailyGenerationsCount(0);
             }
         }
     };
@@ -150,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         <AuthContext.Provider value={{
             user, session, loading, isAdmin, karmaPoints,
             hasGoldenAura, freeDeliveriesCount, hasVipGiftinder, karmaBoostUntil,
-            lastGiftinderGeneration, subscriptionPlan,
+            lastGiftinderGeneration, dailyGenerationsCount, subscriptionPlan,
             refreshUserData, signOut
         }}>
             {children}

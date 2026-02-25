@@ -6,7 +6,7 @@ import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lo
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Profile() {
-    const { user, signOut, hasGoldenAura } = useAuth();
+    const { user, signOut, hasGoldenAura, subscriptionPlan } = useAuth();
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -250,14 +250,14 @@ export default function Profile() {
                             <Crown className="w-5 h-5 text-yellow-400" />
                             <h3 className="font-bold text-lg">Current Plan</h3>
                         </div>
-                        <p className="text-4xl font-extrabold tracking-tight mb-2">Free<span className="text-lg font-medium text-slate-400">/forever</span></p>
-                        <p className="text-sm text-slate-300">Basic features limited to 5 contacts. Upgrade for unlimited access.</p>
+                        <p className="text-4xl font-extrabold tracking-tight mb-2 capitalize">{(subscriptionPlan || 'FREE').toLowerCase()}</p>
+                        <p className="text-sm text-slate-300">Upgrade to unlock more AI gift generations and premium models.</p>
                     </div>
                     <button
-                        onClick={() => navigate('/checkout')}
+                        onClick={() => navigate('/upgrade')}
                         className="py-3 px-8 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap shadow-xl"
                     >
-                        Upgrade Plan
+                        View Plans
                     </button>
                 </div>
             </div>

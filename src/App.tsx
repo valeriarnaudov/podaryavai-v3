@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { SettingsProvider, useSettings } from './lib/SettingsContext';
 import MobileLayout from './components/layout/MobileLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Home from './pages/Home';
@@ -23,6 +24,9 @@ import AdminLogs from './pages/admin/AdminLogs';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminGifts from './pages/admin/AdminGifts';
 import AdminSettings from './pages/admin/AdminSettings';
+import MaintenanceScreen from './components/MaintenanceScreen';
+import Upgrade from './pages/Upgrade';
+import CheckoutCancel from './pages/CheckoutCancel';
 
 // Component to handle redirecting authenticated users away from auth pages
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
@@ -92,6 +96,14 @@ const router = createBrowserRouter([
         ),
     },
     {
+        path: '/upgrade',
+        element: <Upgrade />
+    },
+    {
+        path: '/checkout-cancel',
+        element: <CheckoutCancel />
+    },
+    {
         path: '/wishlist/:userId',
         element: <SharedWishlist />
     },
@@ -134,10 +146,34 @@ const router = createBrowserRouter([
     }
 ]);
 
+const AppContent = () => {
+    const { settings, loading: settingsLoading } = useSettings();
+    const { isAdmin, loading: authLoading } = useAuth();
+
+    if (settingsLoading || authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            </div>
+        );
+    }
+
+    // Block access if maintenance mode is ON and user is NOT an admin
+    // Note: Allow access to /login so admins can sign in
+    const isLoginPage = window.location.pathname === '/login';
+    if (settings.MAINTENANCE_MODE === 'true' && !isAdmin && !isLoginPage) {
+        return <MaintenanceScreen />;
+    }
+
+    return <RouterProvider router={router} />;
+};
+
 export default function App() {
     return (
         <AuthProvider>
-            <RouterProvider router={router} />
+            <SettingsProvider>
+                <AppContent />
+            </SettingsProvider>
         </AuthProvider>
     );
 }

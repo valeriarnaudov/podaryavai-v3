@@ -6,14 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Plan to Gift Count mapping
-const PLAN_LIMITS: Record<string, number> = {
-  'FREE': 3,
-  'STANDARD': 5,
-  'PRO': 7,
-  'ULTRA': 10,
-  'BUSINESS': 15
-};
+// We will fetch plan limits dynamically from platform_settings
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -39,7 +32,23 @@ serve(async (req) => {
       .single();
 
     const plan = profile?.subscription_plan || 'FREE';
-    const amountToGenerate = PLAN_LIMITS[plan] || 3;
+    
+    // 1.b Fetch dynamic platform settings
+    const { data: settingsData } = await supabaseClient
+      .from('platform_settings')
+      .select('setting_key, setting_value');
+
+    const settings: Record<string, string> = {};
+    if (settingsData) {
+      settingsData.forEach((s: any) => settings[s.setting_key] = s.setting_value);
+    }
+
+    const limitKey = `LIMIT_AI_${plan}`;
+    const modelKey = `MODEL_AI_${plan}`;
+    
+    // If setting doesn't exist, fallback to robust defaults
+    const amountToGenerate = parseInt(settings[limitKey] || '3', 10);
+    const chosenModel = settings[modelKey] || 'llama';
 
     // Optional: Protect against spamming the function
     const lastGen = profile?.last_giftinder_generation ? new Date(profile.last_giftinder_generation) : null;
@@ -66,47 +75,84 @@ serve(async (req) => {
        tasteContext = `The user likes these types of items: ${likesStr}. Suggest gifts matching this vibe or complementing them.`;
     }
 
-    const openAiKey = Deno.env.get('OPENAI_API_KEY');
-    
-    // 3. Call OpenAI API if key is present
     let suggestions: any[] = [];
     
-    if (openAiKey) {
-      try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              { 
-                  role: 'system', 
-                  content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL). Do not include markdown formatting like \`\`\`json.` 
+    try {
+      if (chosenModel === 'openai') {
+        const openAiKey = Deno.env.get('OPENAI_API_KEY');
+        if (openAiKey) {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${openAiKey}`,
+                'Content-Type': 'application/json',
               },
-              { role: 'user', content: `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
-            ],
-          }),
-        });
+              body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                  { 
+                      role: 'system', 
+                      content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate > 0 ? amountToGenerate : 3} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL). Do not include markdown formatting like \`\`\`json.` 
+                  },
+                  { role: 'user', content: `Generate ${amountToGenerate > 0 ? amountToGenerate : 3} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
+                ],
+              }),
+            });
 
-        const rawText = await response.text();
-        if (rawText) {
-          const aiData = JSON.parse(rawText);
-          if (aiData.choices && aiData.choices[0]) {
-             try {
-                suggestions = JSON.parse(aiData.choices[0].message.content);
-             } catch {
-                const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
-                suggestions = JSON.parse(clean);
-             }
-          }
+            const rawText = await response.text();
+            if (rawText) {
+              const aiData = JSON.parse(rawText);
+              if (aiData.choices && aiData.choices[0]) {
+                 try {
+                    suggestions = JSON.parse(aiData.choices[0].message.content);
+                 } catch {
+                    const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
+                    suggestions = JSON.parse(clean);
+                 }
+              }
+            }
+        } else {
+            console.error("OpenAI requested but no API key configured in Edge Function env.");
         }
-      } catch (err) {
-        console.error("OpenAI Fetch Error:", err.message);
-        // Will seamlessly fallback to placeholders below
+      } else {
+        // Fallback or explicit routing to Groq (Llama)
+        const groqKey = Deno.env.get('GROQ_API_KEY');
+        if (groqKey) {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                  { 
+                      role: 'system', 
+                      content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate > 0 ? amountToGenerate : 3} highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_url" (provide a realistic Unsplash image URL). Do not include markdown formatting like \`\`\`json.` 
+                  },
+                  { role: 'user', content: `Generate ${amountToGenerate > 0 ? amountToGenerate : 3} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.` }
+                ],
+              }),
+            });
+
+            const rawText = await response.text();
+            if (rawText) {
+              const aiData = JSON.parse(rawText);
+              if (aiData.choices && aiData.choices[0]) {
+                 try {
+                    suggestions = JSON.parse(aiData.choices[0].message.content);
+                 } catch {
+                    const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
+                    suggestions = JSON.parse(clean);
+                 }
+              }
+            }
+        }
       }
+    } catch (err) {
+      console.error("AI Fetch Error:", err.message);
+      // Will seamlessly fallback to placeholders below
     }
 
     // 3.b Fallback if OpenAI failed or no key

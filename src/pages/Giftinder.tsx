@@ -3,11 +3,11 @@ import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-mo
 import { Heart, X, BookmarkCheck, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-
-
+import { useSettings } from '../lib/SettingsContext';
 
 export default function Giftinder() {
-    const { user, lastGiftinderGeneration, refreshUserData } = useAuth();
+    const { user, lastGiftinderGeneration, dailyGenerationsCount, refreshUserData } = useAuth();
+    const { settings } = useSettings();
 
     const [cards, setCards] = useState<any[]>([]);
     const [loadingGifts, setLoadingGifts] = useState(true);
@@ -30,8 +30,29 @@ export default function Giftinder() {
                 const today = new Date().toDateString();
                 const lastGenStr = trueLastGen ? new Date(trueLastGen).toDateString() : null;
 
+                // Reset daily count locally if it's a new day
+                let currentDailyCount = dailyGenerationsCount;
                 if (lastGenStr !== today) {
-                    console.log("Generating today's personalized gifts...");
+                    currentDailyCount = 0;
+                }
+
+                const userPlan = profile?.subscription_plan || 'FREE';
+                const limitKey = `LIMIT_AI_${userPlan}` as keyof typeof settings;
+                const dailyLimitStr = settings[limitKey] || '1';
+                const dailyLimit = parseInt(dailyLimitStr as string, 10);
+
+                if (dailyLimit !== -1 && currentDailyCount >= dailyLimit) {
+                    console.log(`User reached daily AI limit limit (${dailyLimit}) for plan ${userPlan}`);
+                    setLoadingGifts(false);
+                    return; // Block generation, they only see cards from DB
+                }
+
+                if (lastGenStr !== today || (dailyLimit === -1 || currentDailyCount < dailyLimit)) {
+                    console.log(`Generating personalized gifts... (Count: ${currentDailyCount} / Limit: ${dailyLimit === -1 ? 'Unlimited' : dailyLimit})`);
+
+                    // Increment optimistic count
+                    const newCount = currentDailyCount + 1;
+
                     const { error } = await supabase.functions.invoke('generate_daily_gifts');
 
                     if (error) {
@@ -142,8 +163,11 @@ CRITICAL RULES:
                         }
                     }
 
-                    // Always update the Generation Timestamp (whether Edge succeeded or Fallback succeeded)
-                    await supabase.from('users').update({ last_giftinder_generation: new Date().toISOString() }).eq('id', user.id);
+                    // Always update the Generation Timestamp and Count
+                    await supabase.from('users').update({
+                        last_giftinder_generation: new Date().toISOString(),
+                        daily_generations_count: newCount
+                    }).eq('id', user.id);
                     await refreshUserData();
                 }
 
@@ -240,7 +264,8 @@ CRITICAL RULES:
                             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Heart className="w-8 h-8 text-slate-300" />
                             </div>
-                            <p>You've seen all ideas for today!</p>
+                            <h3 className="font-bold text-slate-700 text-lg mb-1">You've seen all ideas!</h3>
+                            <p className="text-sm">Swipe through them, save what you like, or upgrade your plan to generate more daily.</p>
                         </motion.div>
                     ) : (
                         cards.map((card, index) => {

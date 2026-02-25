@@ -419,3 +419,25 @@ entrypoint = "./functions/generate_daily_gifts/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/generate_daily_gifts/*.html" ]
+
+[functions.create_subscription_session]
+enabled = true
+verify_jwt = true
+import_map = "./functions/create_subscription_session/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/create_subscription_session/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/create_subscription_session/*.html" ]
+
+[functions.stripe_webhook]
+enabled = true
+verify_jwt = true
+import_map = "./functions/stripe_webhook/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/stripe_webhook/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/stripe_webhook/*.html" ]
