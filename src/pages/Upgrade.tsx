@@ -12,6 +12,7 @@ export default function Upgrade() {
     const navigate = useNavigate();
     const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
+    const [isAnnual, setIsAnnual] = useState(false);
 
     // Filter out internal hidden plans if necessary, but here we just show all
     const displayPlans = plans;
@@ -47,7 +48,7 @@ export default function Upgrade() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ planId: plan.id })
+                    body: JSON.stringify({ planId: plan.id, interval: isAnnual && plan.price > 0 ? 'annual' : 'monthly' })
                 });
 
                 const responseData = await response.json();
@@ -127,6 +128,22 @@ export default function Upgrade() {
 
             {/* Pricing Grid */}
             <section className="px-6 max-w-7xl mx-auto flex flex-col items-center">
+                {/* Billing Toggle */}
+                <div className="mb-10 bg-white p-1 rounded-full border border-slate-200 flex items-center shadow-sm">
+                    <button 
+                        onClick={() => setIsAnnual(false)}
+                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
+                    >
+                        Billed Monthly
+                    </button>
+                    <button 
+                        onClick={() => setIsAnnual(true)}
+                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center ${isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
+                    >
+                        Billed Annually <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>Pay 9 months, get 12</span>
+                    </button>
+                </div>
+
                 {checkoutError && (
                     <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl max-w-2xl text-center font-medium border border-red-100 shadow-sm transition-all">
                         {checkoutError}
@@ -136,6 +153,10 @@ export default function Upgrade() {
                     {displayPlans.map((plan, index) => {
                         const isCurrentPlan = user && subscriptionPlan === plan.plan_key;
                         const isPopular = plan.is_popular === true;
+                        
+                        // Calculate display prices
+                        const standardAnnualPrice = plan.price * 12;
+                        const displayPrice = (isAnnual && plan.price > 0) ? plan.price_annual || standardAnnualPrice : plan.price;
 
                         return (
                             <motion.div
@@ -152,9 +173,17 @@ export default function Upgrade() {
                                 )}
 
                                 <h3 className="text-xl font-bold text-slate-800 mb-2">{plan.name}</h3>
-                                <div className="flex items-baseline mb-6">
-                                    <span className="text-4xl font-black text-slate-900">€{plan.price}</span>
-                                    {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">/mo</span>}
+                                
+                                <div className="flex flex-col mb-6 min-h-[5rem] justify-center">
+                                    {isAnnual && plan.price > 0 && standardAnnualPrice > 0 && plan.price_annual > 0 && (
+                                        <div className="text-slate-400 font-medium line-through text-sm mb-1">
+                                            €{standardAnnualPrice.toFixed(2)}/yr
+                                        </div>
+                                    )}
+                                    <div className="flex items-baseline">
+                                        <span className="text-4xl font-black text-slate-900">€{displayPrice}</span>
+                                        {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? '/yr' : '/mo'}</span>}
+                                    </div>
                                 </div>
 
                                 <button

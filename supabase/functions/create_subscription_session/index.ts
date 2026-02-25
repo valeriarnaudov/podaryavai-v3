@@ -41,19 +41,29 @@ serve(async (req) => {
         `Unauthorized: ${userError?.message || "User not found"}`,
       );
     }
-    const { planId } = await req.json();
+    const { planId, interval = "monthly" } = await req.json();
     // Fetch the corresponding Stripe Price ID from our database
     const { data: plan, error: planError } = await supabase.from(
       "subscription_plans",
-    ).select("stripe_price_id, plan_key, name").eq("id", planId).single();
-    if (planError || !plan || !plan.stripe_price_id) {
-      throw new Error("Invalid plan or missing Stripe configuration");
+    ).select("stripe_price_id, stripe_price_id_annual, plan_key, name").eq(
+      "id",
+      planId,
+    ).single();
+
+    const targetPriceId = interval === "annual"
+      ? plan?.stripe_price_id_annual
+      : plan?.stripe_price_id;
+
+    if (planError || !targetPriceId) {
+      throw new Error(
+        `Invalid plan selected or missing Stripe configuration for ${interval} interval.`,
+      );
     }
     // Generate the Stripe Checkout Session
     const origin = req.headers.get("origin") || "http://localhost:5173";
     const bodyParams = new URLSearchParams({
       "payment_method_types[0]": "card",
-      "line_items[0][price]": plan.stripe_price_id,
+      "line_items[0][price]": targetPriceId,
       "line_items[0][quantity]": "1",
       "mode": "subscription",
       "success_url":

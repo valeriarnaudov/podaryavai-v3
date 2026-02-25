@@ -53,7 +53,9 @@ export interface SubscriptionPlan {
     plan_key: string;
     name: string;
     price: number;
+    price_annual: number;
     stripe_price_id: string | null;
+    stripe_price_id_annual: string | null;
     features: string[];
     is_popular: boolean;
 }

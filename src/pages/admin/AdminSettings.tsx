@@ -129,7 +129,9 @@ export default function AdminSettings() {
                 const isChanged =
                     editedPlan.name !== originalPlan.name ||
                     editedPlan.price !== originalPlan.price ||
+                    editedPlan.price_annual !== originalPlan.price_annual ||
                     editedPlan.stripe_price_id !== originalPlan.stripe_price_id ||
+                    editedPlan.stripe_price_id_annual !== originalPlan.stripe_price_id_annual ||
                     JSON.stringify(editedPlan.features) !== JSON.stringify(originalPlan.features);
 
                 if (isChanged) {
@@ -138,7 +140,9 @@ export default function AdminSettings() {
                         .update({
                             name: editedPlan.name,
                             price: editedPlan.price,
+                            price_annual: editedPlan.price_annual,
                             stripe_price_id: editedPlan.stripe_price_id,
+                            stripe_price_id_annual: editedPlan.stripe_price_id_annual,
                             features: editedPlan.features
                         })
                         .eq('id', originalPlan.id);
@@ -300,11 +304,32 @@ export default function AdminSettings() {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stripe Price ID</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Annual Price (EUR/Year)</label>
+                                    <input
+                                        type="number"
+                                        value={edited.price_annual || 0}
+                                        onChange={(e) => handlePlanChange(plan.id, 'price_annual', parseFloat(e.target.value))}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-rose-500 outline-none focus:border-accent focus:bg-white"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stripe Price ID (Monthly)</label>
                                     <input
                                         type="text"
                                         value={edited.stripe_price_id || ''}
                                         onChange={(e) => handlePlanChange(plan.id, 'stripe_price_id', e.target.value)}
+                                        placeholder="price_..."
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 outline-none focus:border-accent focus:bg-white"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stripe Price ID (Annual)</label>
+                                    <input
+                                        type="text"
+                                        value={edited.stripe_price_id_annual || ''}
+                                        onChange={(e) => handlePlanChange(plan.id, 'stripe_price_id_annual', e.target.value)}
                                         placeholder="price_..."
                                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 outline-none focus:border-accent focus:bg-white"
                                     />
