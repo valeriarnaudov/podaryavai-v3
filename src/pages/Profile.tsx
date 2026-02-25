@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock } from 'lucide-react';
+import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Profile() {
-    const { user, signOut, hasGoldenAura, subscriptionPlan } = useAuth();
+    const { user, signOut, hasGoldenAura, subscriptionPlan, activeReward } = useAuth();
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
+    const [portalLoading, setPortalLoading] = useState(false);
 
     // Form fields
     const [firstName, setFirstName] = useState('');
@@ -86,6 +87,42 @@ export default function Profile() {
         }
     };
 
+    const handleOpenPortal = async () => {
+        if (!user) return;
+        setPortalLoading(true);
+        setError('');
+        
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData.session?.access_token;
+            
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create_portal_session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                console.error("Portal Error:", responseData);
+                throw new Error(responseData.error || "Failed to open billing portal.");
+            }
+
+            if (responseData?.url) {
+                window.location.href = responseData.url;
+            }
+        } catch (err: any) {
+            console.error("Portal error:", err);
+            setError(err.message || 'Failed to initialize Stripe Customer Portal.');
+            setTimeout(() => setError(''), 5000);
+        } finally {
+            setPortalLoading(false);
+        }
+    };
+
     // Calculate initial logo or avatar
     const displayFullName = `${firstName} ${lastName}`.trim();
     const avatarUrl = user?.user_metadata?.avatar_url;
@@ -101,9 +138,6 @@ export default function Profile() {
                 <div>
                     <h1 className="text-2xl font-bold text-textMain tracking-tight">Profile</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage your account settings.</p>
-                </div>
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 shadow-soft">
-                    <Settings className="w-5 h-5" />
                 </div>
             </header>
 
@@ -242,23 +276,59 @@ export default function Profile() {
             </div>
 
             {/* Subscription Plan Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-3xl shadow-soft text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-3xl shadow-soft text-white relative overflow-hidden flex flex-col gap-6">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10" />
+                
+                {/* Active Reward Full-Width Banner */}
+                {activeReward && (
+                    <div className="relative z-10 w-full bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Award className="w-5 h-5 text-emerald-400" />
+                                <h4 className="font-bold text-emerald-400 text-xs tracking-widest uppercase">Active Karma Reward</h4>
+                            </div>
+                            <p className="text-white font-medium">{activeReward.title} (Expires: {new Date(activeReward.expires_at).toLocaleDateString()})</p>
+                        </div>
+                        <div className="sm:text-right shrink-0">
+                            <span className="text-xs text-emerald-200">Time Remaining</span>
+                            <p className="font-bold text-white text-lg">
+                                {Math.max(0, Math.ceil((new Date(activeReward.expires_at).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} Days
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="flex items-center space-x-2 mb-1">
                             <Crown className="w-5 h-5 text-yellow-400" />
                             <h3 className="font-bold text-lg">Current Plan</h3>
                         </div>
-                        <p className="text-4xl font-extrabold tracking-tight mb-2 capitalize">{(subscriptionPlan || 'FREE').toLowerCase()}</p>
-                        <p className="text-sm text-slate-300">Upgrade to unlock more AI gift generations and premium models.</p>
+                        <p className="text-4xl font-extrabold tracking-tight mb-2 capitalize">
+                            {(subscriptionPlan || 'FREE').toLowerCase()}
+                        </p>
+                        <p className="text-sm text-slate-300">
+                            {activeReward ? "Your account will handle limits according to your active reward tier." : "Upgrade to unlock more AI gift generations and premium models."}
+                        </p>
                     </div>
-                    <button
-                        onClick={() => navigate('/upgrade')}
-                        className="py-3 px-8 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap shadow-xl"
-                    >
-                        View Plans
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        {subscriptionPlan && subscriptionPlan.toLowerCase() !== 'free' && (
+                            <button
+                                onClick={handleOpenPortal}
+                                disabled={portalLoading}
+                                className="py-3 px-6 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl font-bold active:scale-95 transition-all whitespace-nowrap shadow-soft flex items-center justify-center"
+                            >
+                                {portalLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Settings className="w-4 h-4 mr-2" />}
+                                Manage Subscription
+                            </button>
+                        )}
+                        <button
+                            onClick={() => navigate('/upgrade')}
+                            className="py-3 px-8 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap shadow-xl text-center"
+                        >
+                            View Plans
+                        </button>
+                    </div>
                 </div>
             </div>
 

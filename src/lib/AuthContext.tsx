@@ -15,6 +15,7 @@ interface AuthContextType {
     lastGiftinderGeneration: string | null;
     dailyGenerationsCount: number;
     subscriptionPlan: 'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS';
+    activeReward: { title: string; expires_at: string; plan_code: string } | null;
     refreshUserData: () => Promise<void>;
     signOut: () => Promise<void>;
 }
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
     lastGiftinderGeneration: null,
     dailyGenerationsCount: 0,
     subscriptionPlan: 'FREE',
+    activeReward: null,
     refreshUserData: async () => { },
     signOut: async () => { },
 });
@@ -49,6 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [lastGiftinderGeneration, setLastGiftinderGeneration] = useState<string | null>(null);
     const [dailyGenerationsCount, setDailyGenerationsCount] = useState(0);
     const [subscriptionPlan, setSubscriptionPlan] = useState<'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS'>('FREE');
+    const [activeReward, setActiveReward] = useState<{ title: string; expires_at: string; plan_code: string } | null>(null);
 
     const checkUserData = async (userId: string, isMounted: boolean = true) => {
         if (!userId) {
@@ -60,6 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setHasVipGiftinder(false);
                 setKarmaBoostUntil(null);
                 setDailyGenerationsCount(0);
+                setActiveReward(null);
             }
             return;
         }
@@ -68,6 +72,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const { data, error } = await supabase.from('users').select('is_admin, karma_points, has_golden_aura, free_deliveries_count, has_vip_giftinder, karma_boost_until, subscription_plan, last_giftinder_generation, daily_generations_count').eq('id', userId).maybeSingle();
             if (error) console.warn("Could not fetch user data:", error);
 
+            // Fetch active rewards
+            const { data: rewardsData } = await supabase
+                .from('user_active_rewards')
+                .select('expires_at, karma_rewards(title, reward_value)')
+                .eq('user_id', userId)
+                .gte('expires_at', new Date().toISOString())
+                .order('expires_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            let finalPlan = (data?.subscription_plan as any) || 'FREE';
+            let currentActiveReward = null;
+
+            if (rewardsData && rewardsData.karma_rewards) {
+                // Extract reward details (handling possible array or object from PostgREST)
+                const rewardDetails = Array.isArray(rewardsData.karma_rewards) ? rewardsData.karma_rewards[0] : rewardsData.karma_rewards;
+                
+                finalPlan = rewardDetails.reward_value as any;
+                currentActiveReward = {
+                    title: rewardDetails.title,
+                    expires_at: rewardsData.expires_at,
+                    plan_code: rewardDetails.reward_value
+                };
+            }
+
             if (isMounted) {
                 setIsAdmin(true === data?.is_admin);
                 setKarmaPoints(data?.karma_points || 0);
@@ -75,7 +104,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setFreeDeliveriesCount(data?.free_deliveries_count || 0);
                 setHasVipGiftinder(true === data?.has_vip_giftinder);
                 setKarmaBoostUntil(data?.karma_boost_until || null);
-                setSubscriptionPlan(data?.subscription_plan as any || 'FREE');
+                setSubscriptionPlan(finalPlan);
+                setActiveReward(currentActiveReward);
                 setLastGiftinderGeneration(data?.last_giftinder_generation || null);
                 setDailyGenerationsCount(data?.daily_generations_count || 0);
             }
@@ -89,6 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setHasVipGiftinder(false);
                 setKarmaBoostUntil(null);
                 setSubscriptionPlan('FREE');
+                setActiveReward(null);
                 setLastGiftinderGeneration(null);
                 setDailyGenerationsCount(0);
             }
@@ -157,7 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user, session, loading, isAdmin, karmaPoints,
             hasGoldenAura, freeDeliveriesCount, hasVipGiftinder, karmaBoostUntil,
             lastGiftinderGeneration, dailyGenerationsCount, subscriptionPlan,
-            refreshUserData, signOut
+            activeReward, refreshUserData, signOut
         }}>
             {children}
         </AuthContext.Provider>

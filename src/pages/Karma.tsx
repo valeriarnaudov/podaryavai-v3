@@ -1,63 +1,94 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Lock, Gift, Star, Zap, LogOut, Loader2 } from 'lucide-react';
+import { Sparkles, LogOut, Loader2, Award, Clock, History, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 
-const REWARDS = [
-    { id: 'has_golden_aura', points: 500, title: 'Golden Aura', desc: 'Sleek golden frame around your avatar', icon: Star },
-    { id: 'free_deliveries_count', points: 800, title: 'Free Delivery', desc: 'Free delivery on next Concierge order', icon: Gift },
-    { id: 'has_vip_giftinder', points: 1200, title: 'VIP Giftinder', desc: 'Unlock premium VIP tier gift ideas', icon: Lock },
-    { id: 'karma_boost_until', points: 2000, title: 'x2 Karma Multiplier (24h)', desc: 'Earn double points for 24 hours', icon: Zap },
-];
+interface KarmaReward {
+    id: string;
+    title: string;
+    description: string;
+    cost_points: number;
+    reward_type: string;
+    reward_value: string;
+    duration_days: number;
+}
 
 export default function Karma() {
-    const { user, karmaPoints, hasGoldenAura, hasVipGiftinder, karmaBoostUntil, refreshUserData, signOut, loading } = useAuth();
+    const { user, karmaPoints, activeReward, refreshUserData, signOut, loading: authLoading } = useAuth();
+    const [rewards, setRewards] = useState<KarmaReward[]>([]);
+    const [loading, setLoading] = useState(true);
     const [redeeming, setRedeeming] = useState<string | null>(null);
+    const [showHistory, setShowHistory] = useState(false);
+    const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
-    const hasReward = (rewardId: string) => {
-        if (rewardId === 'has_golden_aura') return hasGoldenAura;
-        if (rewardId === 'has_vip_giftinder') return hasVipGiftinder;
-        if (rewardId === 'karma_boost_until') return karmaBoostUntil && new Date(karmaBoostUntil) > new Date();
-        return false; // Free delivery is stackable
-    };
+    useEffect(() => {
+        const fetchRewards = async () => {
+            const { data } = await supabase
+                .from('karma_rewards')
+                .select('*')
+                .eq('is_active', true)
+                .order('cost_points', { ascending: true });
+            
+            if (data) setRewards(data);
+            setLoading(false);
+        };
+        fetchRewards();
+    }, []);
 
-    const handleRedeem = async (reward: typeof REWARDS[0]) => {
+    const handleRedeem = async (reward: KarmaReward) => {
         if (!user || user.id === 'preview') {
             alert("Please log in to redeem rewards.");
             return;
         }
 
-        if (karmaPoints < reward.points) {
+        if (karmaPoints < reward.cost_points) {
             alert("Not enough Karma points!");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to spend ${reward.cost_points} points on "${reward.title}"?`)) {
             return;
         }
 
         setRedeeming(reward.id);
 
         try {
-            // Calculate new values to update
-            const updates: any = {
-                karma_points: karmaPoints - reward.points
-            };
+            // Calculate expiration
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + reward.duration_days);
 
-            if (reward.id === 'has_golden_aura') updates.has_golden_aura = true;
-            if (reward.id === 'has_vip_giftinder') updates.has_vip_giftinder = true;
+            // 1. Deduct points
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ karma_points: karmaPoints - reward.cost_points })
+                .eq('id', user.id);
 
-            if (reward.id === 'free_deliveries_count') {
-                const { data } = await supabase.from('users').select('free_deliveries_count').eq('id', user.id).single();
-                updates.free_deliveries_count = (data?.free_deliveries_count || 0) + 1;
-            }
+            if (updateError) throw updateError;
 
-            if (reward.id === 'karma_boost_until') {
-                const boostEnd = new Date();
-                boostEnd.setHours(boostEnd.getHours() + 24);
-                updates.karma_boost_until = boostEnd.toISOString();
-            }
+            // 2. Add to active rewards
+            const { error: activeError } = await supabase
+                .from('user_active_rewards')
+                .insert({
+                    user_id: user.id,
+                    reward_id: reward.id,
+                    expires_at: expiresAt.toISOString()
+                });
 
-            const { error } = await supabase.from('users').update(updates).eq('id', user.id);
+            if (activeError) throw activeError;
 
-            if (error) throw error;
+            // 3. Add to history
+            const { error: historyError } = await supabase
+                .from('user_karma_history')
+                .insert({
+                    user_id: user.id,
+                    action_type: 'SPENT',
+                    points: reward.cost_points,
+                    description: `Purchased reward: ${reward.title}`
+                });
+
+            if (historyError) throw historyError;
 
             // Success! Refresh user context
             await refreshUserData();
@@ -67,10 +98,26 @@ export default function Karma() {
 
         } catch (error: any) {
             console.error("Error redeeming reward:", error);
-            alert(`Error: ${error.message || 'Could not redeem reward.'}`);
+            alert(`Error: ${error.message || 'Could not redeem reward. Please try again later.'}`);
         } finally {
             setRedeeming(null);
         }
+    };
+
+    const loadHistory = async () => {
+        setShowHistory(true);
+        if (historyLogs.length > 0) return; // Prevent over-fetching
+
+        setLoadingHistory(true);
+        const { data } = await supabase
+            .from('user_karma_history')
+            .select('*')
+            .eq('user_id', user?.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+        
+        if (data) setHistoryLogs(data);
+        setLoadingHistory(false);
     };
 
     return (
@@ -80,13 +127,22 @@ export default function Karma() {
                     <h1 className="text-2xl font-bold text-textMain tracking-tight">Gamification</h1>
                     <p className="text-sm text-slate-500">Earn points, unlock rewards.</p>
                 </div>
-                <button
-                    onClick={signOut}
-                    className="p-2 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-soft transition-colors"
-                    title="Sign Out"
-                >
-                    <LogOut className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={loadHistory}
+                        className="p-2.5 bg-slate-100 rounded-full text-slate-600 hover:text-accent hover:bg-slate-200 transition-colors"
+                        title="History"
+                    >
+                        <History className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={signOut}
+                        className="p-2.5 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-soft transition-colors"
+                        title="Sign Out"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </button>
+                </div>
             </header>
 
             <main className="flex-1 overflow-y-auto px-6 pb-24">
@@ -101,69 +157,129 @@ export default function Karma() {
 
                     <div className="relative z-10">
                         <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
-                            {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Sparkles className="w-8 h-8 text-white drop-shadow-md" />}
+                            {authLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Sparkles className="w-8 h-8 text-white drop-shadow-md" />}
                         </div>
                         <h2 className="text-6xl font-black mb-1 drop-shadow-md">{karmaPoints}</h2>
                         <p className="font-semibold tracking-widest uppercase text-white/90 text-sm">Karma Points</p>
                     </div>
                 </motion.div>
 
+                {/* Premium Active Reward Status */}
+                {activeReward && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl shadow-sm mb-6 flex items-start gap-4"
+                    >
+                        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shrink-0">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-emerald-800">Active Reward: {activeReward.title}</h4>
+                            <p className="text-sm font-medium text-emerald-600 mt-1">
+                                Enjoy your upgraded benefits! They will automatically expire on {new Date(activeReward.expires_at).toLocaleDateString()}.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* Rewards List */}
                 <div>
-                    <h3 className="text-lg font-bold text-textMain mb-4">Unlock Rewards</h3>
-                    <div className="space-y-4">
-                        {REWARDS.map((reward, i) => {
-                            const Icon = reward.icon;
-                            const isLocked = karmaPoints < reward.points;
-                            const isOwned = hasReward(reward.id);
+                    <h3 className="text-lg font-bold text-textMain mb-4">Karma Store</h3>
+                    {loading ? (
+                        <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-slate-300" /></div>
+                    ) : rewards.length === 0 ? (
+                        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-slate-500">No rewards available in the store right now.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {rewards.map((reward, i) => {
+                                const isLocked = karmaPoints < reward.cost_points;
 
-                            return (
-                                <motion.div
-                                    key={reward.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className={`p-5 rounded-2xl border flex items-center justify-between transition-all ${isLocked && !isOwned
-                                        ? 'bg-slate-50 border-slate-100 opacity-60 grayscale'
-                                        : isOwned
-                                            ? 'bg-amber-50/50 border-amber-200 shadow-sm'
-                                            : 'bg-white border-amber-100 shadow-soft'
-                                        }`}
-                                >
-                                    <div className="flex items-center space-x-4">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isLocked && !isOwned ? 'bg-slate-200' : 'bg-amber-100'
-                                            }`}>
-                                            {isLocked && !isOwned ? <Lock className="w-5 h-5 text-slate-400" /> : <Icon className={`w-6 h-6 ${isOwned ? 'text-amber-600' : 'text-amber-500'}`} />}
+                                return (
+                                    <motion.div
+                                        key={reward.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${isLocked
+                                            ? 'bg-slate-50 border-slate-100 opacity-70 grayscale hover:grayscale-0'
+                                            : 'bg-white border-amber-100 shadow-soft hover:border-amber-300'
+                                            }`}
+                                    >
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-amber-100">
+                                                <Award className="w-6 h-6 text-amber-500" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-textMain">{reward.title}</h4>
+                                                <p className="text-xs font-medium mt-0.5 text-slate-400">
+                                                    {reward.cost_points} Points • Unlocks {reward.duration_days} Days
+                                                </p>
+                                                {reward.description && <p className="text-xs text-slate-500 mt-1">{reward.description}</p>}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 className={`font-bold ${isLocked && !isOwned ? 'text-slate-500' : isOwned ? 'text-amber-700' : 'text-textMain'}`}>{reward.title}</h4>
-                                            <p className={`text-xs font-medium mt-0.5 ${isOwned ? 'text-amber-600/70' : 'text-slate-400'}`}>
-                                                {isOwned && reward.id !== 'karma_boost_until' ? 'Already Purchased' : `${reward.points} Points • ${reward.desc}`}
-                                            </p>
-                                        </div>
-                                    </div>
 
-                                    {!isLocked && !isOwned && (
                                         <button
                                             onClick={() => handleRedeem(reward)}
-                                            disabled={redeeming === reward.id}
-                                            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition-all outline-none disabled:opacity-70 flex items-center"
+                                            disabled={redeeming === reward.id || isLocked}
+                                            className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition-all outline-none disabled:opacity-50 flex items-center justify-center whitespace-nowrap"
                                         >
-                                            {redeeming === reward.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Redeem'}
+                                            {redeeming === reward.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (isLocked ? 'Locked' : 'Buy Reward')}
                                         </button>
-                                    )}
-
-                                    {isOwned && reward.id === 'karma_boost_until' && (
-                                        <div className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-200 inline-block uppercase tracking-wider">
-                                            Active
-                                        </div>
-                                    )}
-                                </motion.div>
-                            );
-                        })}
-                    </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </main>
+
+            {/* History Modal */}
+            {showHistory && (
+                <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white w-full max-w-md rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden"
+                    >
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800">Karma History</h3>
+                                <p className="text-xs text-slate-500 mt-1">Recent point transactions</p>
+                            </div>
+                            <button onClick={() => setShowHistory(false)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                            {loadingHistory ? (
+                                <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+                            ) : historyLogs.length === 0 ? (
+                                <p className="text-center text-slate-500 py-6">No history found.</p>
+                            ) : (
+                                historyLogs.map(log => (
+                                    <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${log.action_type === 'EARNED' ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                                                {log.action_type === 'EARNED' ? <ArrowUpRight className="w-5 h-5 text-emerald-600" /> : <ArrowDownRight className="w-5 h-5 text-red-600" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-700">{log.description}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium uppercase mt-0.5">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`font-black tracking-tight ${log.action_type === 'EARNED' ? 'text-emerald-500' : 'text-slate-500'}`}>
+                                            {log.action_type === 'EARNED' ? '+' : '-'}{log.points}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

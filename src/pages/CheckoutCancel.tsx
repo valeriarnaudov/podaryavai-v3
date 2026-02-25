@@ -158,7 +158,7 @@ export default function CheckoutCancel() {
                     </div>
                 ) : (
                     <div className="flex flex-wrap justify-center gap-6 w-full">
-                        {plans.map((plan, index) => {
+                        {plans.filter(plan => plan.is_active !== false).map((plan, index) => {
                             const isCurrentPlan = user && subscriptionPlan === plan.plan_key;
                             const isPopular = plan.is_popular === true;
 

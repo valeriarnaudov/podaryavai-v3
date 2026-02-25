@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Save, Settings as SettingsIcon, Globe, Zap, RotateCcw, CreditCard } from 'lucide-react';
+import { Loader2, Save, Settings as SettingsIcon, Globe, Zap, RotateCcw, CreditCard, Users } from 'lucide-react';
 import { useSettings, SubscriptionPlan } from '../../lib/SettingsContext';
 
 interface PlatformSetting {
@@ -27,7 +27,14 @@ const DEFAULT_SETTINGS = [
     { setting_key: 'MODEL_AI_STANDARD', setting_value: 'llama', description: 'AI Model for Standard plan ("llama" or "openai")' },
     { setting_key: 'MODEL_AI_PRO', setting_value: 'openai', description: 'AI Model for Pro plan ("llama" or "openai")' },
     { setting_key: 'MODEL_AI_ULTRA', setting_value: 'openai', description: 'AI Model for Ultra plan ("llama" or "openai")' },
-    { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'openai', description: 'AI Model for Business plan ("llama" or "openai")' }
+    { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'openai', description: 'AI Model for Business plan ("llama" or "openai")' },
+
+    // Contact Limits per plan (-1 for unlimited)
+    { setting_key: 'LIMIT_CONTACTS_FREE', setting_value: '2', description: 'Maximum contacts allowed for Free plan' },
+    { setting_key: 'LIMIT_CONTACTS_STANDARD', setting_value: '10', description: 'Maximum contacts allowed for Standard plan' },
+    { setting_key: 'LIMIT_CONTACTS_PRO', setting_value: '50', description: 'Maximum contacts allowed for Pro plan' },
+    { setting_key: 'LIMIT_CONTACTS_ULTRA', setting_value: '200', description: 'Maximum contacts allowed for Ultra plan' },
+    { setting_key: 'LIMIT_CONTACTS_BUSINESS', setting_value: '-1', description: 'Maximum contacts allowed for Business plan' }
 ];
 
 export default function AdminSettings() {
@@ -132,6 +139,7 @@ export default function AdminSettings() {
                     editedPlan.price_annual !== originalPlan.price_annual ||
                     editedPlan.stripe_price_id !== originalPlan.stripe_price_id ||
                     editedPlan.stripe_price_id_annual !== originalPlan.stripe_price_id_annual ||
+                    editedPlan.is_active !== originalPlan.is_active ||
                     JSON.stringify(editedPlan.features) !== JSON.stringify(originalPlan.features);
 
                 if (isChanged) {
@@ -143,6 +151,7 @@ export default function AdminSettings() {
                             price_annual: editedPlan.price_annual,
                             stripe_price_id: editedPlan.stripe_price_id,
                             stripe_price_id_annual: editedPlan.stripe_price_id_annual,
+                            is_active: editedPlan.is_active,
                             features: editedPlan.features
                         })
                         .eq('id', originalPlan.id);
@@ -169,9 +178,7 @@ export default function AdminSettings() {
     };
 
     // Filter categories
-    const globalSettings = settings.filter(s => !s.setting_key.startsWith('LIMIT_AI') && !s.setting_key.startsWith('MODEL_AI'));
-    const limitsSettings = settings.filter(s => s.setting_key.startsWith('LIMIT_AI'));
-    const modelsSettings = settings.filter(s => s.setting_key.startsWith('MODEL_AI'));
+    const globalSettings = settings.filter(s => !s.setting_key.startsWith('LIMIT_AI') && !s.setting_key.startsWith('MODEL_AI') && !s.setting_key.startsWith('LIMIT_CONTACTS'));
 
     const renderSettingRow = (setting: PlatformSetting) => (
         <div key={setting.setting_key} className="p-5 sm:pl-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
@@ -247,29 +254,6 @@ export default function AdminSettings() {
                 </div>
             </section>
 
-            {/* Plans Limits Section */}
-            <div className="grid md:grid-cols-2 gap-8">
-                <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center space-x-2">
-                        <Zap className="w-5 h-5 text-amber-500" />
-                        <h3 className="font-bold text-slate-700">Daily Generative Limits</h3>
-                    </div>
-                    <div>
-                        {limitsSettings.map(renderSettingRow)}
-                    </div>
-                </section>
-
-                <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center space-x-2">
-                        <SettingsIcon className="w-5 h-5 text-purple-500" />
-                        <h3 className="font-bold text-slate-700">AI Model Routing</h3>
-                    </div>
-                    <div>
-                        {modelsSettings.map(renderSettingRow)}
-                    </div>
-                </section>
-            </div>
-
             {/* Subscription Plans Section */}
             <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center space-x-2">
@@ -280,8 +264,25 @@ export default function AdminSettings() {
                     {plans.map(plan => {
                         const edited = editablePlans[plan.id] || plan;
                         return (
-                            <div key={plan.id} className="border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col space-y-4 relative">
+                            <div key={plan.id} className={`border border-slate-200 rounded-2xl p-5 flex flex-col space-y-4 relative ${edited.is_active === false ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm'}`}>
                                 {plan.is_popular && <span className="absolute -top-3 -right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm uppercase">Popular</span>}
+
+                                <div className="flex justify-between items-center bg-slate-100/50 -mx-5 -mt-5 p-4 rounded-t-2xl mb-2 border-b border-slate-100">
+                                    <label className="flex items-center space-x-3 cursor-pointer">
+                                        <div className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${edited.is_active !== false ? 'bg-green-500' : 'bg-slate-300'}`}>
+                                            <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${edited.is_active !== false ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={edited.is_active !== false}
+                                            onChange={(e) => handlePlanChange(plan.id, 'is_active', e.target.checked)}
+                                        />
+                                        <span className={`text-sm font-bold ${edited.is_active !== false ? 'text-green-700' : 'text-slate-500'}`}>
+                                            {edited.is_active !== false ? 'Plan Active' : 'Plan Hidden'}
+                                        </span>
+                                    </label>
+                                </div>
 
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Plan Name ({plan.plan_key})</label>
@@ -335,7 +336,40 @@ export default function AdminSettings() {
                                     />
                                 </div>
 
-                                <div className="space-y-1 flex-1">
+                                {/* Platform Settings for this Plan */}
+                                <div className="pt-4 border-t border-slate-100 space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-blue-600 flex items-center gap-1"><Users className="w-3 h-3"/> Maximum Contacts (-1 = unltd)</label>
+                                        <input
+                                            type="number"
+                                            value={editableValues[`LIMIT_CONTACTS_${plan.plan_key}`] !== undefined ? editableValues[`LIMIT_CONTACTS_${plan.plan_key}`] : ''}
+                                            onChange={(e) => handleValueChange(`LIMIT_CONTACTS_${plan.plan_key}`, e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-amber-600 flex items-center gap-1"><Zap className="w-3 h-3"/> AI Giftinder Limit / Day (-1 = unltd)</label>
+                                        <input
+                                            type="number"
+                                            value={editableValues[`LIMIT_AI_${plan.plan_key}`] !== undefined ? editableValues[`LIMIT_AI_${plan.plan_key}`] : ''}
+                                            onChange={(e) => handleValueChange(`LIMIT_AI_${plan.plan_key}`, e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-purple-600 flex items-center gap-1"><SettingsIcon className="w-3 h-3"/> AI Model Backend</label>
+                                        <select
+                                            value={editableValues[`MODEL_AI_${plan.plan_key}`] !== undefined ? editableValues[`MODEL_AI_${plan.plan_key}`] : 'llama'}
+                                            onChange={(e) => handleValueChange(`MODEL_AI_${plan.plan_key}`, e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-purple-500 focus:bg-white"
+                                        >
+                                            <option value="llama">Llama (Standard)</option>
+                                            <option value="openai">OpenAI (Premium)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1 flex-1 pt-4 border-t border-slate-100">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Features (1 per line)</label>
                                     <textarea
                                         value={edited.features.join('\n')}

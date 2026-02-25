@@ -1,27 +1,99 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, ShoppingBag, TrendingUp, Loader2 } from 'lucide-react';
+import { Users, ShoppingBag, TrendingUp, Loader2, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+type TimeRange = '7d' | '30d' | '365d' | 'all';
+
 export default function AdminDashboard() {
-    const [stats, setStats] = useState({ users: 0, orders: 0, revenue: 0 });
+    const [stats, setStats] = useState({ 
+        users: { current: 0, prev: 0 }, 
+        orders: { current: 0, prev: 0 }, 
+        revenue: { current: 0, prev: 0 } 
+    });
     const [loading, setLoading] = useState(true);
+    const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData(timeRange);
+    }, [timeRange]);
 
-    const fetchData = async () => {
+    const fetchData = async (range: TimeRange) => {
+        setLoading(true);
         try {
-            const [{ count: userCount }, { count: orderCount }] = await Promise.all([
-                supabase.from('users').select('*', { count: 'exact', head: true }),
-                supabase.from('concierge_orders').select('*', { count: 'exact', head: true })
+            const now = new Date();
+            let startDate = new Date(0); // Epoch, i.e., "all time"
+            let prevStartDate = new Date(0);
+            let prevEndDate = new Date(0);
+
+            if (range !== 'all') {
+                const days = range === '7d' ? 7 : range === '30d' ? 30 : 365;
+                startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+                
+                // For trend, we look at the exact same previous period
+                prevEndDate = new Date(startDate.getTime() - 1); 
+                prevStartDate = new Date(prevEndDate.getTime() - (days * 24 * 60 * 60 * 1000));
+            }
+
+            // 1. Fetch Current Period Data
+            let usersQuery = supabase.from('users').select('*', { count: 'exact', head: true });
+            let ordersQuery = supabase.from('concierge_orders').select('total_amount, created_at');
+            // We fetch users table fully to calculate recurring subscription revenue
+            let allUsersQuery = supabase.from('users').select('subscription_plan, created_at');
+            
+            // 2. Fetch Previous Period Data (for trend)
+            let prevUsersQuery = supabase.from('users').select('*', { count: 'exact', head: true });
+            let prevOrdersQuery = supabase.from('concierge_orders').select('total_amount, created_at');
+
+            if (range !== 'all') {
+                usersQuery = usersQuery.gte('created_at', startDate.toISOString());
+                ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
+                allUsersQuery = allUsersQuery.gte('created_at', startDate.toISOString());
+
+                prevUsersQuery = prevUsersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
+                prevOrdersQuery = prevOrdersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
+            }
+
+            // Also fetch plans metadata so we know exactly how much each subscription_plan costs
+            const plansPromise = supabase.from('subscription_plans').select('plan_key, price');
+
+            const [
+                { count: currentUsers },
+                { data: currentOrdersData },
+                { data: allUsersData },
+                { count: prevUsers },
+                { data: prevOrdersData },
+                { data: plansData }
+            ] = await Promise.all([
+                usersQuery,
+                ordersQuery,
+                allUsersQuery,
+                prevUsersQuery,
+                prevOrdersQuery,
+                plansPromise
             ]);
 
+            // Calculate Order Revenue
+            const currentOrderRev = (currentOrdersData || []).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+            const prevOrderRev = (prevOrdersData || []).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+
+            // Calculate Subscription Revenue (for current period only as an estimate of new MRR spawned this period)
+            // Or if range === 'all', total ARPU 
+            let currentSubRev = 0;
+            if (plansData && allUsersData) {
+                const planPrices: Record<string, number> = {};
+                plansData.forEach(p => planPrices[p.plan_key] = p.price || 0);
+                
+                allUsersData.forEach(u => {
+                    const price = planPrices[u.subscription_plan] || 0;
+                    currentSubRev += price;
+                });
+            }
+
             setStats({
-                users: userCount || 0,
-                orders: orderCount || 0,
-                revenue: (orderCount || 0) * 85 // dummy avg order value
+                users: { current: currentUsers || 0, prev: prevUsers || 0 },
+                orders: { current: currentOrdersData?.length || 0, prev: prevOrdersData?.length || 0 },
+                revenue: { current: currentOrderRev + currentSubRev, prev: prevOrderRev } // Simplified trend comparison for now
             });
         } catch (err) {
             console.error('Error fetching admin stats:', err);
@@ -30,33 +102,78 @@ export default function AdminDashboard() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="h-64 w-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-accent animate-spin" />
-            </div>
-        );
-    }
+    const calculateTrend = (current: number, prev: number) => {
+        if (prev === 0) return current > 0 ? '+100%' : '0%';
+        const diff = current - prev;
+        const percent = (diff / prev) * 100;
+        return `${percent > 0 ? '+' : ''}${percent.toFixed(1)}%`;
+    };
+
+    const isTrendPositive = (current: number, prev: number) => {
+        if (prev === 0) return current >= 0;
+        return (current - prev) >= 0;
+    };
 
     return (
         <div className="text-slate-800 font-sans mt-2">
-            <header className="mb-8">
-                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">System Overview</h1>
-                <p className="text-slate-500 mt-1 font-medium">Podaryavai key metrics</p>
+            <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">System Overview</h1>
+                    <p className="text-slate-500 mt-1 font-medium">Podaryavai key metrics</p>
+                </div>
+                
+                <div className="flex bg-slate-100 p-1 rounded-xl w-max">
+                    {(['7d', '30d', '365d', 'all'] as TimeRange[]).map((range) => (
+                        <button
+                            key={range}
+                            onClick={() => setTimeRange(range)}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${timeRange === range ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '365d' ? '1 Year' : 'All Time'}
+                        </button>
+                    ))}
+                </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-                <StatCard icon={Users} label="Total Users" value={stats.users.toString()} trend="+12%" color="bg-blue-500" />
-                <StatCard icon={ShoppingBag} label="Concierge Orders" value={stats.orders.toString()} trend="+5%" color="bg-accent" />
-                <StatCard icon={TrendingUp} label="Est. Revenue" value={`€${stats.revenue}`} trend="+18%" color="bg-emerald-500" />
-            </div>
+            {loading ? (
+                <div className="h-64 w-full flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-accent animate-spin" />
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+                    <StatCard 
+                        icon={Users} 
+                        label="New Users" 
+                        value={stats.users.current.toString()} 
+                        trend={timeRange !== 'all' ? calculateTrend(stats.users.current, stats.users.prev) : null} 
+                        isPositive={isTrendPositive(stats.users.current, stats.users.prev)}
+                        color="bg-blue-500" 
+                    />
+                    <StatCard 
+                        icon={ShoppingBag} 
+                        label="New Concierge Orders" 
+                        value={stats.orders.current.toString()} 
+                        trend={timeRange !== 'all' ? calculateTrend(stats.orders.current, stats.orders.prev) : null}
+                        isPositive={isTrendPositive(stats.orders.current, stats.orders.prev)} 
+                        color="bg-accent" 
+                    />
+                    <StatCard 
+                        icon={TrendingUp} 
+                        label="Est. Revenue (Orders + Subs)" 
+                        value={`€${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                        trend={timeRange !== 'all' ? calculateTrend(stats.revenue.current, stats.revenue.prev) : null} 
+                        isPositive={isTrendPositive(stats.revenue.current, stats.revenue.prev)}
+                        color="bg-emerald-500" 
+                    />
+                </div>
+            )}
 
             {/* Additional Dashboard widgets could go here */}
         </div>
     );
 }
 
-function StatCard({ icon: Icon, label, value, trend, color }: any) {
+function StatCard({ icon: Icon, label, value, trend, isPositive, color }: any) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -71,9 +188,11 @@ function StatCard({ icon: Icon, label, value, trend, color }: any) {
                 <p className="text-slate-500 font-medium text-sm mb-1">{label}</p>
                 <h3 className="text-3xl font-black text-slate-900">{value}</h3>
             </div>
-            <div className="mt-4 flex items-center text-emerald-500 text-sm font-bold bg-emerald-50 w-max px-2 py-1 rounded-md">
-                {trend}
-            </div>
+            {trend && (
+                <div className={`mt-4 flex items-center text-sm font-bold w-max px-2 py-1 rounded-md ${isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'}`}>
+                    {trend} vs prev
+                </div>
+            )}
         </motion.div>
     );
 }

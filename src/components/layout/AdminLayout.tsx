@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNavigation from './BottomNavigation';
-import { LayoutDashboard, Package, Bell, Users, Heart, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, Bell, Users, Heart, Settings, Award } from 'lucide-react';
 
 export default function AdminLayout() {
     return (
@@ -89,6 +89,18 @@ export default function AdminLayout() {
                         >
                             <Settings className="w-4 h-4" />
                             <span>Settings</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/karma"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Award className="w-4 h-4 text-emerald-500" />
+                            <span>Karma Store</span>
                         </NavLink>
                     </div>
                 </div>

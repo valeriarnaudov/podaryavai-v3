@@ -14,8 +14,8 @@ export default function Upgrade() {
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [isAnnual, setIsAnnual] = useState(false);
 
-    // Filter out internal hidden plans if necessary, but here we just show all
-    const displayPlans = plans;
+    // Filter out inactive plans
+    const displayPlans = plans.filter(plan => plan.is_active !== false);
 
     const handleSelectPlan = async (plan: SubscriptionPlan) => {
         if (!user) {

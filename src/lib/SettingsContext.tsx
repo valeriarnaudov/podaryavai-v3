@@ -21,6 +21,12 @@ export interface PlatformSettings {
     LIMIT_AI_BUSINESS: string;
     MODEL_AI_BUSINESS: string;
 
+    LIMIT_CONTACTS_FREE: string;
+    LIMIT_CONTACTS_STANDARD: string;
+    LIMIT_CONTACTS_PRO: string;
+    LIMIT_CONTACTS_ULTRA: string;
+    LIMIT_CONTACTS_BUSINESS: string;
+
     [key: string]: string; // Fallback for dynamic keys
 }
 
@@ -38,7 +44,12 @@ const defaultSettings: PlatformSettings = {
     LIMIT_AI_ULTRA: '100',
     MODEL_AI_ULTRA: 'openai',
     LIMIT_AI_BUSINESS: '-1',
-    MODEL_AI_BUSINESS: 'openai'
+    MODEL_AI_BUSINESS: 'openai',
+    LIMIT_CONTACTS_FREE: '2',
+    LIMIT_CONTACTS_STANDARD: '10',
+    LIMIT_CONTACTS_PRO: '50',
+    LIMIT_CONTACTS_ULTRA: '200',
+    LIMIT_CONTACTS_BUSINESS: '-1'
 };
 
 export interface PlatformSetting {
@@ -58,6 +69,7 @@ export interface SubscriptionPlan {
     stripe_price_id_annual: string | null;
     features: string[];
     is_popular: boolean;
+    is_active: boolean;
 }
 
 interface SettingsContextType {

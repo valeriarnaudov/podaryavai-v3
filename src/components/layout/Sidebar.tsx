@@ -20,7 +20,7 @@ export default function Sidebar() {
     }
 
     return (
-        <div className="hidden md:flex flex-col w-20 hover:w-64 transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-lg border-r border-slate-200/50 shadow-soft z-50 overflow-hidden group">
+        <div className="hidden md:flex flex-col w-20 hover:w-64 shrink-0 transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-lg border-r border-slate-200/50 shadow-soft z-50 overflow-hidden group">
             <div className="flex items-center justify-center sm:justify-start sm:px-6 h-20 mb-4 flex-shrink-0">
                 <div className="w-10 h-10 bg-accent rounded-2xl flex items-center justify-center flex-shrink-0">
                     <Gift className="w-5 h-5 text-white" />

@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
+import { useSettings } from '../lib/SettingsContext';
 import { ArrowLeft, Loader2, Camera, User } from 'lucide-react';
 
 export default function NewContact() {
     const navigate = useNavigate();
-    const { user, karmaBoostUntil, refreshUserData } = useAuth();
+    const { user, karmaBoostUntil, refreshUserData, subscriptionPlan } = useAuth();
+    const { settings } = useSettings();
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -65,6 +67,23 @@ export default function NewContact() {
         setPageError(null);
 
         try {
+            // Check limitations
+            let limitStr = '-1';
+            if (subscriptionPlan === 'FREE') limitStr = settings.LIMIT_CONTACTS_FREE;
+            else if (subscriptionPlan === 'STANDARD') limitStr = settings.LIMIT_CONTACTS_STANDARD;
+            else if (subscriptionPlan === 'PRO') limitStr = settings.LIMIT_CONTACTS_PRO;
+            else if (subscriptionPlan === 'ULTRA') limitStr = settings.LIMIT_CONTACTS_ULTRA;
+            else if (subscriptionPlan === 'BUSINESS') limitStr = settings.LIMIT_CONTACTS_BUSINESS;
+            
+            const limit = parseInt(limitStr || '-1', 10);
+            
+            if (limit !== -1) {
+                const { count } = await supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+                if (count !== null && count >= limit) {
+                    throw new Error(`You have reached the maximum number of contacts (${limit}) for your current plan. Please upgrade to add more.`);
+                }
+            }
+
             // 1. Create Contact
             // * Requires `first_name`, `last_name`, `avatar_url` columns in DB *
             const { data: contact, error: contactError } = await supabase
