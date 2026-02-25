@@ -146,7 +146,16 @@ const router = createBrowserRouter([
             { path: 'karma', element: <AdminKarmaRewards /> }
         ]
     }
-]);
+], {
+    future: {
+        v7_relativeSplatPath: true,
+        v7_startTransition: true,
+        v7_fetcherPersist: true,
+        v7_normalizeFormMethod: true,
+        v7_partialHydration: true,
+        v7_skipActionErrorRevalidation: true,
+    } as any
+});
 
 const AppContent = () => {
     const { settings, loading: settingsLoading } = useSettings();

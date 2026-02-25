@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         try {
-            const { data, error } = await supabase.from('users').select('is_admin, karma_points, has_golden_aura, free_deliveries_count, has_vip_giftinder, karma_boost_until, subscription_plan, last_giftinder_generation, daily_generations_count').eq('id', userId).maybeSingle();
+            const { data, error } = await supabase.from('users').select('is_admin, karma_points, has_golden_aura, free_deliveries_count, has_vip_giftinder, karma_boost_until, subscription_plan, subscription_expires_at, last_giftinder_generation, daily_generations_count').eq('id', userId).maybeSingle();
             if (error) console.warn("Could not fetch user data:", error);
 
             // Fetch active rewards
@@ -83,6 +83,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .maybeSingle();
 
             let finalPlan = (data?.subscription_plan as any) || 'FREE';
+            
+            // Check if standard subscription is expired
+            if (data?.subscription_expires_at && new Date(data.subscription_expires_at) < new Date()) {
+                finalPlan = 'FREE';
+            }
+
             let currentActiveReward = null;
 
             if (rewardsData && rewardsData.karma_rewards) {

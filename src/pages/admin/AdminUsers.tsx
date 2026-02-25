@@ -11,6 +11,8 @@ interface UserData {
     is_admin: boolean;
     is_banned: boolean;
     last_giftinder_generation: string | null;
+    subscription_plan?: string;
+    subscription_expires_at?: string | null;
     created_at: string;
 }
 
@@ -19,9 +21,13 @@ export default function AdminUsers() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Karma editing state
     const [editingKarmaId, setEditingKarmaId] = useState<string | null>(null);
     const [editKarmaValue, setEditKarmaValue] = useState<number>(0);
+
+    // Subscription editing state
+    const [editingSubId, setEditingSubId] = useState<string | null>(null);
+    const [editSubPlan, setEditSubPlan] = useState<string>('FREE');
+    const [editSubExpires, setEditSubExpires] = useState<string>('');
 
     type SortKey = 'full_name' | 'karma_points' | 'is_admin' | 'last_giftinder_generation';
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'is_admin', direction: 'desc' });
@@ -74,6 +80,21 @@ export default function AdminUsers() {
             console.error('Failed to update karma:', error);
         } else {
             setEditingKarmaId(null);
+            fetchUsers();
+        }
+    };
+
+    const saveSubscription = async (userId: string) => {
+        const { error } = await supabase.from('users').update({
+            subscription_plan: editSubPlan,
+            subscription_expires_at: editSubExpires || null
+        }).eq('id', userId);
+        
+        if (error) {
+            console.error('Failed to update subscription:', error);
+            alert('Failed to update subscription: ' + error.message);
+        } else {
+            setEditingSubId(null);
             fetchUsers();
         }
     };
@@ -180,6 +201,11 @@ export default function AdminUsers() {
                                             <SortIcon columnKey="karma_points" />
                                         </div>
                                     </th>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group">
+                                        <div className="flex items-center space-x-1">
+                                            <span>Subscription</span>
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('is_admin')}>
                                         <div className="flex items-center space-x-1">
                                             <span>Role</span>
@@ -245,6 +271,67 @@ export default function AdminUsers() {
                                                             onClick={() => { setEditingKarmaId(user.id); setEditKarmaValue(user.karma_points || 0); }}
                                                             className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
                                                             title="Edit Karma"
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {editingSubId === user.id ? (
+                                                    <div className="flex flex-col space-y-2">
+                                                        <select
+                                                            value={editSubPlan}
+                                                            onChange={(e) => setEditSubPlan(e.target.value)}
+                                                            className="w-full max-w-[150px] px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-accent"
+                                                        >
+                                                            <option value="FREE">FREE</option>
+                                                            <option value="STANDARD">STANDARD</option>
+                                                            <option value="PRO">PRO</option>
+                                                            <option value="ULTRA">ULTRA</option>
+                                                            <option value="BUSINESS">BUSINESS</option>
+                                                        </select>
+                                                        <div className="flex items-center space-x-2">
+                                                            <input
+                                                                type="date"
+                                                                value={editSubExpires ? new Date(editSubExpires).toISOString().split('T')[0] : ''}
+                                                                onChange={(e) => setEditSubExpires(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                                                className="w-full max-w-[120px] px-2 py-1 text-xs border border-slate-200 rounded-lg outline-none focus:border-accent"
+                                                            />
+                                                            <button onClick={() => saveSubscription(user.id)} className="p-1 text-green-600 hover:bg-green-50 rounded-lg">
+                                                                <Check className="w-4 h-4" />
+                                                            </button>
+                                                            <button onClick={() => setEditingSubId(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg">
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center space-x-2 group">
+                                                        <div>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${
+                                                                user.subscription_plan && user.subscription_plan !== 'FREE' 
+                                                                ? 'bg-purple-100 text-purple-700' 
+                                                                : 'bg-slate-100 text-slate-600'
+                                                            }`}>
+                                                                {user.subscription_plan || 'FREE'}
+                                                            </span>
+                                                            {(user.subscription_plan && user.subscription_plan !== 'FREE') && (
+                                                                <div className="text-[10px] text-slate-400 mt-1 font-medium">
+                                                                    {user.subscription_expires_at 
+                                                                        ? `Valid til ${new Date(user.subscription_expires_at).toLocaleDateString()}` 
+                                                                        : 'Lifetime/Active'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => { 
+                                                                setEditingSubId(user.id); 
+                                                                setEditSubPlan(user.subscription_plan || 'FREE');
+                                                                setEditSubExpires(user.subscription_expires_at || '');
+                                                            }}
+                                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                                                            title="Edit Subscription"
                                                         >
                                                             <Edit2 className="w-3.5 h-3.5" />
                                                         </button>
