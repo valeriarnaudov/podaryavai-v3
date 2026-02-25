@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabase';
 import { Users, ShoppingBag, TrendingUp, Loader2, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-type TimeRange = '7d' | '30d' | '365d' | 'all';
+type TimeRange = '1d' | '7d' | '30d' | '365d' | 'all';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({ 
         users: { current: 0, prev: 0 }, 
-        orders: { current: 0, prev: 0 }, 
+        premiumUsers: { current: 0, prev: 0 }, 
         revenue: { current: 0, prev: 0 } 
     });
     const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function AdminDashboard() {
             let prevEndDate = new Date(0);
 
             if (range !== 'all') {
-                const days = range === '7d' ? 7 : range === '30d' ? 30 : 365;
+                const days = range === '1d' ? 1 : range === '7d' ? 7 : range === '30d' ? 30 : 365;
                 startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
                 
                 // For trend, we look at the exact same previous period
@@ -37,21 +37,22 @@ export default function AdminDashboard() {
 
             // 1. Fetch Current Period Data
             let usersQuery = supabase.from('users').select('*', { count: 'exact', head: true });
-            let ordersQuery = supabase.from('concierge_orders').select('total_amount, created_at');
-            // We fetch users table fully to calculate recurring subscription revenue
+            let premiumUsersQuery = supabase.from('users').select('*', { count: 'exact', head: true }).neq('subscription_plan', 'FREE');
             let allUsersQuery = supabase.from('users').select('subscription_plan, created_at');
             
             // 2. Fetch Previous Period Data (for trend)
             let prevUsersQuery = supabase.from('users').select('*', { count: 'exact', head: true });
-            let prevOrdersQuery = supabase.from('concierge_orders').select('total_amount, created_at');
+            let prevPremiumUsersQuery = supabase.from('users').select('*', { count: 'exact', head: true }).neq('subscription_plan', 'FREE');
+            let prevAllUsersQuery = supabase.from('users').select('subscription_plan, created_at');
 
             if (range !== 'all') {
                 usersQuery = usersQuery.gte('created_at', startDate.toISOString());
-                ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
+                premiumUsersQuery = premiumUsersQuery.gte('created_at', startDate.toISOString());
                 allUsersQuery = allUsersQuery.gte('created_at', startDate.toISOString());
 
                 prevUsersQuery = prevUsersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
-                prevOrdersQuery = prevOrdersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
+                prevPremiumUsersQuery = prevPremiumUsersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
+                prevAllUsersQuery = prevAllUsersQuery.gte('created_at', prevStartDate.toISOString()).lte('created_at', prevEndDate.toISOString());
             }
 
             // Also fetch plans metadata so we know exactly how much each subscription_plan costs
@@ -59,41 +60,45 @@ export default function AdminDashboard() {
 
             const [
                 { count: currentUsers },
-                { data: currentOrdersData },
-                { data: allUsersData },
+                { count: currentPremiumUsers },
+                { data: currentAllUsersData },
                 { count: prevUsers },
-                { data: prevOrdersData },
+                { count: prevPremiumUsers },
+                { data: prevAllUsersData },
                 { data: plansData }
             ] = await Promise.all([
                 usersQuery,
-                ordersQuery,
+                premiumUsersQuery,
                 allUsersQuery,
                 prevUsersQuery,
-                prevOrdersQuery,
+                prevPremiumUsersQuery,
+                prevAllUsersQuery,
                 plansPromise
             ]);
 
-            // Calculate Order Revenue
-            const currentOrderRev = (currentOrdersData || []).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
-            const prevOrderRev = (prevOrdersData || []).reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
-
-            // Calculate Subscription Revenue (for current period only as an estimate of new MRR spawned this period)
-            // Or if range === 'all', total ARPU 
+            // Calculate Subscription Revenue
             let currentSubRev = 0;
-            if (plansData && allUsersData) {
+            let prevSubRev = 0;
+            
+            if (plansData) {
                 const planPrices: Record<string, number> = {};
                 plansData.forEach(p => planPrices[p.plan_key] = p.price || 0);
                 
-                allUsersData.forEach(u => {
+                (currentAllUsersData || []).forEach(u => {
                     const price = planPrices[u.subscription_plan] || 0;
                     currentSubRev += price;
+                });
+
+                (prevAllUsersData || []).forEach(u => {
+                    const price = planPrices[u.subscription_plan] || 0;
+                    prevSubRev += price;
                 });
             }
 
             setStats({
                 users: { current: currentUsers || 0, prev: prevUsers || 0 },
-                orders: { current: currentOrdersData?.length || 0, prev: prevOrdersData?.length || 0 },
-                revenue: { current: currentOrderRev + currentSubRev, prev: prevOrderRev } // Simplified trend comparison for now
+                premiumUsers: { current: currentPremiumUsers || 0, prev: prevPremiumUsers || 0 },
+                revenue: { current: currentSubRev, prev: prevSubRev }
             });
         } catch (err) {
             console.error('Error fetching admin stats:', err);
@@ -122,14 +127,14 @@ export default function AdminDashboard() {
                     <p className="text-slate-500 mt-1 font-medium">Podaryavai key metrics</p>
                 </div>
                 
-                <div className="flex bg-slate-100 p-1 rounded-xl w-max">
-                    {(['7d', '30d', '365d', 'all'] as TimeRange[]).map((range) => (
+                <div className="flex bg-slate-100 p-1 rounded-xl w-max overflow-x-auto max-w-full hide-scrollbar">
+                    {(['1d', '7d', '30d', '365d', 'all'] as TimeRange[]).map((range) => (
                         <button
                             key={range}
                             onClick={() => setTimeRange(range)}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${timeRange === range ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${timeRange === range ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '365d' ? '1 Year' : 'All Time'}
+                            {range === '1d' ? '1 Day' : range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '365d' ? '1 Year' : 'All Time'}
                         </button>
                     ))}
                 </div>
@@ -151,16 +156,16 @@ export default function AdminDashboard() {
                     />
                     <StatCard 
                         icon={ShoppingBag} 
-                        label="New Concierge Orders" 
-                        value={stats.orders.current.toString()} 
-                        trend={timeRange !== 'all' ? calculateTrend(stats.orders.current, stats.orders.prev) : null}
-                        isPositive={isTrendPositive(stats.orders.current, stats.orders.prev)} 
+                        label="Premium Subscriptions" 
+                        value={stats.premiumUsers.current.toString()} 
+                        trend={timeRange !== 'all' ? calculateTrend(stats.premiumUsers.current, stats.premiumUsers.prev) : null}
+                        isPositive={isTrendPositive(stats.premiumUsers.current, stats.premiumUsers.prev)} 
                         color="bg-accent" 
                     />
                     <StatCard 
                         icon={TrendingUp} 
-                        label="Est. Revenue (Orders + Subs)" 
-                        value={`€${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                        label="Total Revenue (MRR)" 
+                        value={`${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} лв.`} 
                         trend={timeRange !== 'all' ? calculateTrend(stats.revenue.current, stats.revenue.prev) : null} 
                         isPositive={isTrendPositive(stats.revenue.current, stats.revenue.prev)}
                         color="bg-emerald-500" 

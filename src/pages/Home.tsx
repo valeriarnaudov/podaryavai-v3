@@ -11,16 +11,18 @@ interface Event {
     title: string;
     event_date: string;
     event_type: string;
+    ai_recommendations?: any;
     contacts: { id: string; first_name: string; last_name: string; avatar_url: string | null };
     holiday?: string;
 }
 
 export default function Home() {
     const navigate = useNavigate();
-    const { isAdmin, user } = useAuth();
+    const { isAdmin, user, subscriptionPlan } = useAuth();
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [generatingFor, setGeneratingFor] = useState<string | null>(null);
+    const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -80,7 +82,7 @@ export default function Home() {
             const { data, error } = await supabase
                 .from('events')
                 .select(`
-                    id, title, event_date, event_type,
+                    id, title, event_date, event_type, ai_recommendations,
                     contacts (id, first_name, last_name, avatar_url)
                 `);
 
@@ -139,11 +141,42 @@ export default function Home() {
     };
 
     const generateGiftIdeas = async (event: Event) => {
+        if (!user) return;
+        
+        // Check for Free/Standard -> Upgrade Prompt
+        if (['FREE', 'STANDARD'].includes(subscriptionPlan || 'FREE')) {
+            if (confirm("Unlock instant personalized AI gift recommendations directly in your calendar. Upgrade now?")) {
+                navigate('/upgrade');
+            } else {
+                navigate('/giftinder');
+            }
+            return;
+        }
+
+        // Check if already generated
+        if (event.ai_recommendations) {
+            setExpandedEvent(expandedEvent === event.id ? null : event.id);
+            return;
+        }
+
         setGeneratingFor(event.id);
+        setExpandedEvent(event.id);
+        
         try {
-            navigate('/giftinder');
+            const { data, error } = await supabase.functions.invoke('generate_contact_gifts', {
+                body: { contact_id: event.contacts.id, event_id: event.id }
+            });
+
+            if (error) {
+                console.error("Function error:", error);
+                throw error;
+            }
+            
+            setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, ai_recommendations: data.recommendations } : e));
         } catch (err) {
-            console.error('Failed to route:', err);
+            console.error('Failed to generate:', err);
+            alert('AI generation failed. Make sure you filled out their profiling data in Edit Contact.');
+            setExpandedEvent(null);
         } finally {
             setGeneratingFor(null);
         }
@@ -334,18 +367,64 @@ export default function Home() {
                                     <button
                                         onClick={() => generateGiftIdeas(event)}
                                         disabled={generatingFor === event.id}
-                                        className="w-full py-3 bg-accent text-white rounded-2xl font-medium shadow-md shadow-accent/20 active:scale-95 transition-all flex justify-center items-center space-x-2 disabled:opacity-80"
+                                        className={`w-full py-3 text-white rounded-2xl font-medium shadow-md shadow-accent/20 active:scale-95 transition-all flex justify-center items-center space-x-2 disabled:opacity-80
+                                            ${event.ai_recommendations && expandedEvent !== event.id ? 'bg-indigo-500' : 'bg-accent'}`}
                                     >
                                         {generatingFor === event.id ? (
                                             <>
                                                 <Loader2 className="w-5 h-5 animate-spin" />
                                                 <span>Deep Searching AI...</span>
                                             </>
+                                        ) : event.ai_recommendations && expandedEvent !== event.id ? (
+                                            <span>View AI Recommendations</span>
+                                        ) : event.ai_recommendations && expandedEvent === event.id ? (
+                                            <span>Close Recommendations</span>
                                         ) : (
-                                            <span>Find a Gift</span>
+                                            <span>Find a Gift (AI)</span>
                                         )}
                                     </button>
                                 </div>
+                                
+                                {/* AI Ideas Dropdown */}
+                                {expandedEvent === event.id && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="mt-4 pt-4 border-t border-slate-100 overflow-hidden"
+                                    >
+                                        {event.ai_recommendations ? (
+                                            <div className="space-y-4">
+                                                {event.ai_recommendations.map((category: any, catIdx: number) => (
+                                                    <div key={catIdx} className="bg-slate-50 p-4 rounded-2xl">
+                                                        <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center">
+                                                            <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
+                                                            {category.category}
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {category.gifts.map((gift: any, giftIdx: number) => (
+                                                                <div key={giftIdx} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-left">
+                                                                    <p className="font-semibold text-textMain text-sm mb-1">{gift.name}</p>
+                                                                    <p className="text-xs text-slate-500">{gift.reason}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className="pt-2 text-center text-xs text-slate-400 font-medium">
+                                                    Don't like these? Edit their profile and try again, or visit Giftinder.
+                                                </div>
+                                            </div>
+                                        ) : generatingFor === event.id && (
+                                            <div className="py-8 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                                                <div className="w-10 h-10 mb-3 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
+                                                    <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+                                                </div>
+                                                <p className="text-sm font-semibold text-slate-700">Analyzing Profile...</p>
+                                                <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">Finding the perfect gifts based on their age, interests, and budget.</p>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
                             </div>
                         ))}
                     </div>

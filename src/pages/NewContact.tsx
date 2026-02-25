@@ -14,6 +14,12 @@ export default function NewContact() {
     const [lastName, setLastName] = useState('');
     const [relationship, setRelationship] = useState('Friend');
     const [birthday, setBirthday] = useState('');
+    const [ageGroup, setAgeGroup] = useState('20-30');
+    const [interests, setInterests] = useState('');
+    const [budgetPreference, setBudgetPreference] = useState('');
+    const [personality, setPersonality] = useState('Balanced');
+    const [style, setStyle] = useState('Casual');
+    const [favoriteColor, setFavoriteColor] = useState('');
     const [avatarUrl, setAvatarUrl] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [pageError, setPageError] = useState<string | null>(null);
@@ -95,6 +101,12 @@ export default function NewContact() {
                     // Save the base64 string or null
                     avatar_url: avatarUrl || null,
                     relationship,
+                    age_group: ageGroup,
+                    interests,
+                    budget_preference: budgetPreference ? `${budgetPreference} EUR` : null, // Store with EUR for the AI prompt
+                    personality,
+                    style,
+                    favorite_color: favoriteColor,
                     // keep "name" for backwards compatibility
                     name: `${firstName} ${lastName}`.trim()
                 })
@@ -240,6 +252,107 @@ export default function NewContact() {
                                 <option value="Colleague">Colleague</option>
                                 <option value="Other">Other</option>
                             </select>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100">
+                            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider mr-2">AI Feature</span>
+                                Gift Profiling
+                            </h3>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>
+                                    <select
+                                        value={ageGroup}
+                                        onChange={e => setAgeGroup(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="Child (0-12)">Child (0-12)</option>
+                                        <option value="Teen (13-19)">Teen (13-19)</option>
+                                        <option value="20-30">20 - 30</option>
+                                        <option value="30-40">30 - 40</option>
+                                        <option value="40-50">40 - 50</option>
+                                        <option value="50-60">50 - 60</option>
+                                        <option value="60+">60+</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Personality Trait</label>
+                                    <select
+                                        value={personality}
+                                        onChange={e => setPersonality(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="Balanced">Balanced / Average</option>
+                                        <option value="Introvert/Homebody">Introvert / Homebody</option>
+                                        <option value="Extrovert/Social">Extrovert / Social</option>
+                                        <option value="Adventurous/Active">Adventurous / Active</option>
+                                        <option value="Creative/Artistic">Creative / Artistic</option>
+                                        <option value="Practical/Logical">Practical / Logical</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Style Preference</label>
+                                    <select
+                                        value={style}
+                                        onChange={e => setStyle(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="Casual">Casual / Everyday</option>
+                                        <option value="Minimalist">Minimalist</option>
+                                        <option value="Luxury">Luxury / Premium</option>
+                                        <option value="Handmade/Artisanal">Handmade / Artisanal</option>
+                                        <option value="Tech-focused">Tech-focused / Gadgets</option>
+                                        <option value="Sporty">Sporty / Athletic</option>
+                                        <option value="Vintage/Retro">Vintage / Retro</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={favoriteColor}
+                                        onChange={e => setFavoriteColor(e.target.value)}
+                                        placeholder="e.g. Blue, Dark green, Pastels"
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Interests & Hobbies (Detailed)</label>
+                                    <textarea
+                                        value={interests}
+                                        onChange={e => setInterests(e.target.value)}
+                                        placeholder="e.g. Loves reading sci-fi, hiking mountains, drinking espresso, and PC gaming"
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all resize-none"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        The AI uses these precise modifiers to generate highly accurate gift recommendations.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Budget Preference</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <span className="text-slate-500 font-medium">€</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={budgetPreference}
+                                            onChange={e => setBudgetPreference(e.target.value)}
+                                            placeholder="e.g. 50"
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {pageError && (
