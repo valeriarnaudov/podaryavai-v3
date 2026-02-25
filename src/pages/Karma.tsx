@@ -11,6 +11,7 @@ interface KarmaReward {
     cost_points: number;
     reward_type: string;
     reward_value: string;
+    reward_metadata?: Record<string, any>;
     duration_days: number;
 }
 
@@ -55,40 +56,12 @@ export default function Karma() {
         setRedeeming(reward.id);
 
         try {
-            // Calculate expiration
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + reward.duration_days);
+            const { error: redeemError } = await supabase.rpc('redeem_karma_reward', {
+                p_user_id: user.id,
+                p_reward_id: reward.id
+            });
 
-            // 1. Deduct points
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({ karma_points: karmaPoints - reward.cost_points })
-                .eq('id', user.id);
-
-            if (updateError) throw updateError;
-
-            // 2. Add to active rewards
-            const { error: activeError } = await supabase
-                .from('user_active_rewards')
-                .insert({
-                    user_id: user.id,
-                    reward_id: reward.id,
-                    expires_at: expiresAt.toISOString()
-                });
-
-            if (activeError) throw activeError;
-
-            // 3. Add to history
-            const { error: historyError } = await supabase
-                .from('user_karma_history')
-                .insert({
-                    user_id: user.id,
-                    action_type: 'SPENT',
-                    points: reward.cost_points,
-                    description: `Purchased reward: ${reward.title}`
-                });
-
-            if (historyError) throw historyError;
+            if (redeemError) throw redeemError;
 
             // Success! Refresh user context
             await refreshUserData();
@@ -214,10 +187,20 @@ export default function Karma() {
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-textMain">{reward.title}</h4>
-                                                <p className="text-xs font-medium mt-0.5 text-slate-400">
-                                                    {reward.cost_points} Points • Unlocks {reward.duration_days} Days
-                                                </p>
-                                                {reward.description && <p className="text-xs text-slate-500 mt-1">{reward.description}</p>}
+                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-semibold">
+                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">{reward.cost_points} Points</span>
+                                                    
+                                                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
+                                                        {reward.reward_type === 'PLAN_UPGRADE' ? `Unlocks: ${reward.reward_value}` : 
+                                                         reward.reward_type === 'ADD_FREE_DELIVERIES' ? `+${reward.reward_metadata?.amount || 1} Deliveries` : 
+                                                         reward.reward_type.replace(/_/g, ' ')}
+                                                    </span>
+
+                                                    {reward.duration_days > 0 && (
+                                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md">{reward.duration_days} Days</span>
+                                                    )}
+                                                </div>
+                                                {reward.description && <p className="text-xs text-slate-500 mt-2">{reward.description}</p>}
                                             </div>
                                         </div>
 
