@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-import-prefix no-explicit-any
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -55,7 +56,7 @@ serve(async (req) => {
     const limitKey = `LIMIT_AI_${plan}`;
     const modelKey = `MODEL_AI_${plan}`;
 
-    // If setting doesn't exist, fallback to robust defaults
+    // Use dynamic limit from admin settings, fallback to 3
     const amountToGenerate = parseInt(settings[limitKey] || "3", 10);
     const chosenModel = settings[modelKey] || "llama";
 
@@ -112,9 +113,12 @@ serve(async (req) => {
       : "";
 
     const systemInstructionText =
-      `You are a premium AI gift concierge. Generate exactly ${
-        amountToGenerate > 0 ? amountToGenerate : 3
-      } highly specific, trendy, premium gift ideas based on the user's taste. Return ONLY a valid JSON array of objects, where each object has "title", "description", "price_range", and "image_keyword" (a SINGLE English word describing the item for a photo search). Do not include markdown formatting like \`\`\`json. ${noRepeatsContext} ${walletRules}`;
+      `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas. 
+CRITICAL RULE 1: You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). 
+CRITICAL RULE 2: DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL.
+Return ONLY a valid JSON array of objects, where each object has "title" (The exact product name), "description" (Why it's great, max 80 chars), "price_range" (e.g. "$250 - $300"), and "image_keyword" (a SINGLE broad English word describing the item for a Pexels stock photo search, e.g. for Apple Watch use "smartwatch", for Paco Rabanne use "perfume"). 
+Do not include markdown formatting like \`\`\`json. 
+IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext} ${walletRules}`;
 
     let suggestions: any[] = [];
 
@@ -186,9 +190,8 @@ serve(async (req) => {
                 },
                 contents: [{
                   parts: [{
-                    text: `Generate ${
-                      amountToGenerate > 0 ? amountToGenerate : 3
-                    } personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
+                    text:
+                      `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
                   }],
                 }],
                 generationConfig: {
@@ -280,7 +283,15 @@ serve(async (req) => {
     const pexelsKey = Deno.env.get("PEXELS_API_KEY");
 
     const mappedSuggestions = [];
+    const seenNewTitles = new Set();
+
     for (const gift of suggestions) {
+      if (!gift.title) continue;
+
+      const normalizedTitle = gift.title.toLowerCase().trim();
+      if (seenNewTitles.has(normalizedTitle)) continue;
+      seenNewTitles.add(normalizedTitle);
+
       let finalImageUrl =
         "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop";
 

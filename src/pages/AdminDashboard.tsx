@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, ShoppingBag, TrendingUp, Loader2, Calendar } from 'lucide-react';
+import { Users, ShoppingBag, TrendingUp, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type TimeRange = '1d' | '7d' | '30d' | '365d' | 'all';

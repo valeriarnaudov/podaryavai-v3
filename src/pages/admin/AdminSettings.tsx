@@ -29,12 +29,18 @@ const DEFAULT_SETTINGS = [
     { setting_key: 'MODEL_AI_ULTRA', setting_value: 'gemini', description: 'AI Model for Ultra plan ("llama", "openai", "gemini")' },
     { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'gemini', description: 'AI Model for Business plan ("llama", "openai", "gemini")' },
 
-    // Contact Limits per plan (-1 for unlimited)
     { setting_key: 'LIMIT_CONTACTS_FREE', setting_value: '2', description: 'Maximum contacts allowed for Free plan' },
     { setting_key: 'LIMIT_CONTACTS_STANDARD', setting_value: '10', description: 'Maximum contacts allowed for Standard plan' },
     { setting_key: 'LIMIT_CONTACTS_PRO', setting_value: '50', description: 'Maximum contacts allowed for Pro plan' },
     { setting_key: 'LIMIT_CONTACTS_ULTRA', setting_value: '200', description: 'Maximum contacts allowed for Ultra plan' },
-    { setting_key: 'LIMIT_CONTACTS_BUSINESS', setting_value: '-1', description: 'Maximum contacts allowed for Business plan' }
+    { setting_key: 'LIMIT_CONTACTS_BUSINESS', setting_value: '-1', description: 'Maximum contacts allowed for Business plan' },
+
+    // Karma points per swipe right (like) per plan
+    { setting_key: 'KARMA_PER_SWIPE_FREE', setting_value: '1', description: 'Karma points awarded per Giftinder swipe (Free plan)' },
+    { setting_key: 'KARMA_PER_SWIPE_STANDARD', setting_value: '2', description: 'Karma points awarded per Giftinder swipe (Standard plan)' },
+    { setting_key: 'KARMA_PER_SWIPE_PRO', setting_value: '3', description: 'Karma points awarded per Giftinder swipe (Pro plan)' },
+    { setting_key: 'KARMA_PER_SWIPE_ULTRA', setting_value: '4', description: 'Karma points awarded per Giftinder swipe (Ultra plan)' },
+    { setting_key: 'KARMA_PER_SWIPE_BUSINESS', setting_value: '5', description: 'Karma points awarded per Giftinder swipe (Business plan)' }
 ];
 
 export default function AdminSettings() {
@@ -178,7 +184,12 @@ export default function AdminSettings() {
     };
 
     // Filter categories
-    const globalSettings = settings.filter(s => !s.setting_key.startsWith('LIMIT_AI') && !s.setting_key.startsWith('MODEL_AI') && !s.setting_key.startsWith('LIMIT_CONTACTS'));
+    const globalSettings = settings.filter(s => 
+        !s.setting_key.startsWith('LIMIT_AI') && 
+        !s.setting_key.startsWith('MODEL_AI') && 
+        !s.setting_key.startsWith('LIMIT_CONTACTS') &&
+        !s.setting_key.startsWith('KARMA_PER_SWIPE')
+    );
 
     const renderSettingRow = (setting: PlatformSetting) => (
         <div key={setting.setting_key} className="p-5 sm:pl-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
@@ -357,6 +368,15 @@ export default function AdminSettings() {
                                         />
                                     </div>
                                     <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-rose-500 flex items-center gap-1">♥️ Karma Per Swipe Right</label>
+                                        <input
+                                            type="number"
+                                            value={editableValues[`KARMA_PER_SWIPE_${plan.plan_key}`] !== undefined ? editableValues[`KARMA_PER_SWIPE_${plan.plan_key}`] : ''}
+                                            onChange={(e) => handleValueChange(`KARMA_PER_SWIPE_${plan.plan_key}`, e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 outline-none focus:border-rose-500 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-purple-600 flex items-center gap-1"><SettingsIcon className="w-3 h-3"/> AI Model Backend</label>
                                         <select
                                             value={editableValues[`MODEL_AI_${plan.plan_key}`] !== undefined ? editableValues[`MODEL_AI_${plan.plan_key}`] : 'llama'}
@@ -365,6 +385,7 @@ export default function AdminSettings() {
                                         >
                                             <option value="llama">Llama (Standard)</option>
                                             <option value="openai">OpenAI (Premium)</option>
+                                            <option value="gemini">Gemini (Google)</option>
                                         </select>
                                     </div>
                                 </div>

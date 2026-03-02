@@ -5,13 +5,30 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { useSettings } from '../lib/SettingsContext';
 
+export interface GiftCard {
+    id: number;
+    title: string;
+    price: string;
+    image: string;
+    desc: string;
+    isVip: boolean;
+}
+
 export default function Giftinder() {
-    const { user, lastGiftinderGeneration, dailyGenerationsCount, refreshUserData } = useAuth();
+    const { user, lastGiftinderGeneration, dailyGenerationsCount, refreshUserData, subscriptionPlan } = useAuth();
     const { settings } = useSettings();
 
-    const [cards, setCards] = useState<any[]>([]);
+    const [cards, setCards] = useState<GiftCard[]>([]);
     const [loadingGifts, setLoadingGifts] = useState(true);
     const [savedCount, setSavedCount] = useState(0);
+
+    // Floating Karma Animation State
+    const [floatingKarma, setFloatingKarma] = useState<{ id: number; amount: number; visible: boolean } | null>(null);
+
+    // Calculate dynamic karma reward based on user's current plan
+    const karmaKey = `KARMA_PER_SWIPE_${subscriptionPlan}` as keyof typeof settings;
+    const karmaRewardStr = settings[karmaKey] || '1';
+    const karmaReward = parseInt(karmaRewardStr as string, 10);
 
     useEffect(() => {
         const loadGifts = async () => {
@@ -224,6 +241,24 @@ CRITICAL RULES:
                 // Discard it forever but keep a record to avoid regenerating it (Continuous Learning)
                 await supabase.from('gift_ideas').update({ is_rejected: true }).eq('id', id);
             }
+
+            // Award Karma Points via RPC for ANY evaluation (swipe left or right)
+            if (karmaReward > 0) {
+                const { error } = await supabase.rpc('claim_swipe_karma', {
+                    reward_amount: karmaReward,
+                    gift_idea_id: id
+                });
+
+                if (!error) {
+                    // Show floating animation
+                    setFloatingKarma({ id: Date.now(), amount: karmaReward, visible: true });
+                    setTimeout(() => setFloatingKarma(null), 1500); // Hide after animation
+                    // Refresh user data silently to update core balance
+                    refreshUserData();
+                } else {
+                    console.error("RPC Karma error:", error);
+                }
+            }
         } catch (err) {
             console.error("Error handling swipe:", err);
         }
@@ -239,14 +274,34 @@ CRITICAL RULES:
                     <h1 className="text-2xl font-bold text-textMain tracking-tight">Giftinder</h1>
                     <p className="text-sm text-slate-500">Swipe right to save</p>
                 </div>
-                <button className="relative p-2 bg-white rounded-full text-slate-700 shadow-soft hover:bg-slate-50 transition-colors">
-                    <BookmarkCheck className="w-6 h-6" />
-                    {savedCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                            {savedCount}
-                        </span>
-                    )}
-                </button>
+                <div className="relative">
+                    <button className="relative p-2 bg-white rounded-full text-slate-700 shadow-soft hover:bg-slate-50 transition-colors">
+                        <BookmarkCheck className="w-6 h-6" />
+                        {savedCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                                {savedCount}
+                            </span>
+                        )}
+                    </button>
+                    {/* Floating Karma Animation Anchor */}
+                    <AnimatePresence>
+                        {floatingKarma && (
+                            <motion.div
+                                key={floatingKarma.id}
+                                initial={{ opacity: 0, scale: 0.5, y: 0 }}
+                                animate={{ opacity: 1, scale: 1.5, y: -50 }}
+                                exit={{ opacity: 0, scale: 0.8, y: -80 }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                className="absolute right-0 top-0 z-50 pointer-events-none"
+                            >
+                                <div className="bg-rose-500 border border-rose-400 shadow-xl px-3 py-1.5 rounded-full flex items-center gap-1 font-black text-white text-md">
+                                    <Heart className="w-4 h-4 fill-white" />
+                                    +{floatingKarma.amount} Karma
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </header>
 
             <div className="relative flex-1 flex items-center justify-center w-full max-w-sm mx-auto">
@@ -277,9 +332,11 @@ CRITICAL RULES:
                             const isActive = index === activeIndex;
                             return isActive ? (
                                 <SwipeableCard
-                                    key={card.id}
+                                    key={`active-${card.id}`}
                                     card={card}
                                     onSwipe={(dir) => handleSwipe(dir, card.id)}
+                                    // Make sure active card is ALWAYS on top
+                                    style={{ zIndex: 100 }}
                                 />
                             ) : (
                                 <motion.div
@@ -307,7 +364,7 @@ CRITICAL RULES:
                                             }}
                                         />
                                     </div>
-                                    <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white">
+                                     <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white">
                                          <div className="mb-2">
                                             <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
                                             <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
@@ -342,7 +399,7 @@ CRITICAL RULES:
 }
 
 // Separate component for the active swipeable card
-function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | 'right') => void }) {
+function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir: 'left' | 'right') => void, style?: any }) {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-200, 200], [-10, 10]);
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -360,7 +417,7 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
-            style={{ x, rotate, opacity }}
+            style={{ x, rotate, opacity, ...style }}
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
@@ -389,7 +446,17 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
                     <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
                     <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
                 </div>
-                <p className="text-slate-600 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
+                <p className="text-slate-600 leading-snug font-medium line-clamp-2 text-sm">"{card.desc}"</p>
+                
+                <a 
+                    href={`https://www.ozone.bg/s/?q=${encodeURIComponent(card.title)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onPointerDown={(e) => e.stopPropagation()} 
+                    className="mt-3 flex items-center justify-center gap-2 bg-[#0244B6] hover:bg-[#02338A] transition-colors text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-md cursor-pointer"
+                >
+                    Търси в Ozone.bg
+                </a>
                 <div className="flex items-center space-x-2 mt-4">
                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center space-x-3 flex-1">
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">

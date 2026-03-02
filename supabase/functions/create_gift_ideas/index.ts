@@ -57,7 +57,7 @@ serve(async (req) => {
     let suggestions = [];
 
     const systemPrompt =
-      'You are a professional gift concierge. Suggest 3 highly specific, trendy, premium gift ideas based on the profile provided. Return ONLY a valid JSON array of objects, where each object has "title", "description", and "price_range". Do not include markdown formatting like ```json.';
+      'You are a professional gift concierge. Suggest 3 highly specific, trendy, premium gift ideas based on the profile provided. CRITICAL RULE: Suggest specific, named products and brands (e.g., "Sony WH-1000XM5 Headphones" or "Bellroy Hide & Seek Wallet"). DO NOT suggest vague categories like "A leather wallet" or "A smartwatch". Return ONLY a valid JSON array of objects, where each object has "title", "description", and "price_range". Do not include markdown formatting like ```json.';
     const userPrompt =
       `Suggest gifts for a person named ${name}. Relationship: ${relationship}. Keep descriptions short and engaging.`;
 
