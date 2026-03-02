@@ -47,15 +47,18 @@ serve(async (req) => {
       );
     }
 
-    // 1. Fetch user profile for their plan and wallet balance
+    // 1. Fetch user profile for their plan, wallet balance, and preferences
     const { data: profile } = await supabaseClient
       .from("users")
-      .select("subscription_plan, last_giftinder_generation, wallet_balance")
+      .select(
+        "subscription_plan, last_giftinder_generation, wallet_balance, giftinder_preferences",
+      )
       .eq("id", user.id)
       .single();
 
     const plan = profile?.subscription_plan || "FREE";
     const walletBalance = profile?.wallet_balance || 0;
+    const preferences = profile?.giftinder_preferences as any || {};
 
     // 1.b Fetch dynamic platform settings
     const { data: settingsData } = await supabaseClient
@@ -110,11 +113,26 @@ serve(async (req) => {
       .limit(30);
 
     let tasteContext = "General trendy and premium gifts.";
+    const prefDetails = [];
+    if (preferences.hobbies) {
+      prefDetails.push(`Hobbies/Interests: ${preferences.hobbies}`);
+    }
+    if (preferences.favoriteBrands) {
+      prefDetails.push(`Favorite Brands/Styles: ${preferences.favoriteBrands}`);
+    }
+    if (preferences.dislikes) {
+      prefDetails.push(`THINGS TO STRICTLY AVOID: ${preferences.dislikes}`);
+    }
+
+    if (prefDetails.length > 0) {
+      tasteContext = `USER PREFERENCES:\n${prefDetails.join("\n")}\n\n`;
+    }
+
     if (pastLikes && pastLikes.length > 0) {
       const likesStr = pastLikes.map((l) => `${l.title} (${l.description})`)
         .join(", ");
-      tasteContext =
-        `The user typically likes these types of items: ${likesStr}. Analyze the implicit patterns in these gifts and suggest new ones that match this vibe or complement them perfectly.`;
+      tasteContext +=
+        `The user also typically liked these past items: ${likesStr}. Analyze the implicit patterns in these gifts.`;
     }
 
     let noRepeatsContext = "";
@@ -134,7 +152,9 @@ serve(async (req) => {
       `You are a premium AI gift concierge. Generate exactly ${safeAmountToGenerate} highly specific, trendy, premium gift ideas. 
 CRITICAL RULE 1: You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). 
 CRITICAL RULE 2: DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL.
-Return ONLY a valid JSON array of objects, where each object has "title" (The exact product name), "description" (Why it's great, max 80 chars), "price_range" (e.g. "$250 - $300"), and "image_keyword" (a SINGLE broad English word describing the item for a Pexels stock photo search, e.g. for Apple Watch use "smartwatch", for Paco Rabanne use "perfume"). 
+CRITICAL RULE 3: OUTPUT PERFECTLY VALID JSON. Escape all inner quotes properly (e.g., use \\" for quotes inside strings). Do NOT include trailing commas in arrays or objects.
+CRITICAL RULE 4: ALL PRICES MUST BE EXACTLY FORMATTED IN EUROS WITH THE € SYMBOL (e.g., "€250 - €300").
+Return ONLY a valid JSON array of objects, where each object has "title" (The exact product name), "description" (Why it's great, max 80 chars), "price_range" (e.g. "€250 - €300"), and "image_keyword" (a SINGLE broad English word describing the item for a Pexels stock photo search, e.g. for Apple Watch use "smartwatch", for Paco Rabanne use "perfume"). 
 Do not include markdown formatting like \`\`\`json. 
 IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext} ${walletRules}`;
 
@@ -227,9 +247,20 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
             try {
               suggestions = JSON.parse(content);
             } catch {
-              const clean = content.replace(/```json/gi, "").replace(/```/g, "")
+              let clean = content.replace(/```json/gi, "").replace(/```/g, "")
                 .trim();
-              suggestions = JSON.parse(clean);
+              // Remove potential trailing commas
+              clean = clean.replace(/,\s*([\]}])/g, "$1");
+              try {
+                suggestions = JSON.parse(clean);
+              } catch (innerErr: any) {
+                console.error("Failed to parse Gemini content:", content);
+                throw new Error(
+                  `${innerErr.message}. Content preview: ${
+                    content.substring(0, 150)
+                  }`,
+                );
+              }
             }
           } else {
             lastErrorDetails = "Gemini Missing Candidates Error: " +
@@ -302,6 +333,10 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
     }
 
     // 3.b Fallback if OpenAI failed or no key
+    if (suggestions && suggestions.length > safeAmountToGenerate) {
+      suggestions = suggestions.slice(0, safeAmountToGenerate);
+    }
+
     if (!suggestions || suggestions.length === 0) {
       console.error(
         "AI engines failed to return valid suggestions.",
@@ -318,8 +353,8 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
       );
     }
 
-    // Fetch images from Pexels API locally inside the Edge Function!
-    const pexelsKey = Deno.env.get("PEXELS_API_KEY");
+    // Fetch exact product images from Google Search (Serper.dev)
+    const serperKey = Deno.env.get("SERPER_API_KEY");
 
     const mappedSuggestions = [];
     const seenNewTitles = new Set();
@@ -331,26 +366,39 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
       if (seenNewTitles.has(normalizedTitle)) continue;
       seenNewTitles.add(normalizedTitle);
 
+      // Ultra-premium fallback image
       let finalImageUrl =
         "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop";
 
-      if (pexelsKey && gift.image_keyword) {
+      if (serperKey) {
         try {
-          const pexRes = await fetch(
-            `https://api.pexels.com/v1/search?query=${
-              encodeURIComponent(gift.image_keyword)
-            }&per_page=1`,
-            {
-              headers: { Authorization: pexelsKey },
+          // We search for the exact "title" to get the real product picture
+          const query = gift.title;
+
+          const serperRes = await fetch("https://google.serper.dev/images", {
+            method: "POST",
+            headers: {
+              "X-API-KEY": serperKey,
+              "Content-Type": "application/json",
             },
-          );
-          const pexData = await pexRes.json();
-          if (pexData.photos && pexData.photos.length > 0) {
-            finalImageUrl = pexData.photos[0].src.portrait ||
-              pexData.photos[0].src.large;
+            body: JSON.stringify({
+              q: query,
+              gl: "us",
+              hl: "en",
+              num: 1,
+            }),
+          });
+          const serperData = await serperRes.json();
+
+          // Fallback logic inside Serper response
+          if (serperData.images && serperData.images.length > 0) {
+            finalImageUrl = serperData.images[0].imageUrl;
           }
         } catch (e) {
-          console.error("Failed to fetch from Pexels in Edge", e);
+          console.error(
+            "Failed to fetch exact product image from Serper in Edge",
+            e,
+          );
         }
       }
 

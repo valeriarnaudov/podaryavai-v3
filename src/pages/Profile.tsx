@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award } from 'lucide-react';
+import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Profile() {
@@ -19,6 +19,11 @@ export default function Profile() {
     const [dob, setDob] = useState('');
     const [password, setPassword] = useState('');
 
+    // Giftinder Preferences
+    const [hobbies, setHobbies] = useState('');
+    const [dislikes, setDislikes] = useState('');
+    const [favoriteBrands, setFavoriteBrands] = useState('');
+
     // Status UI
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -31,6 +36,17 @@ export default function Profile() {
             setLastName(user.user_metadata?.last_name || (user.user_metadata?.full_name?.split(' ')?.slice(1)?.join(' ') || ''));
             setEmail(user.email || '');
             setDob(user.user_metadata?.dob || '');
+
+            const fetchGiftinderPrefs = async () => {
+                const { data } = await supabase.from('users').select('giftinder_preferences').eq('id', user.id).single();
+                if (data?.giftinder_preferences) {
+                    const prefs = data.giftinder_preferences as any;
+                    setHobbies(prefs.hobbies || '');
+                    setDislikes(prefs.dislikes || '');
+                    setFavoriteBrands(prefs.favoriteBrands || '');
+                }
+            };
+            fetchGiftinderPrefs();
         }
     }, [user]);
 
@@ -62,6 +78,11 @@ export default function Profile() {
 
             const { error: updateError } = await supabase.auth.updateUser(updates);
             if (updateError) throw updateError;
+            
+            // 3. Update Giftinder Preferences in users table
+            const prefs = { hobbies: hobbies.trim(), dislikes: dislikes.trim(), favoriteBrands: favoriteBrands.trim() };
+            const { error: prefsError } = await supabase.from('users').update({ giftinder_preferences: prefs }).eq('id', user.id);
+            if (prefsError) throw prefsError;
 
             setMessage(email !== user.email ? 'Profile updated. Please check email to confirm change.' : 'Profile updated successfully!');
             setIsEditing(false); // Close edit mode on success
@@ -253,6 +274,48 @@ export default function Profile() {
                                         placeholder="Leave blank to keep current"
                                         className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                     />
+                                </div>
+                            </div>
+
+                            {/* Giftinder AI Preferences */}
+                            <div className="pt-4 mt-2 border-t border-slate-100">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                                    <Heart className="w-5 h-5 mr-2 text-rose-500" />
+                                    Giftinder AI Preferences
+                                </h3>
+                                <p className="text-sm text-slate-500 mb-4">Help the AI learn your style, so we can suggest better daily gifts for you to save!</p>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">My Hobbies & Interests</label>
+                                        <input
+                                            type="text"
+                                            value={hobbies}
+                                            onChange={(e) => setHobbies(e.target.value)}
+                                            placeholder="e.g. Photography, Cooking, Tech gadgets"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Favorite Brands or Styles</label>
+                                        <input
+                                            type="text"
+                                            value={favoriteBrands}
+                                            onChange={(e) => setFavoriteBrands(e.target.value)}
+                                            placeholder="e.g. Minimalist, Apple, Nike, Boho"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Things I Dislike / Don't Want</label>
+                                        <input
+                                            type="text"
+                                            value={dislikes}
+                                            onChange={(e) => setDislikes(e.target.value)}
+                                            placeholder="e.g. Alcohol, Socks, Cheap plastic toys"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

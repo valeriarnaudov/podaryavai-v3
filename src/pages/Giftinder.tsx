@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion';
 import { Heart, X, BookmarkCheck, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -17,11 +18,13 @@ export interface GiftCard {
 export default function Giftinder() {
     const { user, session, lastGiftinderGeneration, refreshUserData, subscriptionPlan } = useAuth();
     const { settings } = useSettings();
+    const navigate = useNavigate();
 
     const [cards, setCards] = useState<GiftCard[]>([]);
     const [loadingGifts, setLoadingGifts] = useState(true);
     const [savedCount, setSavedCount] = useState(0);
     const [aiError, setAiError] = useState<string | null>(null);
+    const isGeneratingRef = useRef(false);
 
     // Floating Karma Animation State
     const [floatingKarma, setFloatingKarma] = useState<{ id: number; amount: number; visible: boolean } | null>(null);
@@ -34,6 +37,9 @@ export default function Giftinder() {
     useEffect(() => {
         const loadGifts = async () => {
             if (!user) return;
+            if (isGeneratingRef.current) return;
+            isGeneratingRef.current = true;
+
             setLoadingGifts(true);
 
             try {
@@ -67,7 +73,7 @@ export default function Giftinder() {
                 }
 
                 if (lastGenStr !== today || (dailyLimit === -1 || currentDailyCount < dailyLimit)) {
-                    console.log(`Generating personalized gifts... (Count: ${currentDailyCount} / Limit: ${dailyLimit === -1 ? 'Unlimited' : dailyLimit})`);
+                    console.log(`Generating personalized gifts... Limit: ${dailyLimit === -1 ? 'Unlimited' : dailyLimit})`);
 
                     // Increment optimistic count
                     const newCount = currentDailyCount + 1;
@@ -115,6 +121,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
             } catch (err) {
                 console.error("Giftinder load error:", err);
             } finally {
+                isGeneratingRef.current = false;
                 setLoadingGifts(false);
             }
         };
@@ -196,7 +203,11 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                     <p className="text-sm text-slate-500">Swipe right to save</p>
                 </div>
                 <div className="relative">
-                    <button className="relative p-2 bg-white rounded-full text-slate-700 shadow-soft hover:bg-slate-50 transition-colors">
+                    <button 
+                        onClick={() => navigate('/wishlist')}
+                        className="relative p-2 bg-white rounded-full text-slate-700 shadow-soft hover:bg-slate-50 transition-colors"
+                        title="View Wishlist"
+                    >
                         <BookmarkCheck className="w-6 h-6" />
                         {savedCount > 0 && (
                             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
@@ -225,6 +236,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                             </div>
                             <h3 className="font-bold text-slate-700 text-lg mb-1">You've seen all ideas!</h3>
                             <p className="text-sm">Swipe through them, save what you like, or upgrade your plan to generate more daily.</p>
+
                             {aiError && (
                                 <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-mono break-words w-full text-left">
                                     <strong className="block mb-1 text-red-700">AI Error Details:</strong>
