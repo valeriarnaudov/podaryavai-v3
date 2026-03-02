@@ -131,13 +131,15 @@ serve(async (req) => {
 
 CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
-2. Suggest CONCRETE products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of "Headphones").
-3. Your ENTIRE response MUST be a valid JSON array of category objects. 
+2. You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). 
+3. DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL.
+4. Your ENTIRE response MUST be a valid JSON array of category objects. 
+
 Each category object must have:
 - "category_name": string
 - "suggestions": an array of exactly 2 objects, each containing:
-   - "title": string
-   - "description": string
+   - "title": string (The exact product name and brand)
+   - "description": string (Why it's great, max 80 chars)
    - "price_range": string
    - "image_keyword": a SINGLE visually descriptive English word for photo search (e.g. "headphones", "perfume", "watch")
 

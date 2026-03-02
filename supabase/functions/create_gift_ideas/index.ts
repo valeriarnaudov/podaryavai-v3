@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-import-prefix no-unused-vars no-explicit-any
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -57,7 +58,7 @@ serve(async (req) => {
     let suggestions = [];
 
     const systemPrompt =
-      'You are a professional gift concierge. Suggest 3 highly specific, trendy, premium gift ideas based on the profile provided. CRITICAL RULE: Suggest specific, named products and brands (e.g., "Sony WH-1000XM5 Headphones" or "Bellroy Hide & Seek Wallet"). DO NOT suggest vague categories like "A leather wallet" or "A smartwatch". Return ONLY a valid JSON array of objects, where each object has "title", "description", and "price_range". Do not include markdown formatting like ```json.';
+      'You are a professional gift concierge. Suggest 3 highly specific, trendy, premium gift ideas based on the profile provided. \nCRITICAL RULE 1: You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). \nCRITICAL RULE 2: DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL. \nReturn ONLY a valid JSON array of objects, where each object has "title" (the exact product name), "description", and "price_range". Do not include markdown formatting like ```json.';
     const userPrompt =
       `Suggest gifts for a person named ${name}. Relationship: ${relationship}. Keep descriptions short and engaging.`;
 

@@ -15,12 +15,13 @@ export interface GiftCard {
 }
 
 export default function Giftinder() {
-    const { user, lastGiftinderGeneration, dailyGenerationsCount, refreshUserData, subscriptionPlan } = useAuth();
+    const { user, session, lastGiftinderGeneration, refreshUserData, subscriptionPlan } = useAuth();
     const { settings } = useSettings();
 
     const [cards, setCards] = useState<GiftCard[]>([]);
     const [loadingGifts, setLoadingGifts] = useState(true);
     const [savedCount, setSavedCount] = useState(0);
+    const [aiError, setAiError] = useState<string | null>(null);
 
     // Floating Karma Animation State
     const [floatingKarma, setFloatingKarma] = useState<{ id: number; amount: number; visible: boolean } | null>(null);
@@ -39,7 +40,7 @@ export default function Giftinder() {
                 // 1. Bypass React state and fetch directly from DB to prevent Admin Reset caching issues
                 const { data: profile } = await supabase
                     .from('users')
-                    .select('last_giftinder_generation, subscription_plan')
+                    .select('last_giftinder_generation, subscription_plan, daily_generations_count')
                     .eq('id', user.id)
                     .single();
 
@@ -48,7 +49,7 @@ export default function Giftinder() {
                 const lastGenStr = trueLastGen ? new Date(trueLastGen).toDateString() : null;
 
                 // Reset daily count locally if it's a new day
-                let currentDailyCount = dailyGenerationsCount;
+                let currentDailyCount = profile?.daily_generations_count || 0;
                 if (lastGenStr !== today) {
                     currentDailyCount = 0;
                 }
@@ -60,6 +61,7 @@ export default function Giftinder() {
 
                 if (dailyLimit !== -1 && currentDailyCount >= dailyLimit) {
                     console.log(`User reached daily AI limit limit (${dailyLimit}) for plan ${userPlan}`);
+                    await fetchCardsFromDB(); // <--- FIX: We must fetch existing cards if we skip generation!
                     setLoadingGifts(false);
                     return; // Block generation, they only see cards from DB
                 }
@@ -70,122 +72,41 @@ export default function Giftinder() {
                     // Increment optimistic count
                     const newCount = currentDailyCount + 1;
 
-                    const { error } = await supabase.functions.invoke('generate_daily_gifts');
+                    let currentSession = session;
+if (!currentSession) {
+  const { data: { session: s } } = await supabase.auth.getSession();
+  currentSession = s;
+}
+if (!currentSession) {
+  const errMsg = 'Auth session missing!';
+  console.error(errMsg);
+  setAiError(errMsg);
+  setLoadingGifts(false);
+  return;
+}
+
+const { error, data } = await supabase.functions.invoke('generate_daily_gifts', {
+  headers: {
+    Authorization: `Bearer ${session?.access_token}`,
+  },
+});
 
                     if (error) {
-                        console.error("Edge Function blocked/failed. Using Frontend OpenAI Fallback:", error);
-
-                        try {
-                            const groqKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
-                            let amountToGenerate = 3;
-                            if (profile?.subscription_plan === 'STANDARD') amountToGenerate = 5;
-                            if (profile?.subscription_plan === 'PRO') amountToGenerate = 7;
-                            if (profile?.subscription_plan === 'ULTRA') amountToGenerate = 10;
-                            if (profile?.subscription_plan === 'BUSINESS') amountToGenerate = 15;
-
-                            if (groqKey) {
-                                console.log("Directly calling Groq API...");
-                                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Authorization': `Bearer ${groqKey}`,
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        model: 'llama-3.3-70b-versatile',
-                                        messages: [
-                                            {
-                                                role: 'system',
-                                                content: `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas based on the user's taste. 
-                                                
-CRITICAL RULES:
-1. Prices MUST be in EUR (e.g., "€100 - €150").
-2. Suggest CONCRETE products, brands, or models (e.g., "Sony WH-1000XM5 Headphones" instead of "Headphones").
-3. Return ONLY a valid JSON array of ${amountToGenerate} objects. Each object MUST have "title", "description", "price_range", and "image_keyword" (a SINGLE English word describing the item for a photo search, e.g. "headphones", "perfume", "watch"). Do not wrap in markdown quotes.`
-                                            },
-                                            { role: 'user', content: `Generate exactly ${amountToGenerate} hyper-specific, trendy gift ideas in EUR. Keep titles descriptive but under 6 words. Keep descriptions engaging and under 100 characters. Make sure image_keyword is a single visually descriptive word.` }
-                                        ],
-                                    }),
-                                });
-
-                                const rawText = await response.text();
-                                let suggestions: any[] = [];
-                                if (rawText) {
-                                    const aiData = JSON.parse(rawText);
-                                    if (aiData.choices && aiData.choices[0]) {
-                                        try {
-                                            suggestions = JSON.parse(aiData.choices[0].message.content);
-                                        } catch {
-                                            const clean = aiData.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '');
-                                            suggestions = JSON.parse(clean);
-                                        }
-                                    }
-                                }
-
-                                if (suggestions && suggestions.length > 0) {
-                                    // FORCE EXACT LENGTH LIMIT
-                                    const limitedSuggestions = suggestions.slice(0, amountToGenerate);
-                                    const pexelsKey = import.meta.env.VITE_PEXELS_API_KEY;
-
-                                    const fallbackIdeas = await Promise.all(limitedSuggestions.map(async (gift: any) => {
-                                        let finalImageUrl = '';
-
-                                        if (pexelsKey && gift.image_keyword) {
-                                            try {
-                                                const pexRes = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(gift.image_keyword)}&per_page=1`, {
-                                                    headers: { Authorization: pexelsKey }
-                                                });
-                                                const pexData = await pexRes.json();
-                                                if (pexData.photos && pexData.photos.length > 0) {
-                                                    // Use portrait or large image for the card
-                                                    finalImageUrl = pexData.photos[0].src.portrait || pexData.photos[0].src.large;
-                                                }
-                                            } catch (e) {
-                                                console.error("Failed to fetch from Pexels", e);
-                                            }
-                                        } else {
-                                            console.warn("No Pexels API Key found. Falling back to gradient UI.");
-                                        }
-
-                                        return {
-                                            user_id: user.id,
-                                            title: gift.title,
-                                            description: gift.description,
-                                            price_range: gift.price_range,
-                                            image_url: finalImageUrl,
-                                            is_saved: false,
-                                            is_manual: false
-                                        };
-                                    }));
-                                    await supabase.from('gift_ideas').insert(fallbackIdeas);
-                                    console.log("Successfully inserted direct OpenAI gifts with Pexels images!");
-                                } else {
-                                    throw new Error("No suggestions returned from OpenAI direct call");
-                                }
-                            } else {
-                                throw new Error("No VITE_OPENAI_API_KEY found in frontend .env");
-                            }
-                        } catch (fallbackError) {
-                            console.error("Critical Fallback Failed too! Inserting placebo cards.", fallbackError);
-                            const placeboIdeas = Array.from({ length: 3 }).map((_, i) => ({
-                                user_id: user.id,
-                                title: `Trendy Gift Idea ${i + 1}`,
-                                description: "A personalized gift idea placeholder. The AI engine is currently resting!",
-                                price_range: "$50 - $150",
-                                image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop',
-                                is_saved: false,
-                                is_manual: false
-                            }));
-                            await supabase.from('gift_ideas').insert(placeboIdeas);
-                        }
+                        const errMsg = error.message || error.toString();
+                        console.error("Edge Function failed. No fallback logic needed:", errMsg);
+                        setAiError(errMsg);
+                    } else if (data?.error) {
+                        const errMsg = data.error;
+                        console.error("Edge Function returned custom error payload:", errMsg);
+                        setAiError(errMsg);
+                    } else {
+                        // Only update the Generation Timestamp and Count if successful
+                        await supabase.from('users').update({
+                            last_giftinder_generation: new Date().toISOString(),
+                            daily_generations_count: newCount
+                        }).eq('id', user.id);
+                        await refreshUserData();
                     }
-
-                    // Always update the Generation Timestamp and Count
-                    await supabase.from('users').update({
-                        last_giftinder_generation: new Date().toISOString(),
-                        daily_generations_count: newCount
-                    }).eq('id', user.id);
-                    await refreshUserData();
                 }
 
                 // 2. Fetch the unsaved personalized ideas AFTER potential generation
@@ -206,7 +127,7 @@ CRITICAL RULES:
                 .select('*')
                 .eq('user_id', user.id)
                 .is('is_saved', false)
-                .is('is_rejected', false)
+                .or('is_rejected.is.null,is_rejected.eq.false')
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
@@ -283,24 +204,6 @@ CRITICAL RULES:
                             </span>
                         )}
                     </button>
-                    {/* Floating Karma Animation Anchor */}
-                    <AnimatePresence>
-                        {floatingKarma && (
-                            <motion.div
-                                key={floatingKarma.id}
-                                initial={{ opacity: 0, scale: 0.5, y: 0 }}
-                                animate={{ opacity: 1, scale: 1.5, y: -50 }}
-                                exit={{ opacity: 0, scale: 0.8, y: -80 }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
-                                className="absolute right-0 top-0 z-50 pointer-events-none"
-                            >
-                                <div className="bg-rose-500 border border-rose-400 shadow-xl px-3 py-1.5 rounded-full flex items-center gap-1 font-black text-white text-md">
-                                    <Heart className="w-4 h-4 fill-white" />
-                                    +{floatingKarma.amount} Karma
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                 </div>
             </header>
 
@@ -322,6 +225,12 @@ CRITICAL RULES:
                             </div>
                             <h3 className="font-bold text-slate-700 text-lg mb-1">You've seen all ideas!</h3>
                             <p className="text-sm">Swipe through them, save what you like, or upgrade your plan to generate more daily.</p>
+                            {aiError && (
+                                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-mono break-words w-full text-left">
+                                    <strong className="block mb-1 text-red-700">AI Error Details:</strong>
+                                    {aiError}
+                                </div>
+                            )}
                         </motion.div>
                     ) : (
                         cards.map((card, index) => {
@@ -394,6 +303,25 @@ CRITICAL RULES:
                     </button>
                 </div>
             )}
+
+            {/* Giant Central Floating Karma Animation */}
+            <AnimatePresence>
+                {floatingKarma && (
+                    <motion.div
+                        key={floatingKarma.id}
+                        initial={{ opacity: 0, scale: 0.5, y: 50 }}
+                        animate={{ opacity: 1, scale: 1.5, y: -100 }}
+                        exit={{ opacity: 0, scale: 1, y: -150 }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        className="absolute inset-0 m-auto flex items-center justify-center z-50 pointer-events-none w-fit h-fit"
+                    >
+                        <div className="bg-rose-500 border-2 border-white shadow-2xl px-6 py-3 rounded-full flex items-center gap-2 font-black text-white text-xl">
+                            <Heart className="w-6 h-6 fill-white" />
+                            +{floatingKarma.amount} Karma
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -446,17 +374,7 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
                     <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
                     <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
                 </div>
-                <p className="text-slate-600 leading-snug font-medium line-clamp-2 text-sm">"{card.desc}"</p>
-                
-                <a 
-                    href={`https://www.ozone.bg/s/?q=${encodeURIComponent(card.title)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    onPointerDown={(e) => e.stopPropagation()} 
-                    className="mt-3 flex items-center justify-center gap-2 bg-[#0244B6] hover:bg-[#02338A] transition-colors text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-md cursor-pointer"
-                >
-                    Търси в Ozone.bg
-                </a>
+                <p className="text-slate-600 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
                 <div className="flex items-center space-x-2 mt-4">
                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center space-x-3 flex-1">
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">

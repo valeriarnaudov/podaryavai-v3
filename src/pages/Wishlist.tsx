@@ -390,17 +390,27 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                     <h3 className="font-semibold text-textMain text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
                     <p className="text-xs font-medium text-accent">{item.price_range || 'Price N/A'}</p>
                 </div>
-                {item.source_url && (
+                <div className="mt-3 flex flex-col gap-1.5">
+                    {item.source_url && (
+                        <a
+                            href={item.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center space-x-1 text-xs text-slate-500 bg-slate-50 py-1.5 rounded-lg hover:bg-slate-100 transition-colors shadow-sm"
+                        >
+                            <span>Original Link</span>
+                            <ExternalLink className="w-3 h-3" />
+                        </a>
+                    )}
                     <a
-                        href={item.source_url}
+                        href={`https://www.ozone.bg/s/?q=${encodeURIComponent(item.title)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 flex items-center justify-center space-x-1 text-xs text-slate-500 bg-slate-50 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                        className="flex items-center justify-center space-x-1 text-xs text-white bg-[#0244B6] py-1.5 rounded-lg hover:bg-[#02338A] transition-colors shadow-sm font-bold"
                     >
-                        <span>View</span>
-                        <ExternalLink className="w-3 h-3" />
+                        <span>Купи от Ozone.bg</span>
                     </a>
-                )}
+                </div>
             </div>
         </motion.div>
     );

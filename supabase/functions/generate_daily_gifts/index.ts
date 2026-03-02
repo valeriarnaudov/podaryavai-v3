@@ -16,20 +16,36 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Missing Authorization header in request");
+
+    // Let's check exactly what the authHeader looks like
+    if (!authHeader.startsWith("Bearer ")) {
+      throw new Error(
+        `Auth header is malformed! Starts with: ${authHeader.slice(0, 10)}`,
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: { Authorization: authHeader },
         },
       },
     );
 
-    // Get the user making the request
+    const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth
-      .getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+      .getUser(jwt);
+    if (userError || !user) {
+      throw new Error(
+        `Auth Error: ${
+          userError?.message || "No user found"
+        } (Token Length: ${jwt.length})`,
+      );
+    }
 
     // 1. Fetch user profile for their plan and wallet balance
     const { data: profile } = await supabaseClient
@@ -112,8 +128,10 @@ serve(async (req) => {
       ? `CRITICAL BUDGET RULE: The user currently has a wallet balance of €${walletBalance}. Prioritize gifts that can be fully purchased strictly using this balance (under €${walletBalance}).`
       : "";
 
+    const safeAmountToGenerate = amountToGenerate > 0 ? amountToGenerate : 3;
+
     const systemInstructionText =
-      `You are a premium AI gift concierge. Generate exactly ${amountToGenerate} highly specific, trendy, premium gift ideas. 
+      `You are a premium AI gift concierge. Generate exactly ${safeAmountToGenerate} highly specific, trendy, premium gift ideas. 
 CRITICAL RULE 1: You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). 
 CRITICAL RULE 2: DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL.
 Return ONLY a valid JSON array of objects, where each object has "title" (The exact product name), "description" (Why it's great, max 80 chars), "price_range" (e.g. "$250 - $300"), and "image_keyword" (a SINGLE broad English word describing the item for a Pexels stock photo search, e.g. for Apple Watch use "smartwatch", for Paco Rabanne use "perfume"). 
@@ -121,6 +139,7 @@ Do not include markdown formatting like \`\`\`json.
 IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext} ${walletRules}`;
 
     let suggestions: any[] = [];
+    let lastErrorDetails = "";
 
     try {
       if (chosenModel === "openai") {
@@ -143,9 +162,8 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                   },
                   {
                     role: "user",
-                    content: `Generate ${
-                      amountToGenerate > 0 ? amountToGenerate : 3
-                    } personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
+                    content:
+                      `Generate ${safeAmountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
                   },
                 ],
               }),
@@ -166,17 +184,19 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                 suggestions = JSON.parse(clean);
               }
             }
+          } else {
+            lastErrorDetails = "OpenAI Error: " + rawText;
+            console.error(lastErrorDetails);
           }
         } else {
-          console.error(
-            "OpenAI requested but no API key configured in Edge Function env.",
-          );
+          lastErrorDetails = "OpenAI API Key missing";
+          console.error(lastErrorDetails);
         }
       } else if (chosenModel === "gemini") {
         const geminiKey = Deno.env.get("GEMINI_API_KEY");
         if (geminiKey) {
           const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
             {
               method: "POST",
               headers: {
@@ -191,7 +211,7 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                 contents: [{
                   parts: [{
                     text:
-                      `Generate ${amountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
+                      `Generate ${safeAmountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
                   }],
                 }],
                 generationConfig: {
@@ -211,9 +231,14 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                 .trim();
               suggestions = JSON.parse(clean);
             }
+          } else {
+            lastErrorDetails = "Gemini Missing Candidates Error: " +
+              JSON.stringify(aiData);
+            console.error(lastErrorDetails);
           }
         } else {
-          console.error("Gemini requested but no API key configured");
+          lastErrorDetails = "Gemini API Key missing";
+          console.error(lastErrorDetails);
         }
       } else {
         // Fallback or explicit routing to Groq (Llama)
@@ -236,9 +261,8 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                   },
                   {
                     role: "user",
-                    content: `Generate ${
-                      amountToGenerate > 0 ? amountToGenerate : 3
-                    } personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
+                    content:
+                      `Generate ${safeAmountToGenerate} personalized gift ideas. Context of what they like: ${tasteContext}. Keep descriptions engaging and under 100 characters.`,
                   },
                 ],
               }),
@@ -258,25 +282,40 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
                 ).replace(/```/g, "");
                 suggestions = JSON.parse(clean);
               }
+            } else {
+              lastErrorDetails = "Groq Missing Choices Error: " + rawText;
+              console.error(lastErrorDetails);
             }
+          } else {
+            lastErrorDetails = "Groq Error: Empty response";
+            console.error(lastErrorDetails);
           }
+        } else {
+          lastErrorDetails = "Groq API Key missing";
+          console.error(lastErrorDetails);
         }
       }
     } catch (err: any) {
-      console.error("AI Fetch Error:", err.message);
+      lastErrorDetails = "Fetch Exception: " + err.message;
+      console.error(lastErrorDetails);
       // Will seamlessly fallback to placeholders below
     }
 
     // 3.b Fallback if OpenAI failed or no key
     if (!suggestions || suggestions.length === 0) {
-      suggestions = Array.from({ length: amountToGenerate }).map((_, i) => ({
-        title: `Trendy Gift Idea ${i + 1}`,
-        description:
-          "A personalized gift idea placeholder. The AI engine is currently resting!",
-        price_range: "$50 - $150",
-        image_url:
-          "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=400&auto=format&fit=crop",
-      }));
+      console.error(
+        "AI engines failed to return valid suggestions.",
+        lastErrorDetails,
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Failed to generate AI ideas. " + lastErrorDetails,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        },
+      );
     }
 
     // Fetch images from Pexels API locally inside the Edge Function!
@@ -351,7 +390,7 @@ IMPORTANT: Each idea MUST be entirely unique from the others. ${noRepeatsContext
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
+      status: 200,
     });
   }
 });
