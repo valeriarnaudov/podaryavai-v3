@@ -188,7 +188,8 @@ CRITICAL RULES:
                 .from('gift_ideas')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('is_saved', false)
+                .is('is_saved', false)
+                .is('is_rejected', false)
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
@@ -220,8 +221,8 @@ CRITICAL RULES:
                 await supabase.from('gift_ideas').update({ is_saved: true }).eq('id', id);
                 setSavedCount(prev => prev + 1);
             } else {
-                // Discard it forever
-                await supabase.from('gift_ideas').delete().eq('id', id);
+                // Discard it forever but keep a record to avoid regenerating it (Continuous Learning)
+                await supabase.from('gift_ideas').update({ is_rejected: true }).eq('id', id);
             }
         } catch (err) {
             console.error("Error handling swipe:", err);
@@ -269,6 +270,10 @@ CRITICAL RULES:
                         </motion.div>
                     ) : (
                         cards.map((card, index) => {
+                            const diff = activeIndex - index;
+                            // Only render the active card and max 3 cards behind it to prevent visual clutter
+                            if (diff > 3 || diff < 0) return null;
+
                             const isActive = index === activeIndex;
                             return isActive ? (
                                 <SwipeableCard
@@ -279,21 +284,35 @@ CRITICAL RULES:
                             ) : (
                                 <motion.div
                                     key={card.id}
-                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-slate-200 rounded-[2rem] shadow-soft overflow-hidden filter brightness-95"
+                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-white rounded-[2rem] shadow-floating overflow-hidden filter brightness-[0.85] border border-slate-100/50"
                                     style={{
-                                        scale: 1 - (activeIndex - index) * 0.05,
-                                        top: (activeIndex - index) * -10,
-                                        background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
+                                        scale: 1 - diff * 0.05,
+                                        top: diff * -12,
+                                        zIndex: cards.length - diff, // Ensure correct stacking order
                                     }}
                                 >
-                                    <img
-                                        src={card.image}
-                                        alt=""
-                                        className="w-full h-[60%] object-cover object-center transition-opacity duration-300 pointer-events-none opacity-100"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.opacity = '0';
+                                    {/* Abstract background card to look exactly like the front card */}
+                                    <div
+                                        className="relative w-full h-[55%] bg-slate-200 shrink-0 overflow-hidden rounded-t-[2rem]"
+                                        style={{
+                                            background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                                         }}
-                                    />
+                                    >
+                                        <img
+                                            src={card.image}
+                                            alt=""
+                                            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none transition-opacity duration-300 opacity-100"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.opacity = '0';
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white">
+                                         <div className="mb-2">
+                                            <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
+                                            <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
+                                        </div>
+                                    </div>
                                 </motion.div>
                             );
                         })
@@ -349,7 +368,7 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
         >
             {/* Image Container with Fallback Gradient */}
             <div
-                className="relative w-full h-[60%] bg-slate-200"
+                className="relative w-full h-[55%] bg-slate-200 shrink-0 overflow-hidden rounded-t-[2rem]"
                 style={{
                     background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                 }}
@@ -357,20 +376,20 @@ function SwipeableCard({ card, onSwipe }: { card: any, onSwipe: (dir: 'left' | '
                 <img
                     src={card.image}
                     alt={card.title}
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300 opacity-100"
+                    className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none transition-opacity duration-300 opacity-100"
                     onError={(e) => {
                         // Hide broken image so the beautiful gradient background shows through
                         (e.target as HTMLImageElement).style.opacity = '0';
                     }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
-                <div className="absolute bottom-4 left-6 right-6 text-white pointer-events-none">
-                    <h2 className="text-3xl font-bold leading-tight drop-shadow-md">{card.title}</h2>
-                    <p className="text-xl font-medium text-white/90 drop-shadow-md mt-1">{card.price}</p>
-                </div>
             </div>
-            <div className="p-6 h-[40%] flex flex-col justify-between">
-                <p className="text-slate-600 leading-relaxed font-medium">"{card.desc}"</p>
+            
+            <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden bg-white">
+                <div className="mb-2">
+                    <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
+                    <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
+                </div>
+                <p className="text-slate-600 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
                 <div className="flex items-center space-x-2 mt-4">
                     <div className="bg-slate-50 p-4 rounded-2xl flex items-center space-x-3 flex-1">
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">

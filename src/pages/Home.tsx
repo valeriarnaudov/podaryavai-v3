@@ -143,13 +143,8 @@ export default function Home() {
     const generateGiftIdeas = async (event: Event) => {
         if (!user) return;
         
-        // Check for Free/Standard -> Upgrade Prompt
-        if (['FREE', 'STANDARD'].includes(subscriptionPlan || 'FREE')) {
-            if (confirm("Unlock instant personalized AI gift recommendations directly in your calendar. Upgrade now?")) {
-                navigate('/upgrade');
-            } else {
-                navigate('/giftinder');
-            }
+        // Safety check
+        if (!['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE')) {
             return;
         }
 
@@ -363,35 +358,38 @@ export default function Home() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="mt-5 relative z-10">
-                                    <button
-                                        onClick={() => generateGiftIdeas(event)}
-                                        disabled={generatingFor === event.id}
-                                        className={`w-full py-3 text-white rounded-2xl font-medium shadow-md shadow-accent/20 active:scale-95 transition-all flex justify-center items-center space-x-2 disabled:opacity-80
-                                            ${event.ai_recommendations && expandedEvent !== event.id ? 'bg-indigo-500' : 'bg-accent'}`}
-                                    >
-                                        {generatingFor === event.id ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                                <span>Deep Searching AI...</span>
-                                            </>
-                                        ) : event.ai_recommendations && expandedEvent !== event.id ? (
-                                            <span>View AI Recommendations</span>
-                                        ) : event.ai_recommendations && expandedEvent === event.id ? (
-                                            <span>Close Recommendations</span>
-                                        ) : (
-                                            <span>Find a Gift (AI)</span>
-                                        )}
-                                    </button>
-                                </div>
-                                
-                                {/* AI Ideas Dropdown */}
-                                {expandedEvent === event.id && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        className="mt-4 pt-4 border-t border-slate-100 overflow-hidden"
-                                    >
+                                {/* AI Feature is Premium Only */}
+                                {['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE') && (
+                                    <>
+                                        <div className="mt-5 relative z-10">
+                                            <button
+                                                onClick={() => generateGiftIdeas(event)}
+                                                disabled={generatingFor === event.id}
+                                                className={`w-full py-3 text-white rounded-2xl font-medium shadow-md shadow-accent/20 active:scale-95 transition-all flex justify-center items-center space-x-2 disabled:opacity-80
+                                                    ${event.ai_recommendations && expandedEvent !== event.id ? 'bg-indigo-500' : 'bg-accent'}`}
+                                            >
+                                                {generatingFor === event.id ? (
+                                                    <>
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                        <span>Deep Searching AI...</span>
+                                                    </>
+                                                ) : event.ai_recommendations && expandedEvent !== event.id ? (
+                                                    <span>View AI Recommendations</span>
+                                                ) : event.ai_recommendations && expandedEvent === event.id ? (
+                                                    <span>Close Recommendations</span>
+                                                ) : (
+                                                    <span>Find a Gift (AI)</span>
+                                                )}
+                                            </button>
+                                        </div>
+                                        
+                                        {/* AI Ideas Dropdown */}
+                                        {expandedEvent === event.id && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-4 pt-4 border-t border-slate-100 overflow-hidden"
+                                            >
                                         {event.ai_recommendations ? (
                                             <div className="space-y-4">
                                                 {event.ai_recommendations.map((category: any, catIdx: number) => (
@@ -420,10 +418,12 @@ export default function Home() {
                                                     <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
                                                 </div>
                                                 <p className="text-sm font-semibold text-slate-700">Analyzing Profile...</p>
-                                                <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">Finding the perfect gifts based on their age, interests, and budget.</p>
+                                                <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">Finding the perfect gifts based on their profile and budget.</p>
                                             </div>
                                         )}
                                     </motion.div>
+                                )}
+                                    </>
                                 )}
                             </div>
                         ))}

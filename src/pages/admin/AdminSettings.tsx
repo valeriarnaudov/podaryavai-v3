@@ -22,12 +22,12 @@ const DEFAULT_SETTINGS = [
     { setting_key: 'LIMIT_AI_ULTRA', setting_value: '100', description: 'Daily AI Giftinder limit for Ultra plan' },
     { setting_key: 'LIMIT_AI_BUSINESS', setting_value: '-1', description: 'Daily AI Giftinder limit for Business plan' },
 
-    // AI Models per plan ('llama' or 'openai')
-    { setting_key: 'MODEL_AI_FREE', setting_value: 'llama', description: 'AI Model for Free plan ("llama" or "openai")' },
-    { setting_key: 'MODEL_AI_STANDARD', setting_value: 'llama', description: 'AI Model for Standard plan ("llama" or "openai")' },
-    { setting_key: 'MODEL_AI_PRO', setting_value: 'openai', description: 'AI Model for Pro plan ("llama" or "openai")' },
-    { setting_key: 'MODEL_AI_ULTRA', setting_value: 'openai', description: 'AI Model for Ultra plan ("llama" or "openai")' },
-    { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'openai', description: 'AI Model for Business plan ("llama" or "openai")' },
+    // AI Models per plan ('llama', 'openai', or 'gemini')
+    { setting_key: 'MODEL_AI_FREE', setting_value: 'gemini', description: 'AI Model for Free plan ("llama", "openai", "gemini")' },
+    { setting_key: 'MODEL_AI_STANDARD', setting_value: 'gemini', description: 'AI Model for Standard plan ("llama", "openai", "gemini")' },
+    { setting_key: 'MODEL_AI_PRO', setting_value: 'gemini', description: 'AI Model for Pro plan ("llama", "openai", "gemini")' },
+    { setting_key: 'MODEL_AI_ULTRA', setting_value: 'gemini', description: 'AI Model for Ultra plan ("llama", "openai", "gemini")' },
+    { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'gemini', description: 'AI Model for Business plan ("llama", "openai", "gemini")' },
 
     // Contact Limits per plan (-1 for unlimited)
     { setting_key: 'LIMIT_CONTACTS_FREE', setting_value: '2', description: 'Maximum contacts allowed for Free plan' },
