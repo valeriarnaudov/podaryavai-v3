@@ -114,14 +114,23 @@ serve(async (req) => {
 
     let tasteContext = "General trendy and premium gifts.";
     const prefDetails = [];
-    if (preferences.hobbies) {
-      prefDetails.push(`Hobbies/Interests: ${preferences.hobbies}`);
+    if (preferences.ageGroup) {
+      prefDetails.push(`Age Group: ${preferences.ageGroup}`);
     }
-    if (preferences.favoriteBrands) {
-      prefDetails.push(`Favorite Brands/Styles: ${preferences.favoriteBrands}`);
+    if (preferences.personality) {
+      prefDetails.push(`Personality: ${preferences.personality}`);
     }
-    if (preferences.dislikes) {
-      prefDetails.push(`THINGS TO STRICTLY AVOID: ${preferences.dislikes}`);
+    if (preferences.style) {
+      prefDetails.push(`Style Preference: ${preferences.style}`);
+    }
+    if (preferences.favoriteColor) {
+      prefDetails.push(`Favorite Color: ${preferences.favoriteColor}`);
+    }
+    if (preferences.interests) {
+      prefDetails.push(`Interests & Hobbies: ${preferences.interests}`);
+    }
+    if (preferences.budgetPreference) {
+      prefDetails.push(`Target User Budget: €${preferences.budgetPreference}`);
     }
 
     if (prefDetails.length > 0) {

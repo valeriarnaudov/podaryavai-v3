@@ -28,6 +28,9 @@ export default function EditContact() {
     const [personality, setPersonality] = useState('Balanced');
     const [style, setStyle] = useState('Casual');
     const [favoriteColor, setFavoriteColor] = useState('');
+    const [weekendActivity, setWeekendActivity] = useState('');
+    const [favoriteVibe, setFavoriteVibe] = useState('');
+    const [dislikes, setDislikes] = useState('');
     const [events, setEvents] = useState<Event[]>([]);
 
     const [loading, setLoading] = useState(true);
@@ -110,6 +113,9 @@ export default function EditContact() {
             setPersonality(contactData.personality || 'Balanced');
             setStyle(contactData.style || 'Casual');
             setFavoriteColor(contactData.favorite_color || '');
+            setWeekendActivity(contactData.weekend_activity || '');
+            setFavoriteVibe(contactData.favorite_vibe || '');
+            setDislikes(contactData.dislikes || '');
 
             // Fetch events for this contact
             const { data: eventsData, error: eventsError } = await supabase
@@ -147,6 +153,9 @@ export default function EditContact() {
                     personality,
                     style,
                     favorite_color: favoriteColor,
+                    weekend_activity: weekendActivity,
+                    favorite_vibe: favoriteVibe,
+                    dislikes,
                     name: `${firstName} ${lastName}`.trim()
                 })
                 .eq('id', id);
@@ -370,18 +379,81 @@ export default function EditContact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color (Optional)</label>
-                                    <input
-                                        type="text"
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color</label>
+                                    <select
                                         value={favoriteColor}
                                         onChange={e => setFavoriteColor(e.target.value)}
-                                        placeholder="e.g. Blue, Dark green, Pastels"
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
-                                    />
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Any Color / Not Sure</option>
+                                        <option value="Black">Black (Sleek, Modern)</option>
+                                        <option value="White">White (Clean, Minimal)</option>
+                                        <option value="Blue">Blue (Calming, Classic)</option>
+                                        <option value="Red">Red (Bold, Energetic)</option>
+                                        <option value="Green">Green (Nature, Fresh)</option>
+                                        <option value="Yellow">Yellow (Bright, Happy)</option>
+                                        <option value="Purple">Purple (Creative, Royal)</option>
+                                        <option value="Pink">Pink (Playful, Soft)</option>
+                                        <option value="Pastels">Pastels</option>
+                                        <option value="Earth Tones">Earth Tones</option>
+                                        <option value="Monochrome">Monochrome</option>
+                                    </select>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Vibe / Aesthetic</label>
+                                        <select
+                                            value={favoriteVibe}
+                                            onChange={e => setFavoriteVibe(e.target.value)}
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        >
+                                            <option value="">Any Vibe</option>
+                                            <option value="Cozy">Cozy & Relaxed</option>
+                                            <option value="Techy">Techy & Cyber</option>
+                                            <option value="Glamorous">Glamorous & Chic</option>
+                                            <option value="Minimalist">Minimalist & Clean</option>
+                                            <option value="Earthy">Earthy & Natural</option>
+                                            <option value="Industrial">Industrial & Edgy</option>
+                                            <option value="Vintage">Vintage & Nostalgic</option>
+                                            <option value="Sporty">Sporty & Active</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Are there any specific things we should avoid buying for them?</label>
+                                        <input
+                                            type="text"
+                                            value={dislikes}
+                                            onChange={e => setDislikes(e.target.value)}
+                                            placeholder="e.g. No alcohol, hates socks, no sweets"
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Interests & Hobbies (Detailed)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Weekend Activity</label>
+                                    <select
+                                        value={weekendActivity}
+                                        onChange={e => setWeekendActivity(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Any Activity</option>
+                                        <option value="Outdoors & Hiking">Outdoors & Hiking</option>
+                                        <option value="Netflix & Chill">Netflix & Chill</option>
+                                        <option value="Partying & Events">Partying & Events</option>
+                                        <option value="Board Games & Puzzles">Board Games & Puzzles</option>
+                                        <option value="Cooking & Baking">Cooking & Baking</option>
+                                        <option value="Reading & Coffee">Reading & Coffee</option>
+                                        <option value="Sports & Gym">Sports & Gym</option>
+                                        <option value="Video Games">Video Games</option>
+                                        <option value="DIY & Crafts">DIY & Crafts</option>
+                                        <option value="Traveling & Exploring">Traveling & Exploring</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">What are their absolute favorite hobbies, brands, or interests?</label>
                                     <textarea
                                         value={interests}
                                         onChange={e => setInterests(e.target.value)}

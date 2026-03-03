@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ interface Event {
     event_date: string;
     event_type: string;
     ai_recommendations?: any;
-    contacts: { id: string; first_name: string; last_name: string; avatar_url: string | null };
+    contacts: { id: string; first_name: string; last_name: string; avatar_url: string | null; budget_preference: number | null };
     holiday?: string;
 }
 
@@ -23,6 +23,11 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [generatingFor, setGeneratingFor] = useState<string | null>(null);
     const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+
+    const [budgetModalOpen, setBudgetModalOpen] = useState(false);
+    const [pendingEventForGifts, setPendingEventForGifts] = useState<Event | null>(null);
+    const [tempBudget, setTempBudget] = useState<string>('');
+    const [savingBudget, setSavingBudget] = useState(false);
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -83,14 +88,14 @@ export default function Home() {
                 .from('events')
                 .select(`
                     id, title, event_date, event_type, ai_recommendations,
-                    contacts (id, first_name, last_name, avatar_url)
+                    contacts (id, first_name, last_name, avatar_url, budget_preference)
                 `);
 
             if (error) throw error;
 
             const { data: contactsData, error: contactsError } = await supabase
                 .from('contacts')
-                .select('id, first_name, last_name, avatar_url')
+                .select('id, first_name, last_name, avatar_url, budget_preference')
                 .eq('user_id', user.id);
 
             const currentViewYear = currentDate.getFullYear();
@@ -140,20 +145,65 @@ export default function Home() {
         }
     };
 
-    const generateGiftIdeas = async (event: Event) => {
+    const handleGenerateClick = (event: Event) => {
         if (!user) return;
-        
-        // Safety check
-        if (!['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE')) {
-            return;
-        }
+        if (!['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE')) return;
 
-        // Check if already generated
         if (event.ai_recommendations) {
             setExpandedEvent(expandedEvent === event.id ? null : event.id);
             return;
         }
 
+        const budget = event.contacts?.budget_preference;
+        if (!budget || budget <= 0) {
+            setPendingEventForGifts(event);
+            setTempBudget('');
+            setBudgetModalOpen(true);
+            return;
+        }
+
+        executeGeneration(event);
+    };
+
+    const handleSaveBudgetAndGenerate = async () => {
+        if (!pendingEventForGifts || !tempBudget) return;
+        setSavingBudget(true);
+
+        try {
+            const budgetNum = parseFloat(tempBudget);
+            
+            // 1. Save to contact
+            const { error: updateError } = await supabase
+                .from('contacts')
+                .update({ budget_preference: budgetNum })
+                .eq('id', pendingEventForGifts.contacts.id);
+
+            if (updateError) throw updateError;
+
+            // Update local state so it doesn't prompt again
+            setEvents(prev => prev.map(e => 
+                e.contacts?.id === pendingEventForGifts.contacts.id 
+                    ? { ...e, contacts: { ...e.contacts, budget_preference: budgetNum } }
+                    : e
+            ));
+
+            setBudgetModalOpen(false);
+            
+            // 2. Execute Generation
+            executeGeneration({
+                ...pendingEventForGifts,
+                contacts: { ...pendingEventForGifts.contacts, budget_preference: budgetNum }
+            });
+
+        } catch (err) {
+            console.error("Failed to save budget:", err);
+            alert("Failed to save budget. Please try again.");
+        } finally {
+            setSavingBudget(false);
+        }
+    };
+
+    const executeGeneration = async (event: Event) => {
         setGeneratingFor(event.id);
         setExpandedEvent(event.id);
         
@@ -174,6 +224,7 @@ export default function Home() {
             setExpandedEvent(null);
         } finally {
             setGeneratingFor(null);
+            setPendingEventForGifts(null);
         }
     };
 
@@ -363,7 +414,7 @@ export default function Home() {
                                     <>
                                         <div className="mt-5 relative z-10">
                                             <button
-                                                onClick={() => generateGiftIdeas(event)}
+                                                onClick={() => handleGenerateClick(event)}
                                                 disabled={generatingFor === event.id}
                                                 className={`w-full py-3 text-white rounded-2xl font-medium shadow-md shadow-accent/20 active:scale-95 transition-all flex justify-center items-center space-x-2 disabled:opacity-80
                                                     ${event.ai_recommendations && expandedEvent !== event.id ? 'bg-indigo-500' : 'bg-accent'}`}
@@ -390,24 +441,33 @@ export default function Home() {
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-4 pt-4 border-t border-slate-100 overflow-hidden"
                                             >
-                                        {event.ai_recommendations ? (
+                                        {event.ai_recommendations && Array.isArray(event.ai_recommendations) ? (
                                             <div className="space-y-4">
-                                                {event.ai_recommendations.map((category: any, catIdx: number) => (
-                                                    <div key={catIdx} className="bg-slate-50 p-4 rounded-2xl">
-                                                        <h4 className="font-bold text-slate-800 text-sm mb-3 flex items-center">
-                                                            <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
-                                                            {category.category}
-                                                        </h4>
-                                                        <div className="space-y-3">
-                                                            {category.gifts.map((gift: any, giftIdx: number) => (
-                                                                <div key={giftIdx} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-left">
-                                                                    <p className="font-semibold text-textMain text-sm mb-1">{gift.name}</p>
-                                                                    <p className="text-xs text-slate-500">{gift.reason}</p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {event.ai_recommendations.map((gift: any, giftIdx: number) => (
+                                                        <div key={giftIdx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col h-full hover:border-accent hover:shadow-md transition-all cursor-pointer">
+                                                            <div className="aspect-video w-full rounded-xl bg-slate-50 mb-3 overflow-hidden">
+                                                                <img
+                                                                    src={gift.image_url || `https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop`}
+                                                                    alt={gift.name}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1 flex flex-col">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <h4 className="font-bold text-slate-800 text-sm leading-snug">{gift.name}</h4>
+                                                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2">
+                                                                        {gift.price}
+                                                                    </span>
                                                                 </div>
-                                                            ))}
+                                                                <p className="text-xs text-slate-500 flex-1">{gift.reason}</p>
+                                                            </div>
+                                                            <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(gift.name)}`} target="_blank" rel="noopener noreferrer" className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold text-center transition-colors">
+                                                                Find online
+                                                            </a>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
                                                 <div className="pt-2 text-center text-xs text-slate-400 font-medium">
                                                     Don't like these? Edit their profile and try again, or visit Giftinder.
                                                 </div>
@@ -476,6 +536,68 @@ export default function Home() {
                     </div>
                 </div>
             )}
+
+            {/* Set Budget Modal */}
+            <AnimatePresence>
+                {budgetModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !savingBudget && setBudgetModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="relative w-full max-w-sm bg-white rounded-3xl shadow-xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh]"
+                        >
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold text-slate-800 mb-2">Set Budget Limit</h3>
+                                <p className="text-sm text-slate-500 mb-6">
+                                    The AI needs a precise budget to find exact products for <span className="font-semibold text-slate-700">{pendingEventForGifts?.contacts?.first_name}</span>.
+                                </p>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Budget Target / Limit</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <span className="text-slate-500 font-medium">€</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={tempBudget}
+                                            onChange={e => setTempBudget(e.target.value)}
+                                            placeholder="e.g. 50"
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-6 pt-0 flex space-x-3">
+                                <button
+                                    onClick={() => setBudgetModalOpen(false)}
+                                    disabled={savingBudget}
+                                    className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveBudgetAndGenerate}
+                                    disabled={savingBudget || !tempBudget}
+                                    className="flex-1 py-3 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-95 transition-all flex justify-center items-center disabled:opacity-70"
+                                >
+                                    {savingBudget ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save & Generate"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
         </motion.div>
     );
 }

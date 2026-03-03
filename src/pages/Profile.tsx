@@ -19,10 +19,16 @@ export default function Profile() {
     const [dob, setDob] = useState('');
     const [password, setPassword] = useState('');
 
-    // Giftinder Preferences
-    const [hobbies, setHobbies] = useState('');
+    // Giftinder Preferences (Matching Contacts)
+    const [ageGroup, setAgeGroup] = useState('');
+    const [personality, setPersonality] = useState('Balanced');
+    const [style, setStyle] = useState('Casual');
+    const [favoriteColor, setFavoriteColor] = useState('');
+    const [weekendActivity, setWeekendActivity] = useState('');
+    const [favoriteVibe, setFavoriteVibe] = useState('');
     const [dislikes, setDislikes] = useState('');
-    const [favoriteBrands, setFavoriteBrands] = useState('');
+    const [interests, setInterests] = useState('');
+    const [budgetPreference, setBudgetPreference] = useState('');
 
     // Status UI
     const [loading, setLoading] = useState(false);
@@ -41,9 +47,15 @@ export default function Profile() {
                 const { data } = await supabase.from('users').select('giftinder_preferences').eq('id', user.id).single();
                 if (data?.giftinder_preferences) {
                     const prefs = data.giftinder_preferences as any;
-                    setHobbies(prefs.hobbies || '');
+                    setAgeGroup(prefs.ageGroup || '');
+                    setPersonality(prefs.personality || 'Balanced');
+                    setStyle(prefs.style || 'Casual');
+                    setFavoriteColor(prefs.favoriteColor || '');
+                    setWeekendActivity(prefs.weekendActivity || '');
+                    setFavoriteVibe(prefs.favoriteVibe || '');
                     setDislikes(prefs.dislikes || '');
-                    setFavoriteBrands(prefs.favoriteBrands || '');
+                    setInterests(prefs.interests || '');
+                    setBudgetPreference(prefs.budgetPreference || '');
                 }
             };
             fetchGiftinderPrefs();
@@ -79,8 +91,17 @@ export default function Profile() {
             const { error: updateError } = await supabase.auth.updateUser(updates);
             if (updateError) throw updateError;
             
-            // 3. Update Giftinder Preferences in users table
-            const prefs = { hobbies: hobbies.trim(), dislikes: dislikes.trim(), favoriteBrands: favoriteBrands.trim() };
+            const prefs = { 
+                ageGroup, 
+                personality, 
+                style, 
+                favoriteColor: favoriteColor.trim(),
+                weekendActivity: weekendActivity.trim(),
+                favoriteVibe: favoriteVibe.trim(),
+                dislikes: dislikes.trim(),
+                interests: interests.trim(), 
+                budgetPreference 
+            };
             const { error: prefsError } = await supabase.from('users').update({ giftinder_preferences: prefs }).eq('id', user.id);
             if (prefsError) throw prefsError;
 
@@ -213,6 +234,45 @@ export default function Profile() {
                                     <p className="font-semibold text-textMain">{email}</p>
                                 </div>
                             </div>
+                            
+                            {/* Read-Only Giftinder Preferences */}
+                            <div className="bg-slate-50 p-5 rounded-2xl mt-4">
+                                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                                    <Heart className="w-4 h-4 mr-2 text-rose-500" />
+                                    Giftinder AI Profile
+                                </h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Age Group</p>
+                                        <p className="font-semibold text-textMain text-sm">{ageGroup || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Personality</p>
+                                        <p className="font-semibold text-textMain text-sm">{personality || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Style</p>
+                                        <p className="font-semibold text-textMain text-sm">{style || '-'}</p>
+                                    </div>
+                                    {favoriteColor && (
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Favorite Color</p>
+                                            <p className="font-semibold text-textMain text-sm">{favoriteColor}</p>
+                                        </div>
+                                    )}
+                                    {budgetPreference && (
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Budget Pref.</p>
+                                            <p className="font-semibold text-textMain text-sm">€{budgetPreference}</p>
+                                        </div>
+                                    )}
+                                    <div className="col-span-2 sm:col-span-3">
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Interests & Hobbies</p>
+                                        <p className="font-semibold text-textMain text-sm">{interests || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             {message && <p className="text-sm font-medium text-green-600 bg-green-50 p-3 rounded-xl">{message}</p>}
                         </motion.div>
                     ) : (
@@ -286,35 +346,159 @@ export default function Profile() {
                                 <p className="text-sm text-slate-500 mb-4">Help the AI learn your style, so we can suggest better daily gifts for you to save!</p>
 
                                 <div className="space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>
+                                            <select
+                                                value={ageGroup}
+                                                onChange={e => setAgeGroup(e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">Select Age Group...</option>
+                                                <option value="Child (0-12)">Child (0-12)</option>
+                                                <option value="Teen (13-19)">Teen (13-19)</option>
+                                                <option value="20-30">20 - 30</option>
+                                                <option value="30-40">30 - 40</option>
+                                                <option value="40-50">40 - 50</option>
+                                                <option value="50-60">50 - 60</option>
+                                                <option value="60+">60+</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Personality Trait</label>
+                                            <select
+                                                value={personality}
+                                                onChange={e => setPersonality(e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="Balanced">Balanced / Average</option>
+                                                <option value="Introvert/Homebody">Introvert / Homebody</option>
+                                                <option value="Extrovert/Social">Extrovert / Social</option>
+                                                <option value="Adventurous/Active">Adventurous / Active</option>
+                                                <option value="Creative/Artistic">Creative / Artistic</option>
+                                                <option value="Practical/Logical">Practical / Logical</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Style Preference</label>
+                                            <select
+                                                value={style}
+                                                onChange={e => setStyle(e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="Casual">Casual / Everyday</option>
+                                                <option value="Minimalist">Minimalist</option>
+                                                <option value="Luxury">Luxury / Premium</option>
+                                                <option value="Handmade/Artisanal">Handmade / Artisanal</option>
+                                                <option value="Tech-focused">Tech-focused / Gadgets</option>
+                                                <option value="Sporty">Sporty / Athletic</option>
+                                                <option value="Vintage/Retro">Vintage / Retro</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color</label>
+                                            <select
+                                                value={favoriteColor}
+                                                onChange={e => setFavoriteColor(e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">Any Color / Not Sure</option>
+                                                <option value="Black">Black (Sleek, Modern)</option>
+                                                <option value="White">White (Clean, Minimal)</option>
+                                                <option value="Blue">Blue (Calming, Classic)</option>
+                                                <option value="Red">Red (Bold, Energetic)</option>
+                                                <option value="Green">Green (Nature, Fresh)</option>
+                                                <option value="Yellow">Yellow (Bright, Happy)</option>
+                                                <option value="Purple">Purple (Creative, Royal)</option>
+                                                <option value="Pink">Pink (Playful, Soft)</option>
+                                                <option value="Pastels">Pastels</option>
+                                                <option value="Earth Tones">Earth Tones</option>
+                                                <option value="Monochrome">Monochrome</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Vibe / Aesthetic</label>
+                                            <select
+                                                value={favoriteVibe}
+                                                onChange={e => setFavoriteVibe(e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                            >
+                                                <option value="">Any Vibe</option>
+                                                <option value="Cozy">Cozy & Relaxed</option>
+                                                <option value="Techy">Techy & Cyber</option>
+                                                <option value="Glamorous">Glamorous & Chic</option>
+                                                <option value="Minimalist">Minimalist & Clean</option>
+                                                <option value="Earthy">Earthy & Natural</option>
+                                                <option value="Industrial">Industrial & Edgy</option>
+                                                <option value="Vintage">Vintage & Nostalgic</option>
+                                                <option value="Sporty">Sporty & Active</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">Are there any specific things we should avoid buying for you?</label>
+                                            <input
+                                                type="text"
+                                                value={dislikes}
+                                                onChange={e => setDislikes(e.target.value)}
+                                                placeholder="e.g. No alcohol, hates socks, no sweets"
+                                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">My Hobbies & Interests</label>
-                                        <input
-                                            type="text"
-                                            value={hobbies}
-                                            onChange={(e) => setHobbies(e.target.value)}
-                                            placeholder="e.g. Photography, Cooking, Tech gadgets"
-                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Weekend Activity</label>
+                                        <select
+                                            value={weekendActivity}
+                                            onChange={e => setWeekendActivity(e.target.value)}
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                        >
+                                            <option value="">Any Activity</option>
+                                            <option value="Outdoors & Hiking">Outdoors & Hiking</option>
+                                            <option value="Netflix & Chill">Netflix & Chill</option>
+                                            <option value="Partying & Events">Partying & Events</option>
+                                            <option value="Board Games & Puzzles">Board Games & Puzzles</option>
+                                            <option value="Cooking & Baking">Cooking & Baking</option>
+                                            <option value="Reading & Coffee">Reading & Coffee</option>
+                                            <option value="Sports & Gym">Sports & Gym</option>
+                                            <option value="Video Games">Video Games</option>
+                                            <option value="DIY & Crafts">DIY & Crafts</option>
+                                            <option value="Traveling & Exploring">Traveling & Exploring</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">What are your absolute favorite hobbies, brands, or interests?</label>
+                                        <textarea
+                                            value={interests}
+                                            onChange={e => setInterests(e.target.value)}
+                                            placeholder="e.g. Loves reading sci-fi, hiking mountains, drinking espresso..."
+                                            rows={2}
+                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all resize-none"
                                         />
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Favorite Brands or Styles</label>
-                                        <input
-                                            type="text"
-                                            value={favoriteBrands}
-                                            onChange={(e) => setFavoriteBrands(e.target.value)}
-                                            placeholder="e.g. Minimalist, Apple, Nike, Boho"
-                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Things I Dislike / Don't Want</label>
-                                        <input
-                                            type="text"
-                                            value={dislikes}
-                                            onChange={(e) => setDislikes(e.target.value)}
-                                            placeholder="e.g. Alcohol, Socks, Cheap plastic toys"
-                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
-                                        />
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Budget Target / Limit</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <span className="text-slate-500 font-medium">€</span>
+                                            </div>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={budgetPreference}
+                                                onChange={e => setBudgetPreference(e.target.value)}
+                                                placeholder="e.g. 100"
+                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -117,6 +117,15 @@ serve(async (req) => {
     const colorStr = contact.favorite_color
       ? `Favorite color: ${contact.favorite_color}. `
       : "";
+    const vibeStr = contact.favorite_vibe
+      ? `Favorite Vibe/Aesthetic: ${contact.favorite_vibe}. `
+      : "";
+    const weekendStr = contact.weekend_activity
+      ? `Typical Weekend Activity: ${contact.weekend_activity}. `
+      : "";
+    const dislikesStr = contact.dislikes
+      ? `ABSOLUTELY AVOID THESE (Dislikes): ${contact.dislikes}. `
+      : "";
 
     // Concierge Wallet Awareness
     const walletRules = walletBalance > 0
@@ -124,24 +133,22 @@ serve(async (req) => {
       : `\nCRITICAL BUDGET RULE: The user currently has €0 in their wallet. They will pay out of pocket, so prioritize the contact's preferred budget over everything.`;
 
     const dynamicContext =
-      `Suggest gifts for a person named ${contact.name}. Relationship: ${contact.relationship}. ${ageGroupStr}${budgetPreferenceStr}${interestsStr}${personalityStr}${styleStr}${colorStr}`;
+      `Suggest exactly 10 distinct gifts for a person named ${contact.name}. Relationship: ${contact.relationship}. ${ageGroupStr}${budgetPreferenceStr}${interestsStr}${personalityStr}${styleStr}${colorStr}${vibeStr}${weekendStr}${dislikesStr}`;
 
     const systemPrompt =
-      `You are an expert AI gift concierge. Based on the user's contact profile, suggest 3 different categories of gifts (e.g., 'Tech Gadgets', 'Experiences', 'Home Decor'), and provide exactly 2 specific gift ideas for each category. ${walletRules}
+      `You are an expert AI gift concierge. Based on the user's contact profile, suggest EXACTLY 10 highly specific, real-world gift ideas. ${walletRules}
 
 CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
 2. You MUST suggest EXACT, REAL-WORLD products and specific brands (e.g., "Apple Watch Series 9", "Paco Rabanne One Million", "Sony WH-1000XM5 Headphones", "Dyson Airwrap"). 
 3. DO NOT SUGGEST VAGUE CATEGORIES (e.g. NEVER output "A leather wallet", "A smartwatch", or "A perfume"). YOU MUST GIVE THE EXACT MAKER AND MODEL.
-4. Your ENTIRE response MUST be a valid JSON array of category objects. 
+4. Your ENTIRE response MUST be a valid JSON array containing exactly 10 objects. Do not use categories.
 
-Each category object must have:
-- "category_name": string
-- "suggestions": an array of exactly 2 objects, each containing:
-   - "title": string (The exact product name and brand)
-   - "description": string (Why it's great, max 80 chars)
-   - "price_range": string
-   - "image_keyword": a SINGLE visually descriptive English word for photo search (e.g. "headphones", "perfume", "watch")
+Each object must have:
+- "name": string (The exact product name and brand)
+- "reason": string (Why it fits their highly specific profile perfectly, max 80 chars)
+- "price": string (e.g. "€250 - €300")
+- "image_keyword": a highly specific search term to find the exact product image on Google Images (e.g. "Sony WH-1000XM5 silver", "Dyson Airwrap Multistyler").
 
 Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw array.`;
 
@@ -254,6 +261,46 @@ Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw arr
           }
         }
       }
+    }
+
+    // --- SECOND PASS: Fetch Real Images via Serper.dev ---
+    const serperKey = Deno.env.get("SERPER_API_KEY");
+    if (serperKey && suggestions.length > 0) {
+      console.log(`Fetching Serper images for ${suggestions.length} items...`);
+
+      const fetchImage = async (query: string): Promise<string> => {
+        try {
+          const res = await fetch("https://google.serper.dev/images", {
+            method: "POST",
+            headers: {
+              "X-API-KEY": serperKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              q: query + " product",
+              num: 1,
+            }),
+          });
+          const data = await res.json();
+          if (data && data.images && data.images.length > 0) {
+            return data.images[0].imageUrl;
+          }
+        } catch (err) {
+          console.error(`Serper fetch failed for ${query}:`, err);
+        }
+        return "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop"; // fallback
+      };
+
+      const enrichedSuggestions = await Promise.all(
+        suggestions.map(async (gift: any) => {
+          const imageUrl = await fetchImage(gift.image_keyword || gift.name);
+          return {
+            ...gift,
+            image_url: imageUrl,
+          };
+        }),
+      );
+      suggestions = enrichedSuggestions;
     }
 
     // Save back to the event
