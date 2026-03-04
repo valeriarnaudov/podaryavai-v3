@@ -29,6 +29,19 @@ const DEFAULT_SETTINGS = [
     { setting_key: 'MODEL_AI_ULTRA', setting_value: 'gemini', description: 'AI Model for Ultra plan ("llama", "openai", "gemini")' },
     { setting_key: 'MODEL_AI_BUSINESS', setting_value: 'gemini', description: 'AI Model for Business plan ("llama", "openai", "gemini")' },
 
+    // Calendar Profile Generation
+    { setting_key: 'CONTACT_GIFTS_ENABLED_FREE', setting_value: 'false', description: 'Enable Calendar AI Gifts for Free plan ("true" | "false")' },
+    { setting_key: 'CONTACT_GIFTS_ENABLED_STANDARD', setting_value: 'false', description: 'Enable Calendar AI Gifts for Standard plan ("true" | "false")' },
+    { setting_key: 'CONTACT_GIFTS_ENABLED_PRO', setting_value: 'true', description: 'Enable Calendar AI Gifts for Pro plan ("true" | "false")' },
+    { setting_key: 'CONTACT_GIFTS_ENABLED_ULTRA', setting_value: 'true', description: 'Enable Calendar AI Gifts for Ultra plan ("true" | "false")' },
+    { setting_key: 'CONTACT_GIFTS_ENABLED_BUSINESS', setting_value: 'true', description: 'Enable Calendar AI Gifts for Business plan ("true" | "false")' },
+
+    { setting_key: 'CONTACT_GIFTS_MODEL_FREE', setting_value: 'gemini', description: 'Calendar AI Model for Free plan ("llama", "openai", "gemini")' },
+    { setting_key: 'CONTACT_GIFTS_MODEL_STANDARD', setting_value: 'gemini', description: 'Calendar AI Model for Standard plan ("llama", "openai", "gemini")' },
+    { setting_key: 'CONTACT_GIFTS_MODEL_PRO', setting_value: 'gemini', description: 'Calendar AI Model for Pro plan ("llama", "openai", "gemini")' },
+    { setting_key: 'CONTACT_GIFTS_MODEL_ULTRA', setting_value: 'gemini', description: 'Calendar AI Model for Ultra plan ("llama", "openai", "gemini")' },
+    { setting_key: 'CONTACT_GIFTS_MODEL_BUSINESS', setting_value: 'gemini', description: 'Calendar AI Model for Business plan ("llama", "openai", "gemini")' },
+
     { setting_key: 'LIMIT_CONTACTS_FREE', setting_value: '2', description: 'Maximum contacts allowed for Free plan' },
     { setting_key: 'LIMIT_CONTACTS_STANDARD', setting_value: '10', description: 'Maximum contacts allowed for Standard plan' },
     { setting_key: 'LIMIT_CONTACTS_PRO', setting_value: '50', description: 'Maximum contacts allowed for Pro plan' },
@@ -187,6 +200,8 @@ export default function AdminSettings() {
     const globalSettings = settings.filter(s => 
         !s.setting_key.startsWith('LIMIT_AI') && 
         !s.setting_key.startsWith('MODEL_AI') && 
+        !s.setting_key.startsWith('CONTACT_GIFTS_ENABLED') && 
+        !s.setting_key.startsWith('CONTACT_GIFTS_MODEL') && 
         !s.setting_key.startsWith('LIMIT_CONTACTS') &&
         !s.setting_key.startsWith('KARMA_PER_SWIPE')
     );
@@ -382,6 +397,34 @@ export default function AdminSettings() {
                                             value={editableValues[`MODEL_AI_${plan.plan_key}`] !== undefined ? editableValues[`MODEL_AI_${plan.plan_key}`] : 'llama'}
                                             onChange={(e) => handleValueChange(`MODEL_AI_${plan.plan_key}`, e.target.value)}
                                             className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-purple-500 focus:bg-white"
+                                        >
+                                            <option value="llama">Llama (Standard)</option>
+                                            <option value="openai">OpenAI (Premium)</option>
+                                            <option value="gemini">Gemini (Google)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Calendar Profile Gifts Settings */}
+                                    <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center">
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider text-teal-600">Calendar AI Options</span>
+                                        <label className="flex items-center space-x-2 cursor-pointer">
+                                            <span className="text-xs font-bold text-slate-400">Enabled</span>
+                                            <div className={`w-8 h-4 flex items-center rounded-full p-0.5 transition-colors duration-300 ${editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true' ? 'bg-teal-500' : 'bg-slate-300'}`}>
+                                                <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-300 ${editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true' ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true'}
+                                                onChange={(e) => handleValueChange(`CONTACT_GIFTS_ENABLED_${plan.plan_key}`, e.target.checked ? 'true' : 'false')}
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <select
+                                            value={editableValues[`CONTACT_GIFTS_MODEL_${plan.plan_key}`] !== undefined ? editableValues[`CONTACT_GIFTS_MODEL_${plan.plan_key}`] : 'gemini'}
+                                            onChange={(e) => handleValueChange(`CONTACT_GIFTS_MODEL_${plan.plan_key}`, e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-teal-500 focus:bg-white"
                                         >
                                             <option value="llama">Llama (Standard)</option>
                                             <option value="openai">OpenAI (Premium)</option>

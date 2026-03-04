@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { findNameDay } from '../lib/nameDaysBg';
@@ -145,11 +145,11 @@ export default function Home() {
         }
     };
 
-    const handleGenerateClick = (event: Event) => {
+    const handleGenerateClick = (event: Event, forceRegenerate: boolean = false) => {
         if (!user) return;
         if (!['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE')) return;
 
-        if (event.ai_recommendations) {
+        if (!forceRegenerate && event.ai_recommendations) {
             setExpandedEvent(expandedEvent === event.id ? null : event.id);
             return;
         }
@@ -162,7 +162,7 @@ export default function Home() {
             return;
         }
 
-        executeGeneration(event);
+        executeGeneration(event, forceRegenerate);
     };
 
     const handleSaveBudgetAndGenerate = async () => {
@@ -203,24 +203,38 @@ export default function Home() {
         }
     };
 
-    const executeGeneration = async (event: Event) => {
+    const executeGeneration = async (event: Event, forceRegenerate: boolean = false) => {
         setGeneratingFor(event.id);
         setExpandedEvent(event.id);
         
         try {
             const { data, error } = await supabase.functions.invoke('generate_contact_gifts', {
-                body: { contact_id: event.contacts.id, event_id: event.id }
+                body: { contact_id: event.contacts.id, event_id: event.id, force_regenerate: forceRegenerate }
             });
 
             if (error) {
                 console.error("Function error:", error);
                 throw error;
             }
+            if (data && data._error) {
+                throw new Error(data.message);
+            }
             
             setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, ai_recommendations: data.recommendations } : e));
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to generate:', err);
-            alert('AI generation failed. Make sure you filled out their profiling data in Edit Contact.');
+            
+            let errMsg = 'Unknown error';
+            if (err instanceof Error) {
+                errMsg = err.message;
+            } else if (typeof err === 'object' && err !== null) {
+                try {
+                    errMsg = JSON.stringify(err);
+                } catch {
+                    // ignore
+                }
+            }
+            alert(`Edge Function Error: ${errMsg}`);
             setExpandedEvent(null);
         } finally {
             setGeneratingFor(null);
@@ -468,8 +482,12 @@ export default function Home() {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="pt-2 text-center text-xs text-slate-400 font-medium">
-                                                    Don't like these? Edit their profile and try again, or visit Giftinder.
+                                                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium border-t border-slate-100">
+                                                    <span>Don't like these? Edit their profile or visit Giftinder.</span>
+                                                    <button onClick={() => handleGenerateClick(event, true)} className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg transition-colors flex items-center shadow-sm">
+                                                        <Sparkles className="w-3 h-3 mr-1.5 text-accent" />
+                                                        Regenerate Ideas
+                                                    </button>
                                                 </div>
                                             </div>
                                         ) : generatingFor === event.id && (

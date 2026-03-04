@@ -403,12 +403,12 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                         </a>
                     )}
                     <a
-                        href={`https://www.ozone.bg/s/?q=${encodeURIComponent(item.title)}`}
+                        href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.title)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center space-x-1 text-xs text-white bg-[#0244B6] py-1.5 rounded-lg hover:bg-[#02338A] transition-colors shadow-sm font-bold"
+                        className="flex items-center justify-center space-x-1 text-xs text-slate-700 bg-slate-100 py-1.5 rounded-lg hover:bg-slate-200 transition-colors shadow-sm font-semibold"
                     >
-                        <span>Купи от Ozone.bg</span>
+                        <span>Потърси онлайн</span>
                     </a>
                 </div>
             </div>

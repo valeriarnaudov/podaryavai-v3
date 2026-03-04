@@ -15,24 +15,33 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Missing Authorization header in request");
+
+    const jwt = authHeader.replace("Bearer ", "");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: { Authorization: authHeader },
         },
       },
     );
 
     // Verify user authentication
     const { data: { user }, error: authError } = await supabaseClient.auth
-      .getUser();
+      .getUser(jwt);
     if (authError || !user) {
-      throw new Error("Unauthorized");
+      throw new Error(
+        `Unauthorized (Invalid JWT): ${
+          authError?.message || "No User Object Found"
+        } (Token Length: ${jwt.length})`,
+      );
     }
 
-    const { contact_id, event_id } = await req.json();
+    const { contact_id, event_id, force_regenerate } = await req.json();
 
     if (!contact_id || !event_id) {
       throw new Error("Missing contact_id or event_id");
@@ -78,19 +87,34 @@ serve(async (req) => {
       );
     }
 
-    const modelKey = `MODEL_AI_${plan}`;
-    const chosenModel = settings[modelKey] || "llama";
+    const enabledKey = `CONTACT_GIFTS_ENABLED_${plan}`;
+    const isContactGiftsEnabled = settings[enabledKey] === "true"; // Defaults to false if missing, but we will add them to DB
 
-    // Check if recommendations already exist
+    // If there is no specific setting yet, we'll allow PRO, ULTRA, BUSINESS to use it by default to avoid breaking it during deployment
+    if (settings[enabledKey] === "false") {
+      throw new Error(
+        `Calendar Gift generation is disabled for the ${plan} plan.`,
+      );
+    }
+
+    const modelKey = `CONTACT_GIFTS_MODEL_${plan}`;
+    const chosenModel = settings[modelKey] || "gemini";
+
+    // Check if recommendations already exist and fetch event context
     const { data: existingEvent, error: eventError } = await supabaseClient
       .from("events")
-      .select("ai_recommendations")
+      .select("ai_recommendations, event_type, title")
       .eq("id", event_id)
       .eq("user_id", user.id)
       .single();
 
-    // If it already has recommendations, just return them
-    if (existingEvent?.ai_recommendations) {
+    // If it already has valid recommendations, just return them
+    if (
+      !force_regenerate &&
+      existingEvent?.ai_recommendations &&
+      Array.isArray(existingEvent.ai_recommendations) &&
+      existingEvent.ai_recommendations.length > 0
+    ) {
       return new Response(
         JSON.stringify({ recommendations: existingEvent.ai_recommendations }),
         {
@@ -132,11 +156,14 @@ serve(async (req) => {
       ? `\nCRITICAL BUDGET RULE: The user currently has a wallet balance of €${walletBalance}. Prioritize gifts that can be fully purchased strictly using this balance (under €${walletBalance}).`
       : `\nCRITICAL BUDGET RULE: The user currently has €0 in their wallet. They will pay out of pocket, so prioritize the contact's preferred budget over everything.`;
 
-    const dynamicContext =
-      `Suggest exactly 10 distinct gifts for a person named ${contact.name}. Relationship: ${contact.relationship}. ${ageGroupStr}${budgetPreferenceStr}${interestsStr}${personalityStr}${styleStr}${colorStr}${vibeStr}${weekendStr}${dislikesStr}`;
+    const dynamicContext = `EVENT TYPE: ${
+      existingEvent?.event_type || "Special Occasion"
+    } (${
+      existingEvent?.title || "Gift Event"
+    })\nSuggest exactly 10 distinct gifts for a person named ${contact.name}. Relationship: ${contact.relationship}. ${ageGroupStr}${budgetPreferenceStr}${interestsStr}${personalityStr}${styleStr}${colorStr}${vibeStr}${weekendStr}${dislikesStr}`;
 
     const systemPrompt =
-      `You are an expert AI gift concierge. Based on the user's contact profile, suggest EXACTLY 10 highly specific, real-world gift ideas. ${walletRules}
+      `You are an expert AI gift concierge. Based on the user's highly detailed contact profile, suggest EXACTLY 10 highly specific, real-world gift ideas. You MUST heavily weigh their personality, interests, aesthetic vibe, weekend activities, and the specific occasion (e.g. Birthday, Christmas, Wedding) when selecting gifts. Make sure the gifts feel profoundly personal to them. ${walletRules}
 
 CRITICAL RULES:
 1. Prices MUST be in EUR (e.g., "€100 - €150").
@@ -180,21 +207,27 @@ Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw arr
           const aiData = JSON.parse(rawText);
           if (aiData.choices && aiData.choices[0]) {
             let content = aiData.choices[0].message.content;
-            if (content.startsWith("```json")) {
-              content = content.replace(/^```json/, "").replace(/```$/, "")
+            try {
+              suggestions = JSON.parse(content);
+            } catch {
+              const clean = content.replace(/```json/gi, "").replace(/```/g, "")
                 .trim();
+              suggestions = JSON.parse(clean);
             }
-            suggestions = JSON.parse(content);
+          } else if (aiData.error) {
+            throw new Error(`OpenAI API Error: ${aiData.error.message}`);
           }
         }
       } else {
-        console.error("OpenAI requested but no API key configured");
+        throw new Error(
+          "OpenAI requested but no API key configured in Edge Function Secrets",
+        );
       }
     } else if (chosenModel === "gemini") {
       const geminiKey = Deno.env.get("GEMINI_API_KEY");
       if (geminiKey) {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: {
@@ -216,15 +249,21 @@ Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw arr
 
         const aiData = await response.json();
         if (aiData.candidates && aiData.candidates[0]) {
-          let content = aiData.candidates[0].content.parts[0].text;
-          if (content.startsWith("```json")) {
-            content = content.replace(/^```json/, "").replace(/```$/, "")
+          const content = aiData.candidates[0].content.parts[0].text;
+          try {
+            suggestions = JSON.parse(content);
+          } catch {
+            const clean = content.replace(/```json/gi, "").replace(/```/g, "")
               .trim();
+            suggestions = JSON.parse(clean);
           }
-          suggestions = JSON.parse(content);
+        } else if (aiData.error) {
+          throw new Error(`Gemini API Error: ${aiData.error.message}`);
         }
       } else {
-        console.error("Gemini requested but no API key configured");
+        throw new Error(
+          "Gemini requested but no API key configured in Edge Function Secrets",
+        );
       }
     } else {
       // Fallback to Groq (Llama)
@@ -253,11 +292,13 @@ Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw arr
           const aiData = JSON.parse(rawText);
           if (aiData.choices && aiData.choices[0]) {
             let content = aiData.choices[0].message.content;
-            if (content.startsWith("```json")) {
-              content = content.replace(/^```json/, "").replace(/```$/, "")
+            try {
+              suggestions = JSON.parse(content);
+            } catch {
+              const clean = content.replace(/```json/gi, "").replace(/```/g, "")
                 .trim();
+              suggestions = JSON.parse(clean);
             }
-            suggestions = JSON.parse(content);
           }
         }
       }
@@ -316,9 +357,16 @@ Do NOT wrap the JSON in markdown blocks like \`\`\`json. Return ONLY the raw arr
       },
     );
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({
+        _error: true,
+        message: error.message,
+        stack: error.stack,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
   }
 });
