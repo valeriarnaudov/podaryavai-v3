@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, LogOut, Loader2, Award, Clock, History, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 interface KarmaReward {
     id: string;
@@ -17,6 +18,7 @@ interface KarmaReward {
 
 export default function Karma() {
     const { user, karmaPoints, activeReward, refreshUserData, signOut, loading: authLoading } = useAuth();
+    const { t } = useTranslation();
     const [rewards, setRewards] = useState<KarmaReward[]>([]);
     const [loading, setLoading] = useState(true);
     const [redeeming, setRedeeming] = useState<string | null>(null);
@@ -40,16 +42,16 @@ export default function Karma() {
 
     const handleRedeem = async (reward: KarmaReward) => {
         if (!user || user.id === 'preview') {
-            alert("Please log in to redeem rewards.");
+            alert(t('karmaStore.loginRequired'));
             return;
         }
 
         if (karmaPoints < reward.cost_points) {
-            alert("Not enough Karma points!");
+            alert(t('karmaStore.notEnough'));
             return;
         }
 
-        if (!confirm(`Are you sure you want to spend ${reward.cost_points} points on "${reward.title}"?`)) {
+        if (!confirm(t('karmaStore.confirmSpend', { points: reward.cost_points, title: reward.title }))) {
             return;
         }
 
@@ -67,11 +69,11 @@ export default function Karma() {
             await refreshUserData();
 
             // Provide feedback
-            alert(`🎉 Success! You redeemed ${reward.title}.`);
+            alert(t('karmaStore.successRedeem', { title: reward.title }));
 
         } catch (error: any) {
             console.error("Error redeeming reward:", error);
-            alert(`Error: ${error.message || 'Could not redeem reward. Please try again later.'}`);
+            alert(t('karmaStore.errorRedeem', { error: error.message || t('karmaStore.genericError') }));
         } finally {
             setRedeeming(null);
         }
@@ -97,8 +99,8 @@ export default function Karma() {
         <div className="h-full flex flex-col bg-background relative overflow-hidden">
             <header className="px-6 pt-10 pb-6 flex justify-between items-center relative z-10">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">Gamification</h1>
-                    <p className="text-sm text-slate-500">Earn points, unlock rewards.</p>
+                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('karmaStore.title')}</h1>
+                    <p className="text-sm text-slate-500">{t('karmaStore.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -133,7 +135,7 @@ export default function Karma() {
                             {authLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Sparkles className="w-8 h-8 text-white drop-shadow-md" />}
                         </div>
                         <h2 className="text-6xl font-black mb-1 drop-shadow-md">{karmaPoints}</h2>
-                        <p className="font-semibold tracking-widest uppercase text-white/90 text-sm">Karma Points</p>
+                        <p className="font-semibold tracking-widest uppercase text-white/90 text-sm">{t('karmaStore.points')}</p>
                     </div>
                 </motion.div>
 
@@ -148,9 +150,9 @@ export default function Karma() {
                             <Clock className="w-6 h-6" />
                         </div>
                         <div>
-                            <h4 className="font-bold text-emerald-800">Active Reward: {activeReward.title}</h4>
+                            <h4 className="font-bold text-emerald-800">{t('karmaStore.activeReward')}: {activeReward.title}</h4>
                             <p className="text-sm font-medium text-emerald-600 mt-1">
-                                Enjoy your upgraded benefits! They will automatically expire on {new Date(activeReward.expires_at).toLocaleDateString()}.
+                                {t('karmaStore.benefitsExpire')} {new Date(activeReward.expires_at).toLocaleDateString()}.
                             </p>
                         </div>
                     </motion.div>
@@ -158,12 +160,12 @@ export default function Karma() {
 
                 {/* Rewards List */}
                 <div>
-                    <h3 className="text-lg font-bold text-textMain mb-4">Karma Store</h3>
+                    <h3 className="text-lg font-bold text-textMain mb-4">{t('karmaStore.store')}</h3>
                     {loading ? (
                         <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-slate-300" /></div>
                     ) : rewards.length === 0 ? (
                         <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-slate-500">No rewards available in the store right now.</p>
+                            <p className="text-slate-500">{t('karmaStore.noRewards')}</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -188,16 +190,16 @@ export default function Karma() {
                                             <div>
                                                 <h4 className="font-bold text-textMain">{reward.title}</h4>
                                                 <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-semibold">
-                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">{reward.cost_points} Points</span>
+                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">{t('karmaStore.costPoints', { points: reward.cost_points })}</span>
                                                     
                                                     <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
-                                                        {reward.reward_type === 'PLAN_UPGRADE' ? `Unlocks: ${reward.reward_value}` : 
-                                                         reward.reward_type === 'ADD_FREE_DELIVERIES' ? `+${reward.reward_metadata?.amount || 1} Deliveries` : 
+                                                        {reward.reward_type === 'PLAN_UPGRADE' ? `${t('karmaStore.unlocks')}: ${reward.reward_value}` : 
+                                                         reward.reward_type === 'ADD_FREE_DELIVERIES' ? t('karmaStore.deliveries', { amount: reward.reward_metadata?.amount || 1 }) : 
                                                          reward.reward_type.replace(/_/g, ' ')}
                                                     </span>
 
                                                     {reward.duration_days > 0 && (
-                                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md">{reward.duration_days} Days</span>
+                                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md">{t('karmaStore.days', { days: reward.duration_days })}</span>
                                                     )}
                                                 </div>
                                                 {reward.description && <p className="text-xs text-slate-500 mt-2">{reward.description}</p>}
@@ -209,7 +211,7 @@ export default function Karma() {
                                             disabled={redeeming === reward.id || isLocked}
                                             className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition-all outline-none disabled:opacity-50 flex items-center justify-center whitespace-nowrap"
                                         >
-                                            {redeeming === reward.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (isLocked ? 'Locked' : 'Buy Reward')}
+                                            {redeeming === reward.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (isLocked ? t('karmaStore.locked') : t('karmaStore.buyReward'))}
                                         </button>
                                     </motion.div>
                                 );
@@ -229,8 +231,8 @@ export default function Karma() {
                     >
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Karma History</h3>
-                                <p className="text-xs text-slate-500 mt-1">Recent point transactions</p>
+                                <h3 className="text-xl font-bold text-slate-800">{t('karmaStore.historyTitle')}</h3>
+                                <p className="text-xs text-slate-500 mt-1">{t('karmaStore.historySubtitle')}</p>
                             </div>
                             <button onClick={() => setShowHistory(false)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
                                 <X className="w-5 h-5" />
@@ -240,7 +242,7 @@ export default function Karma() {
                             {loadingHistory ? (
                                 <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
                             ) : historyLogs.length === 0 ? (
-                                <p className="text-center text-slate-500 py-6">No history found.</p>
+                                <p className="text-center text-slate-500 py-6">{t('karmaStore.noHistory')}</p>
                             ) : (
                                 historyLogs.map(log => (
                                     <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
@@ -250,7 +252,7 @@ export default function Karma() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-700">{log.description}</p>
-                                                <p className="text-[10px] text-slate-400 font-medium uppercase mt-0.5">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium uppercase mt-0.5">{new Date(log.created_at).toLocaleDateString()} {t('karmaStore.atTime')} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                             </div>
                                         </div>
                                         <span className={`font-black tracking-tight ${log.action_type === 'EARNED' ? 'text-emerald-500' : 'text-slate-500'}`}>

@@ -25,6 +25,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminGifts from './pages/admin/AdminGifts';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminKarmaRewards from './pages/admin/AdminKarmaRewards';
+import AdminEmails from './pages/admin/AdminEmails';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import Upgrade from './pages/Upgrade';
 import CheckoutCancel from './pages/CheckoutCancel';
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
             { path: 'users', element: <AdminUsers /> },
             { path: 'gifts', element: <AdminGifts /> },
             { path: 'settings', element: <AdminSettings /> },
+            { path: 'emails', element: <AdminEmails /> },
             { path: 'karma', element: <AdminKarmaRewards /> }
         ]
     }

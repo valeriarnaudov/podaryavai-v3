@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award, Heart } from 'lucide-react';
+import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award, Heart, Globe, Moon, Sun, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Profile() {
     const { user, signOut, hasGoldenAura, subscriptionPlan, activeReward } = useAuth();
@@ -11,6 +13,20 @@ export default function Profile() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [portalLoading, setPortalLoading] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    const { t, i18n } = useTranslation();
+    const { theme, setTheme } = useTheme();
+
+    const toggleLanguage = () => {
+        i18n.changeLanguage(i18n.language === 'en' ? 'bg' : 'en');
+    };
+
+    const getThemeIcon = () => {
+        if (theme === 'light') return <Sun className="w-4 h-4 text-amber-500" />;
+        if (theme === 'dark') return <Moon className="w-4 h-4 text-indigo-400" />;
+        return <Monitor className="w-4 h-4 text-slate-400" />;
+    };
 
     // Form fields
     const [firstName, setFirstName] = useState('');
@@ -18,6 +34,9 @@ export default function Profile() {
     const [email, setEmail] = useState('');
     const [dob, setDob] = useState('');
     const [password, setPassword] = useState('');
+
+    // Notification Preferences
+    const [notifyEmailEvents, setNotifyEmailEvents] = useState(true);
 
     // Giftinder Preferences (Matching Contacts)
     const [ageGroup, setAgeGroup] = useState('');
@@ -44,18 +63,23 @@ export default function Profile() {
             setDob(user.user_metadata?.dob || '');
 
             const fetchGiftinderPrefs = async () => {
-                const { data } = await supabase.from('users').select('giftinder_preferences').eq('id', user.id).single();
-                if (data?.giftinder_preferences) {
-                    const prefs = data.giftinder_preferences as any;
-                    setAgeGroup(prefs.ageGroup || '');
-                    setPersonality(prefs.personality || 'Balanced');
-                    setStyle(prefs.style || 'Casual');
-                    setFavoriteColor(prefs.favoriteColor || '');
-                    setWeekendActivity(prefs.weekendActivity || '');
-                    setFavoriteVibe(prefs.favoriteVibe || '');
-                    setDislikes(prefs.dislikes || '');
-                    setInterests(prefs.interests || '');
-                    setBudgetPreference(prefs.budgetPreference || '');
+                const { data } = await supabase.from('users').select('giftinder_preferences, notify_email_events').eq('id', user.id).single();
+                if (data) {
+                    if (data.notify_email_events !== undefined) {
+                        setNotifyEmailEvents(data.notify_email_events);
+                    }
+                    if (data.giftinder_preferences) {
+                        const prefs = data.giftinder_preferences as any;
+                        setAgeGroup(prefs.ageGroup || '');
+                        setPersonality(prefs.personality || 'Balanced');
+                        setStyle(prefs.style || 'Casual');
+                        setFavoriteColor(prefs.favoriteColor || '');
+                        setWeekendActivity(prefs.weekendActivity || '');
+                        setFavoriteVibe(prefs.favoriteVibe || '');
+                        setDislikes(prefs.dislikes || '');
+                        setInterests(prefs.interests || '');
+                        setBudgetPreference(prefs.budgetPreference || '');
+                    }
                 }
             };
             fetchGiftinderPrefs();
@@ -102,7 +126,10 @@ export default function Profile() {
                 interests: interests.trim(), 
                 budgetPreference 
             };
-            const { error: prefsError } = await supabase.from('users').update({ giftinder_preferences: prefs }).eq('id', user.id);
+            const { error: prefsError } = await supabase.from('users').update({ 
+                giftinder_preferences: prefs,
+                notify_email_events: notifyEmailEvents
+            }).eq('id', user.id);
             if (prefsError) throw prefsError;
 
             setMessage(email !== user.email ? 'Profile updated. Please check email to confirm change.' : 'Profile updated successfully!');
@@ -178,8 +205,8 @@ export default function Profile() {
         >
             <header className="pt-4 pb-2 flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">Profile</h1>
-                    <p className="text-slate-500 text-sm mt-1">Manage your account settings.</p>
+                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('profile.title')}</h1>
+                    <p className="text-slate-500 text-sm mt-1">{t('profile.subtitle')}</p>
                 </div>
             </header>
 
@@ -203,14 +230,132 @@ export default function Profile() {
                                 </div>
                             )}
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-textMain">{displayFullName || 'Unknown User'}</h2>
+                        <div className="relative">
+                            <div className="flex items-center space-x-3">
+                                <h2 className="text-2xl font-bold text-textMain">{displayFullName || t('profile.unknownUser')}</h2>
+                                <button
+                                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                                    className="p-1.5 text-slate-400 hover:text-accent bg-slate-50 hover:bg-slate-100 rounded-full transition-colors relative"
+                                    title="App Settings"
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </button>
+                            </div>
                             <p className="text-slate-500 text-sm font-medium">{email}</p>
+
+                            {/* Settings Dropdown */}
+                            <AnimatePresence>
+                                {isSettingsOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                                    >
+                                        <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                {t('profile.preferences')}
+                                            </span>
+                                            <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-600 text-xs font-medium">{t('profile.cancel')}</button>
+                                        </div>
+                                        
+                                        <div className="p-2 space-y-1">
+                                            {/* Language Toggle */}
+                                            <button
+                                                onClick={toggleLanguage}
+                                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                            >
+                                                <div className="flex items-center space-x-3">
+                                                    <Globe className="w-4 h-4 text-blue-500" />
+                                                    <span>{t('profile.language')}</span>
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md">
+                                                    {i18n.language === 'en' ? 'EN' : 'BG'}
+                                                </span>
+                                            </button>
+
+                                            {/* Theme Toggle */}
+                                            <div className="px-3 py-2 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+                                                        {getThemeIcon()}
+                                                        <span>{t('profile.theme')}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
+                                                    <button 
+                                                        onClick={() => setTheme('light')}
+                                                        className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                                    >
+                                                        {t('profile.themeLight')}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setTheme('dark')}
+                                                        className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                                    >
+                                                        {t('profile.themeDark')}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setTheme('system')}
+                                                        className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${theme === 'system' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                                    >
+                                                        {t('profile.themeSystem')}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-px bg-slate-100 dark:bg-slate-700 my-2" />
+                                            
+                                            {/* Notification Preferences */}
+                                            <div className="px-3 py-2">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{t('profile.notifications')}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 rounded-lg p-2">
+                                                    <div>
+                                                        <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">{t('profile.emailAlerts')}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newValue = !notifyEmailEvents;
+                                                            setNotifyEmailEvents(newValue);
+                                                            if (user) await supabase.from('users').update({ notify_email_events: newValue }).eq('id', user.id);
+                                                        }}
+                                                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                            notifyEmailEvents ? 'bg-accent' : 'bg-slate-300 dark:bg-slate-600'
+                                                        }`}
+                                                    >
+                                                        <span
+                                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                                notifyEmailEvents ? 'translate-x-4' : 'translate-x-0'
+                                                            }`}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-px bg-slate-100 dark:bg-slate-700 my-2" />
+                                            
+                                            {/* Logout */}
+                                            <button
+                                                onClick={handleLogout}
+                                                disabled={loading}
+                                                className="w-full flex items-center justify-start px-3 py-2 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            >
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <LogOut className="w-4 h-4 mr-3" />}
+                                                <span>{t('profile.logout')}</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                     {!isEditing && (
-                        <button onClick={() => setIsEditing(true)} className="p-2 text-slate-400 hover:text-accent bg-slate-50 rounded-full transition-colors">
-                            <Edit3 className="w-5 h-5" />
+                        <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-accent bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
+                            <Edit3 className="w-4 h-4" />
+                            <span>{t('profile.editProfile')}</span>
                         </button>
                     )}
                 </div>
@@ -222,15 +367,15 @@ export default function Profile() {
                         <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl">
-                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><User className="w-3 h-3 mr-1" /> Full Name</p>
+                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><User className="w-3 h-3 mr-1" /> {t('profile.fullName')}</p>
                                     <p className="font-semibold text-textMain">{displayFullName || '-'}</p>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl">
-                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> Date of Birth</p>
+                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> {t('profile.dob')}</p>
                                     <p className="font-semibold text-textMain">{dob || '-'}</p>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl col-span-2">
-                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Mail className="w-3 h-3 mr-1" /> Email Address</p>
+                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Mail className="w-3 h-3 mr-1" /> {t('profile.emailAddress')}</p>
                                     <p className="font-semibold text-textMain">{email}</p>
                                 </div>
                             </div>
@@ -239,35 +384,35 @@ export default function Profile() {
                             <div className="bg-slate-50 p-5 rounded-2xl mt-4">
                                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
                                     <Heart className="w-4 h-4 mr-2 text-rose-500" />
-                                    Giftinder AI Profile
+                                    {t('profile.giftinderProfile')}
                                 </h3>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                     <div>
-                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Age Group</p>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.ageGroup')}</p>
                                         <p className="font-semibold text-textMain text-sm">{ageGroup || '-'}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Personality</p>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.personality')}</p>
                                         <p className="font-semibold text-textMain text-sm">{personality || '-'}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Style</p>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.style')}</p>
                                         <p className="font-semibold text-textMain text-sm">{style || '-'}</p>
                                     </div>
                                     {favoriteColor && (
                                         <div>
-                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Favorite Color</p>
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.favoriteColor')}</p>
                                             <p className="font-semibold text-textMain text-sm">{favoriteColor}</p>
                                         </div>
                                     )}
                                     {budgetPreference && (
                                         <div>
-                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Budget Pref.</p>
+                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.budgetPref')}</p>
                                             <p className="font-semibold text-textMain text-sm">€{budgetPreference}</p>
                                         </div>
                                     )}
                                     <div className="col-span-2 sm:col-span-3">
-                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Interests & Hobbies</p>
+                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">{t('profile.interestsHobbies')}</p>
                                         <p className="font-semibold text-textMain text-sm">{interests || '-'}</p>
                                     </div>
                                 </div>
@@ -281,28 +426,28 @@ export default function Profile() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('contactForm.firstName')}</label>
                                         <input
                                             type="text"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            placeholder="e.g. Ivan"
+                                            placeholder={t('contactForm.firstNamePlaceholder')}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Last Name</label>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('contactForm.lastName')}</label>
                                         <input
                                             type="text"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            placeholder="e.g. Ivanov"
+                                            placeholder={t('contactForm.lastNamePlaceholder')}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('profile.dob')}</label>
                                     <input
                                         type="date"
                                         value={dob}
@@ -313,25 +458,25 @@ export default function Profile() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('profile.emailAddress')}</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                 />
-                                <p className="text-xs text-slate-400 mt-1">Changing this will require verification.</p>
+                                <p className="text-xs text-slate-400 mt-1">{t('profile.emailVerification')}</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">New Password (Optional)</label>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('profile.newPassword')}</label>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Leave blank to keep current"
+                                        placeholder={t('profile.newPasswordPlaceholder')}
                                         className="w-full pl-11 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                     />
                                 </div>
@@ -341,20 +486,20 @@ export default function Profile() {
                             <div className="pt-4 mt-2 border-t border-slate-100">
                                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
                                     <Heart className="w-5 h-5 mr-2 text-rose-500" />
-                                    Giftinder AI Preferences
+                                    {t('profile.giftinderAIPrefs')}
                                 </h3>
-                                <p className="text-sm text-slate-500 mb-4">Help the AI learn your style, so we can suggest better daily gifts for you to save!</p>
+                                <p className="text-sm text-slate-500 mb-4">{t('profile.giftinderAIDesc')}</p>
 
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.ageGroup')}</label>
                                             <select
                                                 value={ageGroup}
                                                 onChange={e => setAgeGroup(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                             >
-                                                <option value="">Select Age Group...</option>
+                                                <option value="">{t('profile.selectAgeGroup')}</option>
                                                 <option value="Child (0-12)">Child (0-12)</option>
                                                 <option value="Teen (13-19)">Teen (13-19)</option>
                                                 <option value="20-30">20 - 30</option>
@@ -366,126 +511,126 @@ export default function Profile() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Personality Trait</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.personality')}</label>
                                             <select
                                                 value={personality}
                                                 onChange={e => setPersonality(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                             >
-                                                <option value="Balanced">Balanced / Average</option>
-                                                <option value="Introvert/Homebody">Introvert / Homebody</option>
-                                                <option value="Extrovert/Social">Extrovert / Social</option>
-                                                <option value="Adventurous/Active">Adventurous / Active</option>
-                                                <option value="Creative/Artistic">Creative / Artistic</option>
-                                                <option value="Practical/Logical">Practical / Logical</option>
+                                                <option value="Balanced">{t('contactForm.personalities.balanced')}</option>
+                                                <option value="Introvert/Homebody">{t('contactForm.personalities.introvert')}</option>
+                                                <option value="Extrovert/Social">{t('contactForm.personalities.extrovert')}</option>
+                                                <option value="Adventurous/Active">{t('contactForm.personalities.adventurous')}</option>
+                                                <option value="Creative/Artistic">{t('contactForm.personalities.creative')}</option>
+                                                <option value="Practical/Logical">{t('contactForm.personalities.practical')}</option>
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Style Preference</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.style')}</label>
                                             <select
                                                 value={style}
                                                 onChange={e => setStyle(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                             >
-                                                <option value="Casual">Casual / Everyday</option>
-                                                <option value="Minimalist">Minimalist</option>
-                                                <option value="Luxury">Luxury / Premium</option>
-                                                <option value="Handmade/Artisanal">Handmade / Artisanal</option>
-                                                <option value="Tech-focused">Tech-focused / Gadgets</option>
-                                                <option value="Sporty">Sporty / Athletic</option>
-                                                <option value="Vintage/Retro">Vintage / Retro</option>
+                                                <option value="Casual">{t('contactForm.styles.casual')}</option>
+                                                <option value="Minimalist">{t('contactForm.styles.minimalist')}</option>
+                                                <option value="Luxury">{t('contactForm.styles.luxury')}</option>
+                                                <option value="Handmade/Artisanal">{t('contactForm.styles.handmade')}</option>
+                                                <option value="Tech-focused">{t('contactForm.styles.tech')}</option>
+                                                <option value="Sporty">{t('contactForm.styles.sporty')}</option>
+                                                <option value="Vintage/Retro">{t('contactForm.styles.vintage')}</option>
                                             </select>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.favoriteColor')}</label>
                                             <select
                                                 value={favoriteColor}
                                                 onChange={e => setFavoriteColor(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                             >
-                                                <option value="">Any Color / Not Sure</option>
-                                                <option value="Black">Black (Sleek, Modern)</option>
-                                                <option value="White">White (Clean, Minimal)</option>
-                                                <option value="Blue">Blue (Calming, Classic)</option>
-                                                <option value="Red">Red (Bold, Energetic)</option>
-                                                <option value="Green">Green (Nature, Fresh)</option>
-                                                <option value="Yellow">Yellow (Bright, Happy)</option>
-                                                <option value="Purple">Purple (Creative, Royal)</option>
-                                                <option value="Pink">Pink (Playful, Soft)</option>
-                                                <option value="Pastels">Pastels</option>
-                                                <option value="Earth Tones">Earth Tones</option>
-                                                <option value="Monochrome">Monochrome</option>
+                                                <option value="">{t('contactForm.colors.any')}</option>
+                                                <option value="Black">{t('contactForm.colors.black')}</option>
+                                                <option value="White">{t('contactForm.colors.white')}</option>
+                                                <option value="Blue">{t('contactForm.colors.blue')}</option>
+                                                <option value="Red">{t('contactForm.colors.red')}</option>
+                                                <option value="Green">{t('contactForm.colors.green')}</option>
+                                                <option value="Yellow">{t('contactForm.colors.yellow')}</option>
+                                                <option value="Purple">{t('contactForm.colors.purple')}</option>
+                                                <option value="Pink">{t('contactForm.colors.pink')}</option>
+                                                <option value="Pastels">{t('contactForm.colors.pastels')}</option>
+                                                <option value="Earth Tones">{t('contactForm.colors.earth')}</option>
+                                                <option value="Monochrome">{t('contactForm.colors.monochrome')}</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Vibe / Aesthetic</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.favoriteVibe')}</label>
                                             <select
                                                 value={favoriteVibe}
                                                 onChange={e => setFavoriteVibe(e.target.value)}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                             >
-                                                <option value="">Any Vibe</option>
-                                                <option value="Cozy">Cozy & Relaxed</option>
-                                                <option value="Techy">Techy & Cyber</option>
-                                                <option value="Glamorous">Glamorous & Chic</option>
-                                                <option value="Minimalist">Minimalist & Clean</option>
-                                                <option value="Earthy">Earthy & Natural</option>
-                                                <option value="Industrial">Industrial & Edgy</option>
-                                                <option value="Vintage">Vintage & Nostalgic</option>
-                                                <option value="Sporty">Sporty & Active</option>
+                                                <option value="">{t('contactForm.vibes.any')}</option>
+                                                <option value="Cozy">{t('contactForm.vibes.cozy')}</option>
+                                                <option value="Techy">{t('contactForm.vibes.techy')}</option>
+                                                <option value="Glamorous">{t('contactForm.vibes.glamorous')}</option>
+                                                <option value="Minimalist">{t('contactForm.vibes.minimalist')}</option>
+                                                <option value="Earthy">{t('contactForm.vibes.earthy')}</option>
+                                                <option value="Industrial">{t('contactForm.vibes.industrial')}</option>
+                                                <option value="Vintage">{t('contactForm.vibes.vintage')}</option>
+                                                <option value="Sporty">{t('contactForm.vibes.sporty')}</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-2">Are there any specific things we should avoid buying for you?</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.dislikesLabel')}</label>
                                             <input
                                                 type="text"
                                                 value={dislikes}
                                                 onChange={e => setDislikes(e.target.value)}
-                                                placeholder="e.g. No alcohol, hates socks, no sweets"
+                                                placeholder={t('profile.dislikesPlaceholder')}
                                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Weekend Activity</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.weekendActivity')}</label>
                                         <select
                                             value={weekendActivity}
                                             onChange={e => setWeekendActivity(e.target.value)}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                                         >
-                                            <option value="">Any Activity</option>
-                                            <option value="Outdoors & Hiking">Outdoors & Hiking</option>
-                                            <option value="Netflix & Chill">Netflix & Chill</option>
-                                            <option value="Partying & Events">Partying & Events</option>
-                                            <option value="Board Games & Puzzles">Board Games & Puzzles</option>
-                                            <option value="Cooking & Baking">Cooking & Baking</option>
-                                            <option value="Reading & Coffee">Reading & Coffee</option>
-                                            <option value="Sports & Gym">Sports & Gym</option>
-                                            <option value="Video Games">Video Games</option>
-                                            <option value="DIY & Crafts">DIY & Crafts</option>
-                                            <option value="Traveling & Exploring">Traveling & Exploring</option>
+                                            <option value="">{t('contactForm.activities.any')}</option>
+                                            <option value="Outdoors & Hiking">{t('contactForm.activities.outdoors')}</option>
+                                            <option value="Netflix & Chill">{t('contactForm.activities.netflix')}</option>
+                                            <option value="Partying & Events">{t('contactForm.activities.partying')}</option>
+                                            <option value="Board Games & Puzzles">{t('contactForm.activities.boardGames')}</option>
+                                            <option value="Cooking & Baking">{t('contactForm.activities.cooking')}</option>
+                                            <option value="Reading & Coffee">{t('contactForm.activities.reading')}</option>
+                                            <option value="Sports & Gym">{t('contactForm.activities.sports')}</option>
+                                            <option value="Video Games">{t('contactForm.activities.videoGames')}</option>
+                                            <option value="DIY & Crafts">{t('contactForm.activities.diy')}</option>
+                                            <option value="Traveling & Exploring">{t('contactForm.activities.traveling')}</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">What are your absolute favorite hobbies, brands, or interests?</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.interestsLabel')}</label>
                                         <textarea
                                             value={interests}
                                             onChange={e => setInterests(e.target.value)}
-                                            placeholder="e.g. Loves reading sci-fi, hiking mountains, drinking espresso..."
+                                            placeholder={t('contactForm.interestsPlaceholder')}
                                             rows={2}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all resize-none"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Budget Target / Limit</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('profile.budgetTarget')}</label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                 <span className="text-slate-500 font-medium">€</span>
@@ -495,7 +640,7 @@ export default function Profile() {
                                                 min="0"
                                                 value={budgetPreference}
                                                 onChange={e => setBudgetPreference(e.target.value)}
-                                                placeholder="e.g. 100"
+                                                placeholder={t('profile.budgetTargetPlaceholder')}
                                                 className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                         </div>
@@ -505,13 +650,13 @@ export default function Profile() {
 
                             <div className="flex space-x-3 pt-2">
                                 <button type="button" onClick={() => setIsEditing(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-semibold hover:bg-slate-200 transition-colors">
-                                    Cancel
+                                    {t('profile.cancel')}
                                 </button>
                                 <button type="submit" disabled={saving} className="flex-1 py-3 bg-accent text-white rounded-2xl font-semibold active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 shadow-floating shadow-accent/20">
                                     {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                         <>
                                             <Save className="w-4 h-4" />
-                                            <span>Save Changes</span>
+                                            <span>{t('profile.save')}</span>
                                         </>
                                     )}
                                 </button>
@@ -532,14 +677,14 @@ export default function Profile() {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <Award className="w-5 h-5 text-emerald-400" />
-                                <h4 className="font-bold text-emerald-400 text-xs tracking-widest uppercase">Active Karma Reward</h4>
+                                <h4 className="font-bold text-emerald-400 text-xs tracking-widest uppercase">{t('profile.activeKarmaReward')}</h4>
                             </div>
                             <p className="text-white font-medium">{activeReward.title} (Expires: {new Date(activeReward.expires_at).toLocaleDateString()})</p>
                         </div>
                         <div className="sm:text-right shrink-0">
-                            <span className="text-xs text-emerald-200">Time Remaining</span>
+                            <span className="text-xs text-emerald-200">{t('profile.timeRemaining')}</span>
                             <p className="font-bold text-white text-lg">
-                                {Math.max(0, Math.ceil((new Date(activeReward.expires_at).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} Days
+                                {Math.max(0, Math.ceil((new Date(activeReward.expires_at).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} {t('profile.days')}
                             </p>
                         </div>
                     </div>
@@ -549,13 +694,13 @@ export default function Profile() {
                     <div>
                         <div className="flex items-center space-x-2 mb-1">
                             <Crown className="w-5 h-5 text-yellow-400" />
-                            <h3 className="font-bold text-lg">Current Plan</h3>
+                            <h3 className="font-bold text-lg">{t('profile.currentPlan')}</h3>
                         </div>
                         <p className="text-4xl font-extrabold tracking-tight mb-2 capitalize">
                             {(subscriptionPlan || 'FREE').toLowerCase()}
                         </p>
                         <p className="text-sm text-slate-300">
-                            {activeReward ? "Your account will handle limits according to your active reward tier." : "Upgrade to unlock more AI gift generations and premium models."}
+                            {activeReward ? t('profile.activeRewardLimits') : t('profile.upgradeUnlock')}
                         </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -566,33 +711,17 @@ export default function Profile() {
                                 className="py-3 px-6 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl font-bold active:scale-95 transition-all whitespace-nowrap shadow-soft flex items-center justify-center"
                             >
                                 {portalLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Settings className="w-4 h-4 mr-2" />}
-                                Manage Subscription
+                                {t('profile.manageSubscription')}
                             </button>
                         )}
                         <button
                             onClick={() => navigate('/upgrade')}
                             className="py-3 px-8 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap shadow-xl text-center"
                         >
-                            View Plans
+                            {t('profile.viewPlans')}
                         </button>
                     </div>
                 </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className="mt-8 pt-8 border-t border-slate-200/50 flex justify-center">
-                <button
-                    onClick={handleLogout}
-                    disabled={loading}
-                    className="w-full sm:w-auto px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-semibold hover:bg-red-100 active:scale-95 transition-all flex items-center justify-center space-x-2"
-                >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                        <>
-                            <LogOut className="w-5 h-5" />
-                            <span>Log Out Safely</span>
-                        </>
-                    )}
-                </button>
             </div>
         </motion.div>
     );

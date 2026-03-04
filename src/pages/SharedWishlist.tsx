@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Gift, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WishlistItem {
     id: string;
@@ -21,6 +22,7 @@ export default function SharedWishlist() {
     const [userName, setUserName] = useState<string>('Someone');
     const [userAvatar, setUserAvatar] = useState<string | null>(null);
     const [userHasAura, setUserHasAura] = useState(false);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (userId) {
@@ -85,10 +87,10 @@ export default function SharedWishlist() {
                     </div>
                 </div>
                 <h1 className="text-2xl font-bold text-textMain tracking-tight">
-                    {userName}'s Wishlist
+                    {t('sharedWishlist.title', { name: userName })}
                 </h1>
                 <p className="text-sm text-slate-500 mt-2">
-                    Gift ideas {userName} actually wants!
+                    {t('sharedWishlist.subtitle', { name: userName })}
                 </p>
             </header>
 
@@ -102,9 +104,9 @@ export default function SharedWishlist() {
                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Gift className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-textMain mb-2">Empty Wishlist</h3>
+                        <h3 className="text-lg font-bold text-textMain mb-2">{t('sharedWishlist.emptyTitle')}</h3>
                         <p className="text-slate-500 text-sm px-6">
-                            {userName} hasn't added any public items to their wishlist yet.
+                            {t('sharedWishlist.emptyDesc', { name: userName })}
                         </p>
                     </div>
                 ) : (
@@ -121,13 +123,13 @@ export default function SharedWishlist() {
                                     {item.image_url ? (
                                         <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">{t('wishlist.noImage')}</div>
                                     )}
                                 </div>
                                 <div className="p-3 flex-1 flex flex-col justify-between">
                                     <div>
                                         <h3 className="font-semibold text-textMain text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
-                                        <p className="text-xs font-medium text-accent">{item.price_range || 'Price N/A'}</p>
+                                        <p className="text-xs font-medium text-accent">{item.price_range || t('wishlist.priceNA')}</p>
                                     </div>
                                     {item.source_url && (
                                         <a
@@ -136,7 +138,7 @@ export default function SharedWishlist() {
                                             rel="noopener noreferrer"
                                             className="mt-3 flex items-center justify-center space-x-1 text-xs text-slate-500 bg-slate-50 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                                         >
-                                            <span>View Store</span>
+                                            <span>{t('sharedWishlist.viewStore')}</span>
                                             <ExternalLink className="w-3 h-3" />
                                         </a>
                                     )}
@@ -154,7 +156,7 @@ export default function SharedWishlist() {
                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-floating active:scale-[0.98] transition-all flex items-center justify-center space-x-2"
                 >
                     <Sparkles className="w-5 h-5 text-yellow-400" />
-                    <span>Create Your Own Wishlist</span>
+                    <span>{t('sharedWishlist.createOwn')}</span>
                 </button>
             </div>
         </div>

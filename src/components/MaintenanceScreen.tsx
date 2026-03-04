@@ -1,6 +1,8 @@
 import { Settings, ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function MaintenanceScreen() {
+    const { t } = useTranslation();
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
             <div className="w-24 h-24 bg-accent/10 rounded-full flex items-center justify-center text-accent mb-6 shadow-soft relative">
@@ -10,19 +12,19 @@ export default function MaintenanceScreen() {
                 </div>
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-800 mb-3 tracking-tight">System Update in Progress</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-3 tracking-tight">{t('maintenance.title')}</h1>
             <p className="text-slate-500 max-w-md mx-auto text-lg">
-                Podaryavai is currently undergoing scheduled maintenance to bring you exciting new features.
+                {t('maintenance.desc')}
             </p>
 
             <div className="mt-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm max-w-sm w-full">
-                <p className="text-sm font-semibold text-slate-700 mb-1">Are you an Admin?</p>
-                <p className="text-xs text-slate-400 mb-4">Admins can bypass this screen to test changes.</p>
+                <p className="text-sm font-semibold text-slate-700 mb-1">{t('maintenance.adminQ')}</p>
+                <p className="text-xs text-slate-400 mb-4">{t('maintenance.adminDesc')}</p>
                 <a
                     href="/login"
                     className="block w-full text-center bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors"
                 >
-                    Admin Login
+                    {t('maintenance.adminLogin')}
                 </a>
             </div>
         </div>

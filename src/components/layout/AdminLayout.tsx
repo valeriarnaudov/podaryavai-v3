@@ -1,9 +1,11 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNavigation from './BottomNavigation';
-import { LayoutDashboard, Package, Bell, Users, Heart, Settings, Award } from 'lucide-react';
+import { LayoutDashboard, Package, Bell, Users, Heart, Settings, Award, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminLayout() {
+    const { t } = useTranslation();
     return (
         <div className="flex h-[100dvh] w-full bg-slate-50 overflow-hidden">
             {/* Desktop Sidebar (Main Navigation) */}
@@ -14,7 +16,7 @@ export default function AdminLayout() {
 
                 {/* Secondary Admin Navigation */}
                 <div className="sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md pt-4 pb-2 px-6 border-b border-slate-200/50 mb-4 md:bg-white/80 md:rounded-t-3xl md:mt-0 md:pt-6 md:px-8">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-4">Admin Hub</h1>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-4">{t('admin.title')}</h1>
 
                     <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-2">
                         <NavLink
@@ -28,7 +30,7 @@ export default function AdminLayout() {
                             }
                         >
                             <LayoutDashboard className="w-4 h-4" />
-                            <span>Dashboard</span>
+                            <span>{t('admin.dashboard')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/orders"
@@ -40,7 +42,7 @@ export default function AdminLayout() {
                             }
                         >
                             <Package className="w-4 h-4" />
-                            <span>Concierge Orders</span>
+                            <span>{t('admin.orders')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/logs"
@@ -52,7 +54,7 @@ export default function AdminLayout() {
                             }
                         >
                             <Bell className="w-4 h-4" />
-                            <span>Logs</span>
+                            <span>{t('admin.logs')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/users"
@@ -64,7 +66,7 @@ export default function AdminLayout() {
                             }
                         >
                             <Users className="w-4 h-4" />
-                            <span>Users</span>
+                            <span>{t('admin.users')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/gifts"
@@ -76,7 +78,7 @@ export default function AdminLayout() {
                             }
                         >
                             <Heart className="w-4 h-4" />
-                            <span>Gifts DB</span>
+                            <span>{t('admin.gifts')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/settings"
@@ -88,7 +90,19 @@ export default function AdminLayout() {
                             }
                         >
                             <Settings className="w-4 h-4" />
-                            <span>Settings</span>
+                            <span>{t('admin.settings')}</span>
+                        </NavLink>
+                        <NavLink
+                            to="/admin/emails"
+                            className={({ isActive }) =>
+                                `flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${isActive
+                                    ? 'bg-slate-900 text-white shadow-soft'
+                                    : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'
+                                }`
+                            }
+                        >
+                            <Mail className="w-4 h-4 text-blue-500" />
+                            <span>{t('admin.emails')}</span>
                         </NavLink>
                         <NavLink
                             to="/admin/karma"
@@ -100,7 +114,7 @@ export default function AdminLayout() {
                             }
                         >
                             <Award className="w-4 h-4 text-emerald-500" />
-                            <span>Karma Store</span>
+                            <span>{t('admin.karmaStore')}</span>
                         </NavLink>
                     </div>
                 </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Users, ShoppingBag, TrendingUp, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 type TimeRange = '1d' | '7d' | '30d' | '365d' | 'all';
 
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchData(timeRange);
@@ -123,8 +125,8 @@ export default function AdminDashboard() {
         <div className="text-slate-800 font-sans mt-2">
             <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">System Overview</h1>
-                    <p className="text-slate-500 mt-1 font-medium">Podaryavai key metrics</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{t('admin.title')}</h1>
+                    <p className="text-slate-500 mt-1 font-medium">{t('admin.subtitle')}</p>
                 </div>
                 
                 <div className="flex bg-slate-100 p-1 rounded-xl w-max overflow-x-auto max-w-full hide-scrollbar">
@@ -134,7 +136,7 @@ export default function AdminDashboard() {
                             onClick={() => setTimeRange(range)}
                             className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${timeRange === range ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            {range === '1d' ? '1 Day' : range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '365d' ? '1 Year' : 'All Time'}
+                            {t(`admin.timeRanges.${range}`)}
                         </button>
                     ))}
                 </div>
@@ -148,27 +150,30 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                     <StatCard 
                         icon={Users} 
-                        label="New Users" 
+                        label={t('admin.stats.users')} 
                         value={stats.users.current.toString()} 
                         trend={timeRange !== 'all' ? calculateTrend(stats.users.current, stats.users.prev) : null} 
                         isPositive={isTrendPositive(stats.users.current, stats.users.prev)}
                         color="bg-blue-500" 
+                        t={t}
                     />
                     <StatCard 
                         icon={ShoppingBag} 
-                        label="Premium Subscriptions" 
+                        label={t('admin.stats.premium')} 
                         value={stats.premiumUsers.current.toString()} 
                         trend={timeRange !== 'all' ? calculateTrend(stats.premiumUsers.current, stats.premiumUsers.prev) : null}
                         isPositive={isTrendPositive(stats.premiumUsers.current, stats.premiumUsers.prev)} 
                         color="bg-accent" 
+                        t={t}
                     />
                     <StatCard 
                         icon={TrendingUp} 
-                        label="Total Revenue (MRR)" 
+                        label={t('admin.stats.revenue')} 
                         value={`${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} лв.`} 
                         trend={timeRange !== 'all' ? calculateTrend(stats.revenue.current, stats.revenue.prev) : null} 
                         isPositive={isTrendPositive(stats.revenue.current, stats.revenue.prev)}
                         color="bg-emerald-500" 
+                        t={t}
                     />
                 </div>
             )}
@@ -178,7 +183,7 @@ export default function AdminDashboard() {
     );
 }
 
-function StatCard({ icon: Icon, label, value, trend, isPositive, color }: any) {
+function StatCard({ icon: Icon, label, value, trend, isPositive, color, t }: any) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -195,7 +200,7 @@ function StatCard({ icon: Icon, label, value, trend, isPositive, color }: any) {
             </div>
             {trend && (
                 <div className={`mt-4 flex items-center text-sm font-bold w-max px-2 py-1 rounded-md ${isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'}`}>
-                    {trend} vs prev
+                    {trend} {t('admin.stats.vsPrev')}
                 </div>
             )}
         </motion.div>

@@ -5,11 +5,13 @@ import { AlertTriangle, Crown, Sparkles, Infinity as InfinityIcon, Truck, Check,
 import { useSettings, SubscriptionPlan } from '../lib/SettingsContext';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 export default function CheckoutCancel() {
     const navigate = useNavigate();
     const { plans, loading: plansLoading } = useSettings();
     const { user, subscriptionPlan } = useAuth();
+    const { t } = useTranslation();
     const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [isAnnual, setIsAnnual] = useState(false);
@@ -48,7 +50,7 @@ export default function CheckoutCancel() {
                 const responseData = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(responseData.error || 'Failed to initialize Stripe Checkout session.');
+                    throw new Error(responseData.error || t('upgrade.failedStripe'));
                 }
 
                 if (responseData?.url) {
@@ -56,12 +58,12 @@ export default function CheckoutCancel() {
                 }
             } catch (err: any) {
                 console.error("Checkout error:", err);
-                setCheckoutError(err.message || 'Error connecting to payment provider.');
+                setCheckoutError(err.message || t('checkout.paymentError'));
             } finally {
                 setCheckoutLoading(null);
             }
         } else {
-            setCheckoutError('This plan is not fully configured for payments yet.');
+            setCheckoutError(t('upgrade.notConfigured'));
         }
     };
 
@@ -82,38 +84,37 @@ export default function CheckoutCancel() {
                 </div>
 
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-4 relative z-10">
-                    Upgrade Cancelled
+                    {t('checkout.cancelTitle')}
                 </h1>
                 
                 <p className="text-slate-500 text-lg mb-8 leading-relaxed relative z-10">
-                    You're missing out on the ultimate personalized gifting experience! 
-                    Upgrading your account unlocks the true power of our AI concierge.
+                    {t('checkout.cancelDesc')}
                 </p>
 
                 {/* Benefits List */}
                 <div className="text-left space-y-4 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100 relative z-10">
                     <h3 className="font-bold text-slate-800 mb-4 flex items-center">
-                        <Crown className="w-5 h-5 mr-2 text-accent" /> Why You Should Reconsider
+                        <Crown className="w-5 h-5 mr-2 text-accent" /> {t('checkout.reconsider')}
                     </h3>
                     <div className="flex items-start">
                         <Sparkles className="w-5 h-5 text-purple-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">Premium AI Engine (GPT-4o)</p>
-                            <p className="text-xs text-slate-500">Get significantly smarter, highly-tailored gift suggestions instead of basic ones.</p>
+                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat1Title')}</p>
+                            <p className="text-xs text-slate-500">{t('checkout.feat1Desc')}</p>
                         </div>
                     </div>
                     <div className="flex items-start">
                         <InfinityIcon className="w-5 h-5 text-blue-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">Unlimited Swipes & Saves</p>
-                            <p className="text-xs text-slate-500">Don't hit daily limits. Generate up to 100 ideas per day and save them forever.</p>
+                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat2Title')}</p>
+                            <p className="text-xs text-slate-500">{t('checkout.feat2Desc')}</p>
                         </div>
                     </div>
                     <div className="flex items-start">
                         <Truck className="w-5 h-5 text-green-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">Free Concierge Delivery</p>
-                            <p className="text-xs text-slate-500">Let us buy, wrap, and deliver the gift for you completely free of charge.</p>
+                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat3Title')}</p>
+                            <p className="text-xs text-slate-500">{t('checkout.feat3Desc')}</p>
                         </div>
                     </div>
                 </div>
@@ -122,13 +123,13 @@ export default function CheckoutCancel() {
                     onClick={() => navigate('/')}
                     className="w-full py-4 bg-red-50 text-red-600 font-bold hover:bg-red-100 hover:text-red-700 rounded-xl transition-all relative z-10 border border-red-100 shadow-sm"
                 >
-                    I'm sure, continue to homepage
+                    {t('checkout.btnHome')}
                 </button>
             </motion.div>
 
             {/* Pricing Grid */}
             <div className="w-full max-w-7xl px-6 flex flex-col items-center">
-                <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">Give it another try</h2>
+                <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">{t('checkout.tryAgain')}</h2>
                 
                 {/* Billing Toggle */}
                 <div className="mb-10 bg-white p-1 rounded-full border border-slate-200 flex items-center shadow-sm">
@@ -136,13 +137,13 @@ export default function CheckoutCancel() {
                         onClick={() => setIsAnnual(false)}
                         className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
                     >
-                        Billed Monthly
+                        {t('upgrade.billedMonthly')}
                     </button>
                     <button 
                         onClick={() => setIsAnnual(true)}
                         className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center ${isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
                     >
-                        Billed Annually <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>Pay 9 months, get 12</span>
+                        {t('upgrade. billedAnnually')} <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>{t('upgrade.pay9get12')}</span>
                     </button>
                 </div>
 
@@ -176,7 +177,7 @@ export default function CheckoutCancel() {
                                 >
                                     {isPopular === true && (
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
-                                            Most Popular
+                                            {t('upgrade.mostPopular')}
                                         </div>
                                     )}
 
@@ -185,12 +186,12 @@ export default function CheckoutCancel() {
                                     <div className="flex flex-col mb-6 min-h-[5rem] justify-center">
                                         {isAnnual && plan.price > 0 && standardAnnualPrice > 0 && plan.price_annual > 0 && (
                                             <div className="text-slate-400 font-medium line-through text-sm mb-1">
-                                                €{standardAnnualPrice.toFixed(2)}/yr
+                                                €{standardAnnualPrice.toFixed(2)}{t('upgrade.perYear')}
                                             </div>
                                         )}
                                         <div className="flex items-baseline">
                                             <span className="text-4xl font-black text-slate-900">€{displayPrice}</span>
-                                            {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? '/yr' : '/mo'}</span>}
+                                            {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? t('upgrade.perYear') : t('upgrade.perMonth')}</span>}
                                         </div>
                                     </div>
 
@@ -203,8 +204,8 @@ export default function CheckoutCancel() {
                                             }`}
                                     >
                                         {checkoutLoading === plan.id ? <Loader2 className="w-5 h-5 animate-spin" /> :
-                                            isCurrentPlan ? 'Current Plan' :
-                                                plan.price === 0 ? 'Start Free' : 'Upgrade Now'
+                                            isCurrentPlan ? t('upgrade.btnCurrent') :
+                                                plan.price === 0 ? t('upgrade.btnFree') : t('upgrade.btnUpgrade')
                                         }
                                     </button>
 

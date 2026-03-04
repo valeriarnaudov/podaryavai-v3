@@ -3,25 +3,25 @@ import { NavLink } from 'react-router-dom';
 import { Home, Heart, Gift, User, Users, Shield, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../lib/AuthContext';
-
-const baseNavItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/contacts', icon: Users, label: 'Contacts' },
-    { path: '/giftinder', icon: Heart, label: 'Giftinder' },
-    { path: '/wishlist', icon: Gift, label: 'Wishlist' },
-    { path: '/profile', icon: User, label: 'Profile' }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function BottomNavigation() {
     const { isAdmin, karmaPoints } = useAuth();
+    const { t } = useTranslation();
 
-    const navItems = [...baseNavItems];
+    const navItems = [
+        { path: '/', icon: Home, label: t('nav.home') },
+        { path: '/contacts', icon: Users, label: t('nav.contacts') },
+        { path: '/giftinder', icon: Heart, label: t('nav.giftinder') },
+        { path: '/wishlist', icon: Gift, label: t('nav.wishlist') },
+        { path: '/profile', icon: User, label: t('nav.profile') }
+    ];
 
     // Insert Karma before Profile
     navItems.splice(-1, 0, { path: '/karma', icon: Sparkles, label: `${karmaPoints} pts` });
 
     if (isAdmin) {
-        navItems.push({ path: '/admin', icon: Shield, label: 'Admin' });
+        navItems.push({ path: '/admin', icon: Shield, label: t('nav.admin') });
     }
 
     return (

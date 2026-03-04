@@ -5,11 +5,13 @@ import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Check, Crown, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Upgrade() {
     const { plans, loading: plansLoading } = useSettings();
     const { user, subscriptionPlan } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [isAnnual, setIsAnnual] = useState(false);
@@ -30,7 +32,7 @@ export default function Upgrade() {
 
         if (plan.price === 0) {
             // Free plan logic if they are downgrading? Often handled via customer portal
-            alert('To manage your subscription or downgrade, please visit the billing portal.');
+            alert(t('upgrade.managePortal'));
             return;
         }
 
@@ -63,12 +65,12 @@ export default function Upgrade() {
                 }
             } catch (err: any) {
                 console.error("Checkout error:", err);
-                setCheckoutError(err.message || 'Failed to initialize Stripe Checkout session.');
+                setCheckoutError(err.message || t('upgrade.failedStripe'));
             } finally {
                 setCheckoutLoading(null);
             }
         } else {
-            setCheckoutError('This plan is not fully configured for payments yet.');
+            setCheckoutError(t('upgrade.notConfigured'));
         }
     };
 
@@ -76,7 +78,7 @@ export default function Upgrade() {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center">
                 <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-                <p className="text-slate-500 font-medium">Loading subscription plans...</p>
+                <p className="text-slate-500 font-medium">{t('upgrade.loadingPlans')}</p>
             </div>
         );
     }
@@ -93,7 +95,7 @@ export default function Upgrade() {
                 </button>
                 {user && (
                     <div className="bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 flex items-center space-x-2">
-                        <span className="text-xs text-slate-500">Current Plan:</span>
+                        <span className="text-xs text-slate-500">{t('upgrade.currentPlan')}</span>
                         <span className="text-sm font-bold text-accent uppercase tracking-wider">{subscriptionPlan}</span>
                     </div>
                 )}
@@ -114,7 +116,7 @@ export default function Upgrade() {
                     transition={{ delay: 0.1 }}
                     className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-4"
                 >
-                    Elevate Your Gifting
+                    {t('upgrade.title')}
                 </motion.h1>
                 <motion.p
                     initial={{ opacity: 0, y: 10 }}
@@ -122,7 +124,7 @@ export default function Upgrade() {
                     transition={{ delay: 0.2 }}
                     className="text-slate-500 text-lg max-w-md"
                 >
-                    Choose the perfect engine power. Generate more tailored ideas, access premium AI, and unlock concierge perks.
+                    {t('upgrade.subtitle')}
                 </motion.p>
             </section>
 
@@ -134,13 +136,13 @@ export default function Upgrade() {
                         onClick={() => setIsAnnual(false)}
                         className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
                     >
-                        Billed Monthly
+                        {t('upgrade.billedMonthly')}
                     </button>
                     <button 
                         onClick={() => setIsAnnual(true)}
                         className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center ${isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
                     >
-                        Billed Annually <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>Pay 9 months, get 12</span>
+                        {t('upgrade.billedAnnually')} <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>{t('upgrade.pay9get12')}</span>
                     </button>
                 </div>
 
@@ -168,7 +170,7 @@ export default function Upgrade() {
                             >
                                 {isPopular === true && (
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
-                                        Most Popular
+                                        {t('upgrade.mostPopular')}
                                     </div>
                                 )}
 
@@ -177,12 +179,12 @@ export default function Upgrade() {
                                 <div className="flex flex-col mb-6 min-h-[5rem] justify-center">
                                     {isAnnual && plan.price > 0 && standardAnnualPrice > 0 && plan.price_annual > 0 && (
                                         <div className="text-slate-400 font-medium line-through text-sm mb-1">
-                                            €{standardAnnualPrice.toFixed(2)}/yr
+                                            €{standardAnnualPrice.toFixed(2)}{t('upgrade.perYear')}
                                         </div>
                                     )}
                                     <div className="flex items-baseline">
                                         <span className="text-4xl font-black text-slate-900">€{displayPrice}</span>
-                                        {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? '/yr' : '/mo'}</span>}
+                                        {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? t('upgrade.perYear') : t('upgrade.perMonth')}</span>}
                                     </div>
                                 </div>
 
@@ -195,8 +197,8 @@ export default function Upgrade() {
                                         }`}
                                 >
                                     {checkoutLoading === plan.id ? <Loader2 className="w-5 h-5 animate-spin" /> :
-                                        isCurrentPlan ? 'Current Plan' :
-                                            plan.price === 0 ? 'Start Free' : 'Upgrade Now'
+                                        isCurrentPlan ? t('upgrade.btnCurrent') :
+                                            plan.price === 0 ? t('upgrade.btnFree') : t('upgrade.btnUpgrade')
                                     }
                                 </button>
 

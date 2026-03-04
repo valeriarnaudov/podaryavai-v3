@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users, Spark
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { findNameDay } from '../lib/nameDaysBg';
+import { useTranslation } from 'react-i18next';
 
 interface Event {
     id: string;
@@ -23,6 +24,7 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [generatingFor, setGeneratingFor] = useState<string | null>(null);
     const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+    const { t, i18n } = useTranslation();
 
     const [budgetModalOpen, setBudgetModalOpen] = useState(false);
     const [pendingEventForGifts, setPendingEventForGifts] = useState<Event | null>(null);
@@ -296,15 +298,15 @@ export default function Home() {
         >
             <header className="pt-4 pb-2 flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">Calendar</h1>
-                    <p className="text-slate-500 text-sm mt-1">Plan your upcoming gifts.</p>
+                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('home.title')}</h1>
+                    <p className="text-slate-500 text-sm mt-1">{t('home.subtitle')}</p>
                 </div>
                 <div className="flex space-x-2">
                     {isAdmin && (
                         <button
                             onClick={() => navigate('/admin')}
                             className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-soft hover:bg-slate-800 transition-colors"
-                            title="Admin Dashboard"
+                            title={t('home.adminDashboard')}
                         >
                             <Shield className="w-5 h-5" />
                         </button>
@@ -324,8 +326,8 @@ export default function Home() {
                     <button onClick={prevMonth} className="p-2 -ml-2 hover:bg-slate-50 rounded-full text-slate-600">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <h2 className="text-lg font-bold text-textMain">
-                        {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    <h2 className="text-lg font-bold text-textMain capitalize">
+                        {currentDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
                     </h2>
                     <button onClick={nextMonth} className="p-2 -mr-2 hover:bg-slate-50 rounded-full text-slate-600">
                         <ChevronRight className="w-5 h-5" />
@@ -333,9 +335,9 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                        <div key={day} className="text-center text-xs font-semibold text-slate-400">
-                            {day}
+                    {[0, 1, 2, 3, 4, 5, 6].map(dayIdx => (
+                        <div key={dayIdx} className="text-center text-xs font-semibold text-slate-400 capitalize">
+                            {t(`home.daysSmall.${dayIdx}` as any)}
                         </div>
                     ))}
                 </div>
@@ -378,12 +380,12 @@ export default function Home() {
             {/* Selected Date Events */}
             <div className="pt-2">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-textMain text-lg">
-                        {selectedDate.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    <h3 className="font-bold text-textMain text-lg capitalize">
+                        {selectedDate.toLocaleDateString(i18n.language, { weekday: 'long', month: 'short', day: 'numeric' })}
                     </h3>
                     {selectedEvents.length > 0 && (
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-semibold">
-                            {selectedEvents.length} events
+                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-semibold px-3">
+                            {selectedEvents.length} {t('home.eventsCount')}
                         </span>
                     )}
                 </div>
@@ -394,7 +396,7 @@ export default function Home() {
                     </div>
                 ) : selectedEvents.length === 0 ? (
                     <div className="bg-slate-50/50 border border-slate-100 border-dashed rounded-3xl p-8 text-center text-slate-500 text-sm">
-                        No events on this date.
+                        {t('home.noEvents')}
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -410,7 +412,7 @@ export default function Home() {
                                 <div className="relative z-10 flex items-center justify-between">
                                     <div>
                                         <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
-                                            {event.event_type === 'AI_NAME_DAY' ? 'NAME DAY (AI)' : event.event_type}
+                                            {event.event_type === 'AI_NAME_DAY' ? t('home.nameDayAI') : event.event_type}
                                         </p>
                                         <h3 className="text-lg font-bold text-textMain">{event.title} - {event.contacts?.first_name} {event.contacts?.last_name}</h3>
                                         {event.holiday && <p className="text-xs text-slate-500 font-medium mt-0.5">{event.holiday}</p>}
@@ -436,14 +438,14 @@ export default function Home() {
                                                 {generatingFor === event.id ? (
                                                     <>
                                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                                        <span>Deep Searching AI...</span>
+                                                        <span>{t('home.deepSearching')}</span>
                                                     </>
                                                 ) : event.ai_recommendations && expandedEvent !== event.id ? (
-                                                    <span>View AI Recommendations</span>
+                                                    <span>{t('home.viewRecommendations')}</span>
                                                 ) : event.ai_recommendations && expandedEvent === event.id ? (
-                                                    <span>Close Recommendations</span>
+                                                    <span>{t('home.closeRecommendations')}</span>
                                                 ) : (
-                                                    <span>Find a Gift (AI)</span>
+                                                    <span>{t('home.findGiftAI')}</span>
                                                 )}
                                             </button>
                                         </div>
@@ -477,16 +479,16 @@ export default function Home() {
                                                                 <p className="text-xs text-slate-500 flex-1">{gift.reason}</p>
                                                             </div>
                                                             <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(gift.name)}`} target="_blank" rel="noopener noreferrer" className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold text-center transition-colors">
-                                                                Find online
+                                                                {t('home.findOnline')}
                                                             </a>
                                                         </div>
                                                     ))}
                                                 </div>
                                                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium border-t border-slate-100">
-                                                    <span>Don't like these? Edit their profile or visit Giftinder.</span>
-                                                    <button onClick={() => handleGenerateClick(event, true)} className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg transition-colors flex items-center shadow-sm">
+                                                    <span>{t('home.dontLike')}</span>
+                                                    <button onClick={() => handleGenerateClick(event, true)} className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg transition-colors flex items-center shadow-sm whitespace-nowrap">
                                                         <Sparkles className="w-3 h-3 mr-1.5 text-accent" />
-                                                        Regenerate Ideas
+                                                        {t('home.regenerateIdeas')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -495,8 +497,8 @@ export default function Home() {
                                                 <div className="w-10 h-10 mb-3 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
                                                     <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
                                                 </div>
-                                                <p className="text-sm font-semibold text-slate-700">Analyzing Profile...</p>
-                                                <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">Finding the perfect gifts based on their profile and budget.</p>
+                                                <p className="text-sm font-semibold text-slate-700">{t('home.analyzingProfile')}</p>
+                                                <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">{t('home.findingPerfectGifts')}</p>
                                             </div>
                                         )}
                                     </motion.div>
@@ -514,7 +516,7 @@ export default function Home() {
                 <div className="pt-4 pb-8 border-t border-slate-100">
                     <div className="flex items-center space-x-2 mb-4">
                         <CalendarHeart className="w-5 h-5 text-accent" />
-                        <h3 className="font-bold text-textMain text-lg">Coming Up Soon</h3>
+                        <h3 className="font-bold text-textMain text-lg">{t('home.comingUpSoon')}</h3>
                     </div>
 
                     <div className="space-y-3">
@@ -541,8 +543,8 @@ export default function Home() {
                                         <h4 className="font-semibold text-textMain text-sm">
                                             {event.title} - {event.contacts?.first_name} {event.contacts?.last_name}
                                         </h4>
-                                        <p className={`text-xs font-medium ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
-                                            {new Date(event.event_date).toLocaleDateString('default', { month: 'short', day: 'numeric' })}
+                                        <p className={`text-xs font-medium capitalize ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
+                                            {new Date(event.event_date).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>
                                 </div>
@@ -573,13 +575,13 @@ export default function Home() {
                             className="relative w-full max-w-sm bg-white rounded-3xl shadow-xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh]"
                         >
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">Set Budget Limit</h3>
+                                <h3 className="text-xl font-bold text-slate-800 mb-2">{t('home.setBudgetLimit')}</h3>
                                 <p className="text-sm text-slate-500 mb-6">
-                                    The AI needs a precise budget to find exact products for <span className="font-semibold text-slate-700">{pendingEventForGifts?.contacts?.first_name}</span>.
+                                    {t('home.aiNeedsBudget')} <span className="font-semibold text-slate-700">{pendingEventForGifts?.contacts?.first_name}</span>.
                                 </p>
                                 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Budget Target / Limit</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('home.budgetTarget')}</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <span className="text-slate-500 font-medium">€</span>
@@ -601,14 +603,14 @@ export default function Home() {
                                     disabled={savingBudget}
                                     className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
                                 >
-                                    Cancel
+                                    {t('home.cancel')}
                                 </button>
                                 <button
                                     onClick={handleSaveBudgetAndGenerate}
                                     disabled={savingBudget || !tempBudget}
-                                    className="flex-1 py-3 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-95 transition-all flex justify-center items-center disabled:opacity-70"
+                                    className="flex-1 py-3 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-95 transition-all flex justify-center items-center disabled:opacity-70 whitespace-nowrap"
                                 >
-                                    {savingBudget ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save & Generate"}
+                                    {savingBudget ? <Loader2 className="w-5 h-5 animate-spin" /> : t('home.saveAndGenerate')}
                                 </button>
                             </div>
                         </motion.div>

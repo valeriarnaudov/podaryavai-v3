@@ -2,8 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Gift, Heart, Star, CalendarDays, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Landing() {
+    const { t } = useTranslation();
     const fadeIn = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -22,23 +24,23 @@ export default function Landing() {
     const features = [
         {
             icon: <Gift className="w-6 h-6 text-accent" />,
-            title: "Смарт Подаръци",
-            description: "Намери перфектния подарък лесно с нашия Giftinder алгоритъм."
+            title: t('landing.features.smartGifts.title'),
+            description: t('landing.features.smartGifts.desc')
         },
         {
             icon: <Heart className="w-6 h-6 text-accent" />,
-            title: "Списъци с Желания",
-            description: "Създавай и споделяй списъци с това, което наистина искаш."
+            title: t('landing.features.wishlists.title'),
+            description: t('landing.features.wishlists.desc')
         },
         {
             icon: <Star className="w-6 h-6 text-accent" />,
-            title: "Карма Точки",
-            description: "Събирай точки за всеки направен подарък и бъди най-добрия подаряващ."
+            title: t('landing.features.karma.title'),
+            description: t('landing.features.karma.desc')
         },
         {
             icon: <CalendarDays className="w-6 h-6 text-accent" />,
-            title: "Без Забравени Поводи",
-            description: "Управлявай лесно рождените дни и празниците на всичките си приятели."
+            title: t('landing.features.occasions.title'),
+            description: t('landing.features.occasions.desc')
         }
     ];
 
@@ -59,10 +61,10 @@ export default function Landing() {
                 </div>
                 <div className="flex space-x-4 items-center">
                     <Link to="/login" className="text-sm font-semibold text-slate-600 hover:text-textMain transition-colors">
-                        Вход
+                        {t('landing.nav.login')}
                     </Link>
                     <Link to="/register" className="px-4 py-2 bg-textMain text-white text-sm font-semibold rounded-full shadow-sm hover:scale-105 active:scale-95 transition-all">
-                        Регистрация
+                        {t('landing.nav.register')}
                     </Link>
                 </div>
             </nav>
@@ -76,27 +78,27 @@ export default function Landing() {
                     className="text-center w-full"
                 >
                     <motion.div variants={fadeIn} className="inline-block mb-4 px-4 py-1.5 bg-accent/10 text-accent rounded-full text-sm font-semibold tracking-wide uppercase">
-                        Новото поколение подаряване
+                        {t('landing.hero.badge')}
                     </motion.div>
 
                     <motion.h1 variants={fadeIn} className="text-5xl sm:text-7xl font-extrabold tracking-tight text-textMain mb-6 leading-[1.1]">
-                        Никога не забравяй <br className="hidden sm:block" />
+                        {t('landing.hero.title1')} <br className="hidden sm:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">
-                            повече поводи
+                            {t('landing.hero.title2')}
                         </span>
                     </motion.h1>
 
                     <motion.p variants={fadeIn} className="text-lg sm:text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        Единствената екосистема, която свързва вашите приятели, техните желания и най-добрите идеи за подаръци на едно място.
+                        {t('landing.hero.subtitle')}
                     </motion.p>
 
                     <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                         <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-accent text-white rounded-full font-bold shadow-floating shadow-accent/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center group">
-                            <span>Започни сега</span>
+                            <span>{t('landing.hero.startNow')}</span>
                             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-white text-textMain rounded-full font-bold shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center">
-                            Вече имам акаунт
+                            {t('landing.hero.alreadyHaveAccount')}
                         </Link>
                     </motion.div>
                 </motion.div>

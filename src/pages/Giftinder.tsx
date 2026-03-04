@@ -5,6 +5,7 @@ import { Heart, X, BookmarkCheck, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { useSettings } from '../lib/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 export interface GiftCard {
     id: number;
@@ -19,6 +20,7 @@ export default function Giftinder() {
     const { user, session, lastGiftinderGeneration, refreshUserData, subscriptionPlan } = useAuth();
     const { settings } = useSettings();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [cards, setCards] = useState<GiftCard[]>([]);
     const [loadingGifts, setLoadingGifts] = useState(true);
@@ -199,8 +201,8 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
         <div className="h-full flex flex-col pt-4 px-6 relative overflow-hidden">
             <header className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">Giftinder</h1>
-                    <p className="text-sm text-slate-500">Swipe right to save</p>
+                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('giftinder.title')}</h1>
+                    <p className="text-sm text-slate-500">{t('giftinder.subtitle')}</p>
                 </div>
                 <div className="relative">
                     <button 
@@ -223,7 +225,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                     {loadingGifts ? (
                         <div className="flex flex-col items-center justify-center text-slate-400">
                             <Loader2 className="w-10 h-10 mb-4 animate-spin text-accent" />
-                            <p className="font-medium">Finding perfect gifts...</p>
+                            <p className="font-medium">{t('giftinder.findingGifts')}</p>
                         </div>
                     ) : cards.length === 0 ? (
                         <motion.div
@@ -234,12 +236,12 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Heart className="w-8 h-8 text-slate-300" />
                             </div>
-                            <h3 className="font-bold text-slate-700 text-lg mb-1">You've seen all ideas!</h3>
-                            <p className="text-sm">Swipe through them, save what you like, or upgrade your plan to generate more daily.</p>
+                            <h3 className="font-bold text-slate-700 text-lg mb-1">{t('giftinder.allIdeasSeen')}</h3>
+                            <p className="text-sm">{t('giftinder.allIdeasDesc')}</p>
 
                             {aiError && (
                                 <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-mono break-words w-full text-left">
-                                    <strong className="block mb-1 text-red-700">AI Error Details:</strong>
+                                    <strong className="block mb-1 text-red-700">{t('giftinder.aiError')}</strong>
                                     {aiError}
                                 </div>
                             )}
@@ -329,7 +331,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                     >
                         <div className="bg-rose-500 border-2 border-white shadow-2xl px-6 py-3 rounded-full flex items-center gap-2 font-black text-white text-xl">
                             <Heart className="w-6 h-6 fill-white" />
-                            +{floatingKarma.amount} Karma
+                            +{floatingKarma.amount} {t('giftinder.karma')}
                         </div>
                     </motion.div>
                 )}
@@ -340,6 +342,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
 
 // Separate component for the active swipeable card
 function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir: 'left' | 'right') => void, style?: any }) {
+    const { t } = useTranslation();
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-200, 200], [-10, 10]);
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -392,7 +395,7 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                             <span className="text-accent text-xs font-bold">AI</span>
                         </div>
-                        <p className="text-xs text-slate-500">Suggested based on your friend's profile and latest trends.</p>
+                        <p className="text-xs text-slate-500">{t('giftinder.aiSuggested')}</p>
                     </div>
                     {card.isVip && (
                         <div className="bg-gradient-to-r from-amber-400 to-orange-500 p-4 rounded-2xl flex items-center justify-center shadow-md">

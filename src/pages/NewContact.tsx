@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { useSettings } from '../lib/SettingsContext';
 import { ArrowLeft, Loader2, Camera, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function NewContact() {
     const navigate = useNavigate();
     const { user, karmaBoostUntil, refreshUserData, subscriptionPlan } = useAuth();
     const { settings } = useSettings();
+    const { t } = useTranslation();
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -89,7 +91,7 @@ export default function NewContact() {
             if (limit !== -1) {
                 const { count } = await supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
                 if (count !== null && count >= limit) {
-                    throw new Error(`You have reached the maximum number of contacts (${limit}) for your current plan. Please upgrade to add more.`);
+                    throw new Error(t('contactForm.errors.createFailedLimit', { limit }));
                 }
             }
 
@@ -153,7 +155,7 @@ export default function NewContact() {
             navigate(-1);
         } catch (error: any) {
             console.error('Error creating contact:', error);
-            setPageError(error.message || 'Failed to save contact. Please check your data and try again.');
+            setPageError(error.message || t('contactForm.errors.createFailed'));
         } finally {
             setLoading(false);
         }
@@ -170,7 +172,7 @@ export default function NewContact() {
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-lg font-bold text-textMain">Add New Contact</h1>
+                <h1 className="text-lg font-bold text-textMain">{t('contactForm.titleNew')}</h1>
             </header>
 
             <main className="p-6">
@@ -211,31 +213,31 @@ export default function NewContact() {
 
                         <div className="flex space-x-4">
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.firstName')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={firstName}
                                     onChange={e => setFirstName(e.target.value)}
-                                    placeholder="Ivan"
+                                    placeholder={t('contactForm.firstNamePlaceholder')}
                                     className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                 />
                             </div>
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.lastName')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={lastName}
                                     onChange={e => setLastName(e.target.value)}
-                                    placeholder="Ivanov"
+                                    placeholder={t('contactForm.lastNamePlaceholder')}
                                     className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Birthday</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.birthdayLabel')}</label>
                             <input
                                 type="date"
                                 required
@@ -246,167 +248,167 @@ export default function NewContact() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Relationship</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.relationship')}</label>
                             <select
                                 value={relationship}
                                 onChange={e => setRelationship(e.target.value)}
                                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                             >
-                                <option value="Friend">Friend</option>
-                                <option value="Family">Family</option>
-                                <option value="Partner">Partner</option>
-                                <option value="Colleague">Colleague</option>
-                                <option value="Other">Other</option>
+                                <option value="Friend">{t('contactForm.relationships.friend')}</option>
+                                <option value="Family">{t('contactForm.relationships.family')}</option>
+                                <option value="Partner">{t('contactForm.relationships.partner')}</option>
+                                <option value="Colleague">{t('contactForm.relationships.colleague')}</option>
+                                <option value="Other">{t('contactForm.relationships.other')}</option>
                             </select>
                         </div>
 
                         <div className="pt-4 border-t border-slate-100">
                             <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
-                                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider mr-2">AI Feature</span>
-                                Gift Profiling
+                                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider mr-2">{t('contactForm.aiFeature')}</span>
+                                {t('contactForm.giftProfiling')}
                             </h3>
                             
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.ageGroup')}</label>
                                     <select
                                         value={ageGroup}
                                         onChange={e => setAgeGroup(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
-                                        <option value="Child (0-12)">Child (0-12)</option>
-                                        <option value="Teen (13-19)">Teen (13-19)</option>
-                                        <option value="20-30">20 - 30</option>
-                                        <option value="30-40">30 - 40</option>
-                                        <option value="40-50">40 - 50</option>
-                                        <option value="50-60">50 - 60</option>
-                                        <option value="60+">60+</option>
+                                        <option value="Child (0-12)">{t('contactForm.ages.child')}</option>
+                                        <option value="Teen (13-19)">{t('contactForm.ages.teen')}</option>
+                                        <option value="20-30">{t('contactForm.ages.20')}</option>
+                                        <option value="30-40">{t('contactForm.ages.30')}</option>
+                                        <option value="40-50">{t('contactForm.ages.40')}</option>
+                                        <option value="50-60">{t('contactForm.ages.50')}</option>
+                                        <option value="60+">{t('contactForm.ages.60')}</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Personality Trait</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.personality')}</label>
                                     <select
                                         value={personality}
                                         onChange={e => setPersonality(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
-                                        <option value="Balanced">Balanced / Average</option>
-                                        <option value="Introvert/Homebody">Introvert / Homebody</option>
-                                        <option value="Extrovert/Social">Extrovert / Social</option>
-                                        <option value="Adventurous/Active">Adventurous / Active</option>
-                                        <option value="Creative/Artistic">Creative / Artistic</option>
-                                        <option value="Practical/Logical">Practical / Logical</option>
+                                        <option value="Balanced">{t('contactForm.personalities.balanced')}</option>
+                                        <option value="Introvert/Homebody">{t('contactForm.personalities.introvert')}</option>
+                                        <option value="Extrovert/Social">{t('contactForm.personalities.extrovert')}</option>
+                                        <option value="Adventurous/Active">{t('contactForm.personalities.adventurous')}</option>
+                                        <option value="Creative/Artistic">{t('contactForm.personalities.creative')}</option>
+                                        <option value="Practical/Logical">{t('contactForm.personalities.practical')}</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Style Preference</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.style')}</label>
                                     <select
                                         value={style}
                                         onChange={e => setStyle(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
-                                        <option value="Casual">Casual / Everyday</option>
-                                        <option value="Minimalist">Minimalist</option>
-                                        <option value="Luxury">Luxury / Premium</option>
-                                        <option value="Handmade/Artisanal">Handmade / Artisanal</option>
-                                        <option value="Tech-focused">Tech-focused / Gadgets</option>
-                                        <option value="Sporty">Sporty / Athletic</option>
-                                        <option value="Vintage/Retro">Vintage / Retro</option>
+                                        <option value="Casual">{t('contactForm.styles.casual')}</option>
+                                        <option value="Minimalist">{t('contactForm.styles.minimalist')}</option>
+                                        <option value="Luxury">{t('contactForm.styles.luxury')}</option>
+                                        <option value="Handmade/Artisanal">{t('contactForm.styles.handmade')}</option>
+                                        <option value="Tech-focused">{t('contactForm.styles.tech')}</option>
+                                        <option value="Sporty">{t('contactForm.styles.sporty')}</option>
+                                        <option value="Vintage/Retro">{t('contactForm.styles.vintage')}</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Color</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.favoriteColor')}</label>
                                     <select
                                         value={favoriteColor}
                                         onChange={e => setFavoriteColor(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
-                                        <option value="">Any Color / Not Sure</option>
-                                        <option value="Black">Black (Sleek, Modern)</option>
-                                        <option value="White">White (Clean, Minimal)</option>
-                                        <option value="Blue">Blue (Calming, Classic)</option>
-                                        <option value="Red">Red (Bold, Energetic)</option>
-                                        <option value="Green">Green (Nature, Fresh)</option>
-                                        <option value="Yellow">Yellow (Bright, Happy)</option>
-                                        <option value="Purple">Purple (Creative, Royal)</option>
-                                        <option value="Pink">Pink (Playful, Soft)</option>
-                                        <option value="Pastels">Pastels</option>
-                                        <option value="Earth Tones">Earth Tones</option>
-                                        <option value="Monochrome">Monochrome</option>
+                                        <option value="">{t('contactForm.colors.any')}</option>
+                                        <option value="Black">{t('contactForm.colors.black')}</option>
+                                        <option value="White">{t('contactForm.colors.white')}</option>
+                                        <option value="Blue">{t('contactForm.colors.blue')}</option>
+                                        <option value="Red">{t('contactForm.colors.red')}</option>
+                                        <option value="Green">{t('contactForm.colors.green')}</option>
+                                        <option value="Yellow">{t('contactForm.colors.yellow')}</option>
+                                        <option value="Purple">{t('contactForm.colors.purple')}</option>
+                                        <option value="Pink">{t('contactForm.colors.pink')}</option>
+                                        <option value="Pastels">{t('contactForm.colors.pastels')}</option>
+                                        <option value="Earth Tones">{t('contactForm.colors.earth')}</option>
+                                        <option value="Monochrome">{t('contactForm.colors.monochrome')}</option>
                                     </select>
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Favorite Vibe / Aesthetic</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.favoriteVibe')}</label>
                                         <select
                                             value={favoriteVibe}
                                             onChange={e => setFavoriteVibe(e.target.value)}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                         >
-                                            <option value="">Any Vibe</option>
-                                            <option value="Cozy">Cozy & Relaxed</option>
-                                            <option value="Techy">Techy & Cyber</option>
-                                            <option value="Glamorous">Glamorous & Chic</option>
-                                            <option value="Minimalist">Minimalist & Clean</option>
-                                            <option value="Earthy">Earthy & Natural</option>
-                                            <option value="Industrial">Industrial & Edgy</option>
-                                            <option value="Vintage">Vintage & Nostalgic</option>
-                                            <option value="Sporty">Sporty & Active</option>
+                                            <option value="">{t('contactForm.vibes.any')}</option>
+                                            <option value="Cozy">{t('contactForm.vibes.cozy')}</option>
+                                            <option value="Techy">{t('contactForm.vibes.techy')}</option>
+                                            <option value="Glamorous">{t('contactForm.vibes.glamorous')}</option>
+                                            <option value="Minimalist">{t('contactForm.vibes.minimalist')}</option>
+                                            <option value="Earthy">{t('contactForm.vibes.earthy')}</option>
+                                            <option value="Industrial">{t('contactForm.vibes.industrial')}</option>
+                                            <option value="Vintage">{t('contactForm.vibes.vintage')}</option>
+                                            <option value="Sporty">{t('contactForm.vibes.sporty')}</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Are there any specific things we should avoid buying for them?</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.dislikesLabel')}</label>
                                         <input
                                             type="text"
                                             value={dislikes}
                                             onChange={e => setDislikes(e.target.value)}
-                                            placeholder="e.g. No alcohol, hates socks, no sweets"
+                                            placeholder={t('contactForm.dislikesPlaceholder')}
                                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Weekend Activity</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.weekendActivity')}</label>
                                     <select
                                         value={weekendActivity}
                                         onChange={e => setWeekendActivity(e.target.value)}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
-                                        <option value="">Any Activity</option>
-                                        <option value="Outdoors & Hiking">Outdoors & Hiking</option>
-                                        <option value="Netflix & Chill">Netflix & Chill</option>
-                                        <option value="Partying & Events">Partying & Events</option>
-                                        <option value="Board Games & Puzzles">Board Games & Puzzles</option>
-                                        <option value="Cooking & Baking">Cooking & Baking</option>
-                                        <option value="Reading & Coffee">Reading & Coffee</option>
-                                        <option value="Sports & Gym">Sports & Gym</option>
-                                        <option value="Video Games">Video Games</option>
-                                        <option value="DIY & Crafts">DIY & Crafts</option>
-                                        <option value="Traveling & Exploring">Traveling & Exploring</option>
+                                        <option value="">{t('contactForm.activities.any')}</option>
+                                        <option value="Outdoors & Hiking">{t('contactForm.activities.outdoors')}</option>
+                                        <option value="Netflix & Chill">{t('contactForm.activities.netflix')}</option>
+                                        <option value="Partying & Events">{t('contactForm.activities.partying')}</option>
+                                        <option value="Board Games & Puzzles">{t('contactForm.activities.boardGames')}</option>
+                                        <option value="Cooking & Baking">{t('contactForm.activities.cooking')}</option>
+                                        <option value="Reading & Coffee">{t('contactForm.activities.reading')}</option>
+                                        <option value="Sports & Gym">{t('contactForm.activities.sports')}</option>
+                                        <option value="Video Games">{t('contactForm.activities.videoGames')}</option>
+                                        <option value="DIY & Crafts">{t('contactForm.activities.diy')}</option>
+                                        <option value="Traveling & Exploring">{t('contactForm.activities.traveling')}</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">What are their absolute favorite hobbies, brands, or interests?</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.interestsLabel')}</label>
                                     <textarea
                                         value={interests}
                                         onChange={e => setInterests(e.target.value)}
-                                        placeholder="e.g. Loves reading sci-fi, hiking mountains, drinking espresso, and PC gaming"
+                                        placeholder={t('contactForm.interestsPlaceholder')}
                                         rows={3}
                                         className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all resize-none"
                                     />
                                     <p className="text-xs text-slate-500 mt-1">
-                                        The AI uses these precise modifiers to generate highly accurate gift recommendations.
+                                        {t('contactForm.aiDisclaimer')}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Budget Preference</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.budgetLabel')}</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <span className="text-slate-500 font-medium">€</span>
@@ -416,7 +418,7 @@ export default function NewContact() {
                                             min="0"
                                             value={budgetPreference}
                                             onChange={e => setBudgetPreference(e.target.value)}
-                                            placeholder="e.g. 50"
+                                            placeholder={t('contactForm.budgetPlaceholder')}
                                             className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
                                         />
                                     </div>
@@ -426,7 +428,7 @@ export default function NewContact() {
 
                         {pageError && (
                             <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100/50 flex flex-col">
-                                <span className="font-semibold mb-1">Error saving contact:</span>
+                                <span className="font-semibold mb-1">{t('contactForm.errors.createFailed')}</span>
                                 <span>{pageError}</span>
                             </div>
                         )}
@@ -436,7 +438,7 @@ export default function NewContact() {
                             disabled={loading}
                             className="w-full py-4 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-70 mt-4"
                         >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Save Contact (+{karmaBoostUntil && new Date(karmaBoostUntil) > new Date() ? 20 : 10} Karma)</span>}
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>{t('contactForm.createContactKarma', { karma: karmaBoostUntil && new Date(karmaBoostUntil) > new Date() ? '20' : '10' })}</span>}
                         </button>
                     </form>
                 </div>

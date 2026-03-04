@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { useSettings } from '../lib/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 interface Contact {
     id: string;
@@ -20,6 +21,7 @@ export default function ContactsList() {
     const { settings } = useSettings();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     // Calculate limit
     let limitStr = '-1';
@@ -57,7 +59,7 @@ export default function ContactsList() {
     };
 
     const deleteContact = async (id: string) => {
-        if (confirm('Are you sure you want to delete this contact?')) {
+        if (confirm(t('contacts.deleteConfirm'))) {
             await supabase.from('contacts').delete().eq('id', id);
             setContacts(contacts.filter(c => c.id !== id));
         }
@@ -73,9 +75,9 @@ export default function ContactsList() {
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div className="flex flex-col items-center">
-                    <h1 className="text-lg font-bold text-textMain">My Contacts</h1>
+                    <h1 className="text-lg font-bold text-textMain">{t('contacts.title')}</h1>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
-                        {limit === -1 ? `${contacts.length} added` : `${contacts.length} / ${limit} Max`}
+                        {limit === -1 ? t('contacts.added', { count: contacts.length }) : t('contacts.max', { count: contacts.length, limit })}
                     </span>
                 </div>
                 <div className="w-10"></div> {/* Spacer for alignment */}
@@ -88,12 +90,12 @@ export default function ContactsList() {
                     </div>
                 ) : contacts.length === 0 ? (
                     <div className="text-center py-10">
-                        <p className="text-slate-500 mb-4">You haven't added any contacts yet.</p>
+                        <p className="text-slate-500 mb-4">{t('contacts.empty')}</p>
                         <button
                             onClick={handleAddContact}
                             className="px-6 py-3 bg-accent text-white rounded-2xl font-medium shadow-soft active:scale-95 transition-transform"
                         >
-                            Add First Contact
+                            {t('contacts.addFirst')}
                         </button>
                     </div>
                 ) : (
@@ -118,7 +120,7 @@ export default function ContactsList() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-textMain group-hover:text-accent transition-colors">{contact.first_name} {contact.last_name}</h3>
-                                        <p className="text-xs text-slate-400">{contact.relationship || 'Contact'}</p>
+                                        <p className="text-xs text-slate-400">{contact.relationship || t('contacts.defaultRelationship')}</p>
                                     </div>
                                 </div>
                                 <div className="flex space-x-2">
@@ -152,7 +154,7 @@ export default function ContactsList() {
                 onClick={handleAddContact}
                 className={`absolute bottom-6 right-6 ${isAtLimit ? 'px-6 h-14 bg-amber-500 rounded-full' : 'w-14 h-14 bg-accent rounded-full'} text-white shadow-floating flex items-center justify-center hover:scale-105 active:scale-95 transition-all outline-none font-bold`}
             >
-                {isAtLimit ? 'Upgrade to Add' : <Plus className="w-6 h-6" />}
+                {isAtLimit ? t('contacts.upgradeToAdd') : <Plus className="w-6 h-6" />}
             </button>
         </div>
     );

@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ArrowLeft, CreditCard, Truck, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Checkout() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
 
     const { freeDeliveriesCount } = useAuth();
 
@@ -41,7 +43,7 @@ export default function Checkout() {
             }
         } catch (err) {
             console.error('Checkout error:', err);
-            alert('Failed to initialize checkout.');
+            alert(t('checkout.failedInit'));
             setLoading(false);
         }
     };
@@ -55,7 +57,7 @@ export default function Checkout() {
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-lg font-bold text-textMain">Concierge Checkout</h1>
+                <h1 className="text-lg font-bold text-textMain">{t('checkout.title')}</h1>
             </header>
 
             <main className="p-6 pb-32">
@@ -64,21 +66,21 @@ export default function Checkout() {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white p-6 rounded-3xl shadow-soft border border-slate-100/50 mb-6"
                 >
-                    <h2 className="font-bold text-textMain mb-4 border-b border-slate-100 pb-4">Order Summary</h2>
+                    <h2 className="font-bold text-textMain mb-4 border-b border-slate-100 pb-4">{t('checkout.orderSummary')}</h2>
 
                     <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Item</span>
+                            <span className="text-slate-500">{t('checkout.item')}</span>
                             <span className="font-medium text-textMain text-right max-w-[60%]">{baseOrderDetails.title}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Price</span>
+                            <span className="text-slate-500">{t('checkout.price')}</span>
                             <span className="font-medium text-textMain">€{baseOrderDetails.price.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center group relative">
                             <span className="text-slate-500 flex items-center">
-                                Concierge Delivery
-                                {hasFreeDelivery && <span className="ml-2 text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Free (Karma)</span>}
+                                {t('checkout.delivery')}
+                                {hasFreeDelivery && <span className="ml-2 text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('checkout.freeKarma')}</span>}
                             </span>
                             <span className="font-medium text-textMain">
                                 {hasFreeDelivery ? (
@@ -90,14 +92,14 @@ export default function Checkout() {
                         </div>
 
                         <div className="pt-3 border-t border-slate-100 flex justify-between items-center mt-4">
-                            <span className="font-bold text-textMain">Total</span>
+                            <span className="font-bold text-textMain">{t('checkout.total')}</span>
                             <span className="text-xl font-black text-rose-500">€{total.toFixed(2)}</span>
                         </div>
                     </div>
                 </motion.div>
 
                 <div className="space-y-4">
-                    <h3 className="font-bold text-textMain px-2">Payment Method</h3>
+                    <h3 className="font-bold text-textMain px-2">{t('checkout.paymentMethod')}</h3>
 
                     <button
                         onClick={handleStripeCheckout}
@@ -109,15 +111,15 @@ export default function Checkout() {
                                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-textMain">Pay with Card</p>
-                                <p className="text-xs text-slate-500">Secure payment via Stripe</p>
+                                <p className="font-bold text-textMain">{t('checkout.payWithCard')}</p>
+                                <p className="text-xs text-slate-500">{t('checkout.secureStripe')}</p>
                             </div>
                         </div>
                         <ShieldCheck className="w-5 h-5 text-green-500" />
                     </button>
 
                     <button
-                        onClick={() => alert('Cash on Delivery selected. Order placed!')}
+                        onClick={() => alert(t('checkout.codAlert'))}
                         className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:scale-98 transition-all hover:border-slate-300 opacity-80"
                     >
                         <div className="flex items-center space-x-4">
@@ -125,8 +127,8 @@ export default function Checkout() {
                                 <Truck className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-textMain">Cash on Delivery</p>
-                                <p className="text-xs text-slate-500">Pay when you receive the gift</p>
+                                <p className="font-bold text-textMain">{t('checkout.cod')}</p>
+                                <p className="text-xs text-slate-500">{t('checkout.codDesc')}</p>
                             </div>
                         </div>
                     </button>

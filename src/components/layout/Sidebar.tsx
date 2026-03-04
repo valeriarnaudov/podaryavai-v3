@@ -2,21 +2,22 @@ import { NavLink } from 'react-router-dom';
 import { Home, Heart, Gift, User, Users, Shield, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../lib/AuthContext';
-
-const baseNavItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/contacts', icon: Users, label: 'Contacts' },
-    { path: '/giftinder', icon: Heart, label: 'Giftinder' },
-    { path: '/wishlist', icon: Gift, label: 'Wishlist' },
-    { path: '/profile', icon: User, label: 'Profile' }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function Sidebar() {
     const { isAdmin, karmaPoints } = useAuth();
+    const { t } = useTranslation();
 
-    const navItems = [...baseNavItems];
+    const navItems = [
+        { path: '/', icon: Home, label: t('nav.home') },
+        { path: '/contacts', icon: Users, label: t('nav.contacts') },
+        { path: '/giftinder', icon: Heart, label: t('nav.giftinder') },
+        { path: '/wishlist', icon: Gift, label: t('nav.wishlist') },
+        { path: '/profile', icon: User, label: t('nav.profile') }
+    ];
+
     if (isAdmin) {
-        navItems.push({ path: '/admin', icon: Shield, label: 'Admin' });
+        navItems.push({ path: '/admin', icon: Shield, label: t('nav.admin') });
     }
 
     return (
@@ -76,8 +77,8 @@ export default function Sidebar() {
                         <Sparkles className="w-5 h-5 text-amber-500" />
                     </div>
                     <div className="ml-3 flex flex-col justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-600/80 leading-none mb-0.5">Karma</span>
-                        <span className="font-black text-sm sm:text-base leading-none text-amber-700">{karmaPoints} <span className="text-[10px] sm:text-xs font-semibold text-amber-600/70">pts</span></span>
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-600/80 leading-none mb-0.5">{t('nav.karma', 'Karma')}</span>
+                        <span className="font-black text-sm sm:text-base leading-none text-amber-700">{karmaPoints} <span className="text-[10px] sm:text-xs font-semibold text-amber-600/70">{t('nav.pts', 'pts')}</span></span>
                     </div>
                 </NavLink>
             </div>

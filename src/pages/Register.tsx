@@ -3,10 +3,12 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Loader2, User as UserIcon, Calendar, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Register() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useTranslation();
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -39,13 +41,13 @@ export default function Register() {
                 age--;
             }
             if (age < 18) {
-                setError('Age requirement not met. You must be at least 18 years old to register.');
+                setError(t('auth.register.ageError'));
                 setLoading(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
         } else {
-            setError('Please enter your date of birth.');
+            setError(t('auth.register.dobError'));
             setLoading(false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
@@ -103,8 +105,8 @@ export default function Register() {
                 className="relative z-10 w-full"
             >
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold tracking-tight text-textMain">Create Account</h1>
-                    <p className="text-sm text-slate-500 mt-2">Join Podaryavai & Social Ecosystem</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-textMain">{t('auth.register.title')}</h1>
+                    <p className="text-sm text-slate-500 mt-2">{t('auth.register.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
@@ -129,7 +131,7 @@ export default function Register() {
                                 type="text"
                                 value={firstName}
                                 onChange={(e) => setFirstName(e.target.value)}
-                                placeholder="First Name"
+                                placeholder={t('auth.register.firstName')}
                                 required
                                 className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                             />
@@ -139,7 +141,7 @@ export default function Register() {
                                 type="text"
                                 value={lastName}
                                 onChange={(e) => setLastName(e.target.value)}
-                                placeholder="Last Name"
+                                placeholder={t('auth.register.lastName')}
                                 required
                                 className="w-full px-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                             />
@@ -152,7 +154,7 @@ export default function Register() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email address"
+                            placeholder={t('auth.login.emailPlaceholder')}
                             required
                             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                         />
@@ -175,7 +177,7 @@ export default function Register() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Create Password"
+                            placeholder={t('auth.register.createPassword')}
                             required
                             minLength={6}
                             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
@@ -187,7 +189,7 @@ export default function Register() {
                         disabled={loading}
                         className="w-full py-4 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign Up</span>}
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>{t('auth.register.submit')}</span>}
                     </button>
                 </form>
 
@@ -197,7 +199,7 @@ export default function Register() {
                             <div className="w-full border-t border-slate-200"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-background text-slate-500">Or continue with</span>
+                            <span className="px-2 bg-background text-slate-500">{t('auth.login.orContinueWith')}</span>
                         </div>
                     </div>
 
@@ -217,9 +219,9 @@ export default function Register() {
                 </div>
 
                 <p className="text-center text-sm text-slate-500 mt-8">
-                    Already have an account?{' '}
+                    {t('auth.register.alreadyHaveAccount')}{' '}
                     <Link to="/login" className="font-semibold text-accent hover:underline">
-                        Sign In
+                        {t('auth.register.signIn')}
                     </Link>
                 </p>
             </motion.div>

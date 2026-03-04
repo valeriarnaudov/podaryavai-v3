@@ -3,9 +3,11 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const location = useLocation();
@@ -65,8 +67,8 @@ export default function Login() {
                     <div className="w-16 h-16 bg-white rounded-2xl shadow-floating flex items-center justify-center mx-auto mb-6">
                         <span className="text-2xl font-bold tracking-tighter text-textMain">PD</span>
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-textMain">Welcome Back</h1>
-                    <p className="text-sm text-slate-500 mt-2">Sign in to manage your smart gifts</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-textMain">{t('auth.login.title')}</h1>
+                    <p className="text-sm text-slate-500 mt-2">{t('auth.login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -82,7 +84,7 @@ export default function Login() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email address"
+                            placeholder={t('auth.login.emailPlaceholder')}
                             required
                             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                         />
@@ -94,7 +96,7 @@ export default function Login() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Password"
+                            placeholder={t('auth.login.passwordPlaceholder')}
                             required
                             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                         />
@@ -105,7 +107,7 @@ export default function Login() {
                         disabled={loading}
                         className="w-full py-4 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign In</span>}
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>{t('auth.login.submit')}</span>}
                     </button>
                 </form>
 
@@ -115,7 +117,7 @@ export default function Login() {
                             <div className="w-full border-t border-slate-200"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-background text-slate-500">Or continue with</span>
+                            <span className="px-2 bg-background text-slate-500">{t('auth.login.orContinueWith')}</span>
                         </div>
                     </div>
 
@@ -135,9 +137,9 @@ export default function Login() {
                 </div>
 
                 <p className="text-center text-sm text-slate-500 mt-8">
-                    Don't have an account?{' '}
+                    {t('auth.login.noAccount')}{' '}
                     <Link to="/register" className="font-semibold text-accent hover:underline">
-                        Create one
+                        {t('auth.login.createOne')}
                     </Link>
                 </p>
             </motion.div>
