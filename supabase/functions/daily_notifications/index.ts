@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
       .select(`
         id, event_date, event_type, title, user_id, contact_id,
         users!inner(id, email, full_name, notify_email_events),
-        contacts!inner(id, name)
+        contacts!inner(id, first_name, last_name)
       `)
       .eq("users.notify_email_events", true);
 
@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
       user_id: string;
       contact_id: string;
       users: { id: string; email: string; full_name: string };
-      contacts: { id: string; name: string };
+      contacts: { id: string; first_name: string; last_name: string };
     };
 
     const events = data as unknown as JoinedEvent[];
@@ -97,7 +97,7 @@ Deno.serve(async (req: Request) => {
 
         // Dynamic Variable Replacement
         const userName = event.users.full_name || "Приятел";
-        const contactName = event.contacts.name;
+        const contactName = `${event.contacts.first_name || ''} ${event.contacts.last_name || ''}`.trim();
         const eventTitle = event.title;
 
         const processTemplate = (text: string) => {

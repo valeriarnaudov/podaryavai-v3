@@ -10,25 +10,28 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const getInitialTheme = (): Theme => {
+  if (typeof window !== 'undefined') {
+    const storedPrefs = localStorage.getItem('app-theme');
+    if (storedPrefs === 'dark' || storedPrefs === 'light' || storedPrefs === 'system') {
+      return storedPrefs;
+    }
+  }
+  return 'system';
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     // Attempt to load from DB first to persist across devices 
     const fetchUserTheme = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from('users').select('app_theme').eq('id', user.id).single();
-        if (data?.app_theme) {
+        const { data, error } = await supabase.from('users').select('app_theme').eq('id', user.id).single();
+        if (data?.app_theme && data.app_theme !== theme) {
           setThemeState(data.app_theme as Theme);
-          return;
         }
-      }
-      
-      // Fallback to local storage if not logged in or no DB pref
-      const stored = localStorage.getItem('app-theme') as Theme;
-      if (stored) {
-        setThemeState(stored);
       }
     };
 
@@ -37,16 +40,40 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
+
+    const applyTheme = (t: string) => {
+      root.classList.remove('light', 'dark');
+      root.classList.add(t);
+    };
 
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches ? 'dark' : 'light');
 
-    localStorage.setItem('app-theme', theme);
+      const handleChange = (e: MediaQueryListEvent) => {
+        applyTheme(e.matches ? 'dark' : 'light');
+      };
+
+      // Support older browsers that use addListener
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange);
+      } else if (mediaQuery.addListener) {
+        mediaQuery.addListener(handleChange);
+      }
+      
+      localStorage.setItem('app-theme', 'system');
+
+      return () => {
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', handleChange);
+        } else if (mediaQuery.removeListener) {
+          mediaQuery.removeListener(handleChange);
+        }
+      };
+    } else {
+      applyTheme(theme);
+      localStorage.setItem('app-theme', theme);
+    }
   }, [theme]);
 
   const setTheme = async (newTheme: Theme) => {

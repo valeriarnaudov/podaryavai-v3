@@ -16,10 +16,8 @@ Product) версията в продукция._
 - [ ] **Onboarding Flow:** Създаване на начален туториал (3-4 екрана с
       `framer-motion` swipe), който обяснява на новия потребител какво
       представлява Кармата, Giftinder и Консиержът.
-- [ ] **Push Notifications UI Опции:** Екран в "Settings", откъдето потребителят
-      може да избира дали иска известия само за Рождени Дни, само за Именни Дни
-      или и за двете.
-- [ ] **Dark Mode:** Пълна имплементация на тъмна тема (Tailwind `dark:`
+- [x] **Push Notifications UI Опции:** Редактиране на настройки за имейл известия от Профила на потребителя.
+- [x] **Dark Mode:** Пълна имплементация на тъмна тема (Tailwind `dark:`
       класове), която се сменя автоматично според системата на телефона.
 - [ ] **PWA Offline Support:** Кеширане на събитията и контактите чрез Service
       Workers, така че приложението да зарежда `Home` екрана дори при липса на
@@ -43,8 +41,8 @@ Product) версията в продукция._
 - [ ] **Gifting Wallet:** Виртуален портфейл, в който близките могат да
       превеждат пари по публичния Wishlist линк.
 
-_(Забележка: Stripe Webhooks, Subscription Tiers, Karma Points Override Logic, и
-Inline AI Calendar Recommendations вече са успешно имплементирани и премахнати
+_(Забележка: Stripe Webhooks, Subscription Tiers, Karma Points Override Logic,
+Inline AI Calendar Recommendations, Dark Mode и Многоезичност (i18n) вече са успешно имплементирани и премахнати
 от този списък! 🎉)_
 
 ---

@@ -230,32 +230,32 @@ export default function EditContact() {
 
     if (loading) {
         return (
-            <div className="bg-background min-h-[100dvh] flex items-center justify-center">
+            <div className="bg-background dark:bg-slate-900 min-h-[100dvh] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-accent animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="bg-background min-h-[100dvh] pb-safe sm:h-[90dvh]">
-            <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center justify-between border-b border-slate-100 shadow-sm">
-                <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-600">
+        <div className="bg-background dark:bg-slate-900 min-h-[100dvh] pb-safe sm:h-[90dvh]">
+            <header className="bg-white dark:bg-slate-800/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 shadow-sm">
+                <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-lg font-bold text-textMain">{t('contactForm.titleEdit')}</h1>
+                <h1 className="text-lg font-bold text-textMain dark:text-white">{t('contactForm.titleEdit')}</h1>
                 <div className="w-10"></div> {/* Spacer for centering */}
             </header>
 
             <main className="p-6 space-y-8">
                 {/* Contact Form Details */}
-                <div className="bg-white p-6 rounded-3xl shadow-soft border border-slate-100/50">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-soft border border-slate-100/50 dark:border-slate-700/50">
                     <form onSubmit={handleUpdateContact} className="space-y-6">
                         {/* Avatar Upload / Display */}
                         <div className="flex justify-center mb-6">
                             <div className="relative group">
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-accent transition-colors"
+                                    className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center cursor-pointer overflow-hidden hover:border-accent transition-colors"
                                 >
                                     {avatarUrl ? (
                                         <img src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
@@ -286,33 +286,33 @@ export default function EditContact() {
 
                         <div className="flex space-x-4">
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.firstName')}</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.firstName')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={firstName}
                                     onChange={e => setFirstName(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                 />
                             </div>
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.lastName')}</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.lastName')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={lastName}
                                     onChange={e => setLastName(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.relationship')}</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.relationship')}</label>
                             <select
                                 value={relationship}
                                 onChange={e => setRelationship(e.target.value)}
-                                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all appearance-none"
                             >
                                 <option value="Friend">{t('contactForm.relationships.friend')}</option>
                                 <option value="Family">{t('contactForm.relationships.family')}</option>
@@ -323,19 +323,19 @@ export default function EditContact() {
                         </div>
 
                         {/* AI Profiling Form */}
-                        <div className="pt-4 border-t border-slate-100">
-                            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center">
                                 <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider mr-2">{t('contactForm.aiFeature')}</span>
                                 {t('contactForm.giftProfiling')}
                             </h3>
                             
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.ageGroup')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.ageGroup')}</label>
                                     <select
                                         value={ageGroup}
                                         onChange={e => setAgeGroup(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
                                         <option value="Child (0-12)">{t('contactForm.ages.child')}</option>
                                         <option value="Teen (13-19)">{t('contactForm.ages.teen')}</option>
@@ -348,11 +348,11 @@ export default function EditContact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.personality')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.personality')}</label>
                                     <select
                                         value={personality}
                                         onChange={e => setPersonality(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
                                         <option value="Balanced">{t('contactForm.personalities.balanced')}</option>
                                         <option value="Introvert/Homebody">{t('contactForm.personalities.introvert')}</option>
@@ -364,11 +364,11 @@ export default function EditContact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.style')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.style')}</label>
                                     <select
                                         value={style}
                                         onChange={e => setStyle(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
                                         <option value="Casual">{t('contactForm.styles.casual')}</option>
                                         <option value="Minimalist">{t('contactForm.styles.minimalist')}</option>
@@ -381,11 +381,11 @@ export default function EditContact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.favoriteColor')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.favoriteColor')}</label>
                                     <select
                                         value={favoriteColor}
                                         onChange={e => setFavoriteColor(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
                                         <option value="">{t('contactForm.colors.any')}</option>
                                         <option value="Black">{t('contactForm.colors.black')}</option>
@@ -404,11 +404,11 @@ export default function EditContact() {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.favoriteVibe')}</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.favoriteVibe')}</label>
                                         <select
                                             value={favoriteVibe}
                                             onChange={e => setFavoriteVibe(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                         >
                                             <option value="">{t('contactForm.vibes.any')}</option>
                                             <option value="Cozy">{t('contactForm.vibes.cozy')}</option>
@@ -422,23 +422,23 @@ export default function EditContact() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.dislikesLabel')}</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.dislikesLabel')}</label>
                                         <input
                                             type="text"
                                             value={dislikes}
                                             onChange={e => setDislikes(e.target.value)}
                                             placeholder={t('contactForm.dislikesPlaceholder')}
-                                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.weekendActivity')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.weekendActivity')}</label>
                                     <select
                                         value={weekendActivity}
                                         onChange={e => setWeekendActivity(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all appearance-none"
                                     >
                                         <option value="">{t('contactForm.activities.any')}</option>
                                         <option value="Outdoors & Hiking">{t('contactForm.activities.outdoors')}</option>
@@ -455,24 +455,24 @@ export default function EditContact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.interestsLabel')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.interestsLabel')}</label>
                                     <textarea
                                         value={interests}
                                         onChange={e => setInterests(e.target.value)}
                                         placeholder={t('contactForm.interestsPlaceholder')}
                                         rows={3}
-                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all resize-none"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all resize-none"
                                     />
-                                    <p className="text-xs text-slate-500 mt-1">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                         {t('contactForm.aiDisclaimer')}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('contactForm.budgetLabel')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('contactForm.budgetLabel')}</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <span className="text-slate-500 font-medium">€</span>
+                                            <span className="text-slate-500 dark:text-slate-400 font-medium">€</span>
                                         </div>
                                         <input
                                             type="number"
@@ -480,7 +480,7 @@ export default function EditContact() {
                                             value={budgetPreference}
                                             onChange={e => setBudgetPreference(e.target.value)}
                                             placeholder={t('contactForm.budgetPlaceholder')}
-                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
@@ -510,7 +510,7 @@ export default function EditContact() {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-3xl border border-indigo-100 shadow-sm flex items-start space-x-4"
                         >
-                            <div className="bg-white p-2 rounded-xl text-indigo-500 shadow-sm">
+                            <div className="bg-white dark:bg-slate-800 p-2 rounded-xl text-indigo-500 shadow-sm">
                                 <Sparkles className="w-6 h-6" />
                             </div>
                             <div>
@@ -528,7 +528,7 @@ export default function EditContact() {
                 {/* Important Dates Management */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-bold text-textMain">{t('contactForm.importantDates')}</h2>
+                        <h2 className="text-lg font-bold text-textMain dark:text-white">{t('contactForm.importantDates')}</h2>
                         <button
                             onClick={() => setShowEventForm(!showEventForm)}
                             className="text-accent text-sm font-semibold hover:underline flex items-center"
@@ -547,21 +547,21 @@ export default function EditContact() {
                             {newEventType === 'OTHER' && (
                                 <div>
                                     <input type="text" placeholder={t('contactForm.eventTitlePlaceholder')} required value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)}
-                                        className="w-full px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:border-accent outline-none" />
+                                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 text-sm focus:border-accent outline-none" />
                                 </div>
                             )}
                             <div className="flex space-x-2">
-                                <select value={newEventType} onChange={e => setNewEventType(e.target.value)} className="w-1/2 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm appearance-none focus:border-accent outline-none">
+                                <select value={newEventType} onChange={e => setNewEventType(e.target.value)} className="w-1/2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 text-sm appearance-none focus:border-accent outline-none">
                                     <option value="BIRTHDAY">{t('contactForm.eventTypes.BIRTHDAY')}</option>
                                     <option value="NAME_DAY">{t('contactForm.eventTypes.NAME_DAY')}</option>
                                     <option value="ANNIVERSARY">{t('contactForm.eventTypes.ANNIVERSARY')}</option>
                                     <option value="OTHER">{t('contactForm.eventTypes.OTHER')}</option>
                                 </select>
                                 <input type="date" required value={newEventDate} onChange={e => setNewEventDate(e.target.value)}
-                                    className="w-1/2 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm" />
+                                    className="w-1/2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 text-sm" />
                             </div>
                             <div className="flex justify-end space-x-2">
-                                <button type="button" onClick={() => setShowEventForm(false)} className="px-3 py-1.5 text-sm text-slate-500 font-medium hover:text-slate-700">{t('contactForm.cancel')}</button>
+                                <button type="button" onClick={() => setShowEventForm(false)} className="px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700 dark:text-slate-200">{t('contactForm.cancel')}</button>
                                 <button type="submit" className="px-3 py-1.5 bg-accent text-white text-sm font-medium rounded-lg">{t('contactForm.add')}</button>
                             </div>
                         </motion.form>
@@ -569,17 +569,17 @@ export default function EditContact() {
 
                     <div className="space-y-3">
                         {events.length === 0 && !showEventForm ? (
-                            <p className="text-sm text-slate-500 text-center py-4 bg-white rounded-2xl border border-slate-100/50 border-dashed">{t('contactForm.noDates')}</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100/50 dark:border-slate-700/50 border-dashed">{t('contactForm.noDates')}</p>
                         ) : (
                             events.map(event => (
-                                <div key={event.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center group">
+                                <div key={event.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center group">
                                     <div>
-                                        <h4 className="font-semibold text-textMain text-sm">
+                                        <h4 className="font-semibold text-textMain dark:text-white text-sm">
                                             {['Birthday', 'Name Day', 'Anniversary'].includes(event.title) 
                                                 ? t(`contactForm.eventTypes.${event.event_type}`) 
                                                 : event.title}
                                         </h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">{new Date(event.event_date).toLocaleDateString(i18n.language)} • {t(`contactForm.eventTypes.${event.event_type}`) || event.event_type}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{new Date(event.event_date).toLocaleDateString(i18n.language)} • {t(`contactForm.eventTypes.${event.event_type}`) || event.event_type}</p>
                                     </div>
                                     <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
                                         <X className="w-5 h-5" />

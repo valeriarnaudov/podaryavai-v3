@@ -63,7 +63,7 @@ export default function SharedWishlist() {
     };
 
     return (
-        <div className="min-h-[100dvh] flex flex-col bg-background relative overflow-hidden sm:h-[90dvh] sm:min-h-0 sm:rounded-3xl sm:max-w-md sm:mx-auto sm:mt-[5vh] shadow-2xl">
+        <div className="min-h-[100dvh] flex flex-col bg-background dark:bg-slate-900 relative overflow-hidden sm:h-[90dvh] sm:min-h-0 sm:rounded-3xl sm:max-w-md sm:mx-auto sm:mt-[5vh] shadow-2xl">
             {/* Decorative Header Background */}
             <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-accent/20 to-transparent pointer-events-none" />
 
@@ -86,10 +86,10 @@ export default function SharedWishlist() {
                         )}
                     </div>
                 </div>
-                <h1 className="text-2xl font-bold text-textMain tracking-tight">
+                <h1 className="text-2xl font-bold text-textMain dark:text-white tracking-tight">
                     {t('sharedWishlist.title', { name: userName })}
                 </h1>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                     {t('sharedWishlist.subtitle', { name: userName })}
                 </p>
             </header>
@@ -100,12 +100,12 @@ export default function SharedWishlist() {
                         <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
                     </div>
                 ) : items.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm mt-4">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm mt-4">
+                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Gift className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-textMain mb-2">{t('sharedWishlist.emptyTitle')}</h3>
-                        <p className="text-slate-500 text-sm px-6">
+                        <h3 className="text-lg font-bold text-textMain dark:text-white mb-2">{t('sharedWishlist.emptyTitle')}</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm px-6">
                             {t('sharedWishlist.emptyDesc', { name: userName })}
                         </p>
                     </div>
@@ -117,9 +117,9 @@ export default function SharedWishlist() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="bg-white rounded-2xl shadow-soft overflow-hidden border border-slate-100/50 flex flex-col"
+                                className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft overflow-hidden border border-slate-100/50 dark:border-slate-700/50 flex flex-col"
                             >
-                                <div className="h-32 bg-slate-50 relative group">
+                                <div className="h-32 bg-slate-50 dark:bg-slate-900 relative group">
                                     {item.image_url ? (
                                         <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
                                     ) : (
@@ -128,7 +128,7 @@ export default function SharedWishlist() {
                                 </div>
                                 <div className="p-3 flex-1 flex flex-col justify-between">
                                     <div>
-                                        <h3 className="font-semibold text-textMain text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
+                                        <h3 className="font-semibold text-textMain dark:text-white text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
                                         <p className="text-xs font-medium text-accent">{item.price_range || t('wishlist.priceNA')}</p>
                                     </div>
                                     {item.source_url && (
@@ -136,7 +136,7 @@ export default function SharedWishlist() {
                                             href={item.source_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mt-3 flex items-center justify-center space-x-1 text-xs text-slate-500 bg-slate-50 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                            className="mt-3 flex items-center justify-center space-x-1 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 py-1.5 rounded-lg hover:bg-slate-100 dark:bg-slate-700 transition-colors"
                                         >
                                             <span>{t('sharedWishlist.viewStore')}</span>
                                             <ExternalLink className="w-3 h-3" />
@@ -150,7 +150,7 @@ export default function SharedWishlist() {
             </main>
 
             {/* Static Bottom CTA */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-slate-100/50 z-20">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white dark:bg-slate-800/90 backdrop-blur-md border-t border-slate-100/50 dark:border-slate-700/50 z-20">
                 <button
                     onClick={() => navigate(`/register?ref=${userId}`)}
                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-floating active:scale-[0.98] transition-all flex items-center justify-center space-x-2"

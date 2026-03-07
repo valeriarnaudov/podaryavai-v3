@@ -21,12 +21,12 @@ export default function Sidebar() {
     }
 
     return (
-        <div className="hidden md:flex flex-col w-20 hover:w-64 shrink-0 transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-lg border-r border-slate-200/50 shadow-soft z-50 overflow-hidden group">
+        <div className="hidden md:flex flex-col w-20 hover:w-64 shrink-0 transition-all duration-300 ease-in-out bg-white dark:bg-slate-800/80 backdrop-blur-lg border-r border-slate-200 dark:border-slate-600/50 shadow-soft z-50 overflow-hidden group">
             <div className="flex items-center justify-center sm:justify-start sm:px-6 h-20 mb-4 flex-shrink-0">
                 <div className="w-10 h-10 bg-accent rounded-2xl flex items-center justify-center flex-shrink-0">
                     <Gift className="w-5 h-5 text-white" />
                 </div>
-                <span className="ml-4 font-bold text-xl text-textMain opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                <span className="ml-4 font-bold text-xl text-textMain dark:text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                     Podaryavai
                 </span>
             </div>
@@ -37,7 +37,7 @@ export default function Sidebar() {
                         key={path}
                         to={path}
                         className={({ isActive }) =>
-                            `flex items-center w-full px-3 py-4 rounded-xl transition-all duration-200 relative ${isActive ? 'bg-accent/10 text-accent' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                            `flex items-center w-full px-3 py-4 rounded-xl transition-all duration-200 relative ${isActive ? 'bg-accent/10 dark:bg-indigo-400/10 text-accent dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-800 dark:hover:text-slate-100'
                             }`
                         }
                     >
@@ -52,7 +52,7 @@ export default function Sidebar() {
                                 {isActive && (
                                     <motion.div
                                         layoutId="sidebar-indicator"
-                                        className="absolute left-0 w-1 h-8 rounded-r-full bg-accent"
+                                        className="absolute left-0 w-1 h-8 rounded-r-full bg-accent dark:bg-indigo-400"
                                         initial={false}
                                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                     />
@@ -73,7 +73,7 @@ export default function Sidebar() {
                         }`
                     }
                 >
-                    <div className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 bg-white rounded-xl shadow-sm">
+                    <div className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm">
                         <Sparkles className="w-5 h-5 text-amber-500" />
                     </div>
                     <div className="ml-3 flex flex-col justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">

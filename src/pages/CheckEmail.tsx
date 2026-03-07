@@ -7,7 +7,7 @@ export default function CheckEmail() {
     const { t } = useTranslation();
 
     return (
-        <div className="min-h-screen bg-background flex flex-col justify-center px-6 py-12">
+        <div className="min-h-screen bg-background dark:bg-slate-900 flex flex-col justify-center px-6 py-12">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -17,11 +17,11 @@ export default function CheckEmail() {
                     <Mail className="w-10 h-10" />
                 </div>
 
-                <h1 className="text-3xl font-bold tracking-tight text-textMain mb-3">
+                <h1 className="text-3xl font-bold tracking-tight text-textMain dark:text-white mb-3">
                     {t('checkEmail.title')}
                 </h1>
 
-                <p className="text-slate-500 mb-8">
+                <p className="text-slate-500 dark:text-slate-400 mb-8">
                     {t('checkEmail.desc')}
                 </p>
 

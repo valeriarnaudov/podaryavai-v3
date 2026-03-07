@@ -53,7 +53,7 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-[100dvh] flex flex-col justify-center px-6 bg-background relative overflow-hidden sm:h-[90dvh] sm:min-h-0 sm:rounded-3xl sm:max-w-md sm:mx-auto sm:mt-[5vh] shadow-2xl">
+        <div className="min-h-[100dvh] flex flex-col justify-center px-6 bg-background dark:bg-slate-900 relative overflow-hidden sm:h-[90dvh] sm:min-h-0 sm:rounded-3xl sm:max-w-md sm:mx-auto sm:mt-[5vh] shadow-2xl">
             {/* Decorative Blur Orbs */}
             <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
             <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
@@ -64,11 +64,11 @@ export default function Login() {
                 className="relative z-10 w-full"
             >
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-floating flex items-center justify-center mx-auto mb-6">
-                        <span className="text-2xl font-bold tracking-tighter text-textMain">PD</span>
+                    <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-floating flex items-center justify-center mx-auto mb-6">
+                        <span className="text-2xl font-bold tracking-tighter text-textMain dark:text-white">PD</span>
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-textMain">{t('auth.login.title')}</h1>
-                    <p className="text-sm text-slate-500 mt-2">{t('auth.login.subtitle')}</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-textMain dark:text-white">{t('auth.login.title')}</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t('auth.login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -86,7 +86,7 @@ export default function Login() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder={t('auth.login.emailPlaceholder')}
                             required
-                            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
+                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-600/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                         />
                     </div>
 
@@ -98,7 +98,7 @@ export default function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder={t('auth.login.passwordPlaceholder')}
                             required
-                            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
+                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-600/50 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all shadow-sm placeholder:text-slate-400"
                         />
                     </div>
 
@@ -114,17 +114,17 @@ export default function Login() {
                 <div className="mt-6">
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200"></div>
+                            <div className="w-full border-t border-slate-200 dark:border-slate-600"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-background text-slate-500">{t('auth.login.orContinueWith')}</span>
+                            <span className="px-2 bg-background dark:bg-slate-900 text-slate-500 dark:text-slate-400">{t('auth.login.orContinueWith')}</span>
                         </div>
                     </div>
 
                     <button
                         onClick={handleGoogleLogin}
                         disabled={loading}
-                        className="mt-6 w-full py-4 bg-white text-slate-700 rounded-2xl font-semibold shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="mt-6 w-full py-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl font-semibold shadow-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:bg-slate-900 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -136,7 +136,7 @@ export default function Login() {
                     </button>
                 </div>
 
-                <p className="text-center text-sm text-slate-500 mt-8">
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-8">
                     {t('auth.login.noAccount')}{' '}
                     <Link to="/register" className="font-semibold text-accent hover:underline">
                         {t('auth.login.createOne')}

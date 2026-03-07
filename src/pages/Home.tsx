@@ -128,7 +128,7 @@ export default function Home() {
                         if (!manuallyAdded) {
                             parsedEvents.push({
                                 id: `ai-nd-${contact.id}-${currentViewYear}`,
-                                title: `${contact.first_name}'s Name Day`,
+                                title: t('home.nameDayTitle', { name: contact.first_name }),
                                 event_date: virtualDateStr,
                                 event_type: 'AI_NAME_DAY',
                                 contacts: contact,
@@ -298,8 +298,8 @@ export default function Home() {
         >
             <header className="pt-4 pb-2 flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('home.title')}</h1>
-                    <p className="text-slate-500 text-sm mt-1">{t('home.subtitle')}</p>
+                    <h1 className="text-2xl font-bold text-textMain dark:text-white tracking-tight">{t('home.title')}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('home.subtitle')}</p>
                 </div>
                 <div className="flex space-x-2">
                     {isAdmin && (
@@ -313,7 +313,7 @@ export default function Home() {
                     )}
                     <button
                         onClick={() => navigate('/contacts')}
-                        className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-soft hover:bg-slate-50 transition-colors"
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-soft hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                     >
                         <Users className="w-5 h-5" />
                     </button>
@@ -321,15 +321,15 @@ export default function Home() {
             </header>
 
             {/* Monthly Calendar */}
-            <div className="bg-white p-5 rounded-3xl shadow-soft border border-slate-100/50">
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-soft border border-slate-100/50 dark:border-slate-700/50">
                 <div className="flex justify-between items-center mb-6">
-                    <button onClick={prevMonth} className="p-2 -ml-2 hover:bg-slate-50 rounded-full text-slate-600">
+                    <button onClick={prevMonth} className="p-2 -ml-2 hover:bg-slate-50 dark:bg-slate-900 rounded-full text-slate-600 dark:text-slate-300">
                         <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <h2 className="text-lg font-bold text-textMain capitalize">
+                    <h2 className="text-lg font-bold text-textMain dark:text-white capitalize">
                         {currentDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
                     </h2>
-                    <button onClick={nextMonth} className="p-2 -mr-2 hover:bg-slate-50 rounded-full text-slate-600">
+                    <button onClick={nextMonth} className="p-2 -mr-2 hover:bg-slate-50 dark:bg-slate-900 rounded-full text-slate-600 dark:text-slate-300">
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
@@ -361,14 +361,14 @@ export default function Home() {
                                 onClick={() => setSelectedDate(new Date(year, month, day))}
                                 className={`h-10 w-full rounded-xl flex items-center justify-center relative text-sm font-medium transition-all
                                     ${isSelected ? 'bg-textMain text-white' :
-                                        isToday ? 'bg-accent/10 text-accent' : 'text-slate-700 hover:bg-slate-50'}
+                                        isToday ? 'bg-accent/10 text-accent' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}
                                 `}
                             >
                                 {day}
                                 {hasEvent && (
                                     <div className="absolute bottom-1 flex space-x-0.5 mt-1">
-                                        {hasNormal && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-accent'}`} />}
-                                        {hasAINameDay && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`} />}
+                                        {hasNormal && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-accent dark:bg-emerald-400'}`} />}
+                                        {hasAINameDay && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`} />}
                                     </div>
                                 )}
                             </button>
@@ -380,11 +380,11 @@ export default function Home() {
             {/* Selected Date Events */}
             <div className="pt-2">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-textMain text-lg capitalize">
+                    <h3 className="font-bold text-textMain dark:text-white text-lg capitalize">
                         {selectedDate.toLocaleDateString(i18n.language, { weekday: 'long', month: 'short', day: 'numeric' })}
                     </h3>
                     {selectedEvents.length > 0 && (
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-semibold px-3">
+                        <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-full font-semibold px-3">
                             {selectedEvents.length} {t('home.eventsCount')}
                         </span>
                     )}
@@ -395,7 +395,7 @@ export default function Home() {
                         <Loader2 className="w-6 h-6 text-slate-300 animate-spin" />
                     </div>
                 ) : selectedEvents.length === 0 ? (
-                    <div className="bg-slate-50/50 border border-slate-100 border-dashed rounded-3xl p-8 text-center text-slate-500 text-sm">
+                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 border-dashed rounded-3xl p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                         {t('home.noEvents')}
                     </div>
                 ) : (
@@ -403,7 +403,7 @@ export default function Home() {
                         {selectedEvents.map((event, index) => (
                             <div
                                 key={event.id}
-                                className={`bg-white p-5 rounded-3xl border border-slate-100/50 relative overflow-hidden ${index === 0 ? 'shadow-floating' : 'shadow-soft'
+                                className={`bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-100/50 dark:border-slate-700/50 relative overflow-hidden ${index === 0 ? 'shadow-floating' : 'shadow-soft'
                                     }`}
                             >
                                 {index === 0 && (
@@ -414,8 +414,8 @@ export default function Home() {
                                         <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
                                             {event.event_type === 'AI_NAME_DAY' ? t('home.nameDayAI') : event.event_type}
                                         </p>
-                                        <h3 className="text-lg font-bold text-textMain">{event.title} - {event.contacts?.first_name} {event.contacts?.last_name}</h3>
-                                        {event.holiday && <p className="text-xs text-slate-500 font-medium mt-0.5">{event.holiday}</p>}
+                                        <h3 className="text-lg font-bold text-textMain dark:text-white">{event.title} - {event.contacts?.first_name} {event.contacts?.last_name}</h3>
+                                        {event.holiday && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{event.holiday}</p>}
                                     </div>
                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
                                         {event.contacts?.avatar_url ? (
@@ -455,14 +455,14 @@ export default function Home() {
                                             <motion.div 
                                                 initial={{ opacity: 0, height: 0 }}
                                                 animate={{ opacity: 1, height: 'auto' }}
-                                                className="mt-4 pt-4 border-t border-slate-100 overflow-hidden"
+                                                className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 overflow-hidden"
                                             >
                                         {event.ai_recommendations && Array.isArray(event.ai_recommendations) ? (
                                             <div className="space-y-4">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     {event.ai_recommendations.map((gift: any, giftIdx: number) => (
-                                                        <div key={giftIdx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col h-full hover:border-accent hover:shadow-md transition-all cursor-pointer">
-                                                            <div className="aspect-video w-full rounded-xl bg-slate-50 mb-3 overflow-hidden">
+                                                        <div key={giftIdx} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col h-full hover:border-accent hover:shadow-md transition-all cursor-pointer">
+                                                            <div className="aspect-video w-full rounded-xl bg-slate-50 dark:bg-slate-900 mb-3 overflow-hidden">
                                                                 <img
                                                                     src={gift.image_url || `https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop`}
                                                                     alt={gift.name}
@@ -471,33 +471,33 @@ export default function Home() {
                                                             </div>
                                                             <div className="flex-1 flex flex-col">
                                                                 <div className="flex justify-between items-start mb-2">
-                                                                    <h4 className="font-bold text-slate-800 text-sm leading-snug">{gift.name}</h4>
+                                                                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug">{gift.name}</h4>
                                                                     <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2">
                                                                         {gift.price}
                                                                     </span>
                                                                 </div>
-                                                                <p className="text-xs text-slate-500 flex-1">{gift.reason}</p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 flex-1">{gift.reason}</p>
                                                             </div>
-                                                            <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(gift.name)}`} target="_blank" rel="noopener noreferrer" className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold text-center transition-colors">
+                                                            <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(gift.name)}`} target="_blank" rel="noopener noreferrer" className="mt-4 w-full py-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold text-center transition-colors">
                                                                 {t('home.findOnline')}
                                                             </a>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium border-t border-slate-100">
+                                                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-medium border-t border-slate-100 dark:border-slate-700">
                                                     <span>{t('home.dontLike')}</span>
-                                                    <button onClick={() => handleGenerateClick(event, true)} className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg transition-colors flex items-center shadow-sm whitespace-nowrap">
+                                                    <button onClick={() => handleGenerateClick(event, true)} className="mt-2 sm:mt-0 px-4 py-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-colors flex items-center shadow-sm whitespace-nowrap">
                                                         <Sparkles className="w-3 h-3 mr-1.5 text-accent" />
                                                         {t('home.regenerateIdeas')}
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : generatingFor === event.id && (
-                                            <div className="py-8 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                                            <div className="py-8 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 border-dashed">
                                                 <div className="w-10 h-10 mb-3 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
                                                     <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
                                                 </div>
-                                                <p className="text-sm font-semibold text-slate-700">{t('home.analyzingProfile')}</p>
+                                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('home.analyzingProfile')}</p>
                                                 <p className="text-xs text-slate-400 mt-1 max-w-[200px] text-center">{t('home.findingPerfectGifts')}</p>
                                             </div>
                                         )}
@@ -513,10 +513,10 @@ export default function Home() {
 
             {/* Upcoming Events Section */}
             {upcomingEvents.length > 0 && (
-                <div className="pt-4 pb-8 border-t border-slate-100">
+                <div className="pt-4 pb-8 border-t border-slate-100 dark:border-slate-700">
                     <div className="flex items-center space-x-2 mb-4">
                         <CalendarHeart className="w-5 h-5 text-accent" />
-                        <h3 className="font-bold text-textMain text-lg">{t('home.comingUpSoon')}</h3>
+                        <h3 className="font-bold text-textMain dark:text-white text-lg">{t('home.comingUpSoon')}</h3>
                     </div>
 
                     <div className="space-y-3">
@@ -529,7 +529,7 @@ export default function Home() {
                                     setCurrentDate(new Date(date.getFullYear(), date.getMonth(), 1));
                                     setSelectedDate(date);
                                 }}
-                                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+                                className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                             >
                                 <div className="flex items-center space-x-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-50 text-purple-600' : 'bg-rose-50 text-rose-500'}`}>
@@ -540,7 +540,7 @@ export default function Home() {
                                         )}
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-textMain text-sm">
+                                        <h4 className="font-semibold text-textMain dark:text-white text-sm">
                                             {event.title} - {event.contacts?.first_name} {event.contacts?.last_name}
                                         </h4>
                                         <p className={`text-xs font-medium capitalize ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
@@ -572,19 +572,19 @@ export default function Home() {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="relative w-full max-w-sm bg-white rounded-3xl shadow-xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh]"
+                            className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh]"
                         >
                             <div className="p-6">
-                                <h3 className="text-xl font-bold text-slate-800 mb-2">{t('home.setBudgetLimit')}</h3>
-                                <p className="text-sm text-slate-500 mb-6">
-                                    {t('home.aiNeedsBudget')} <span className="font-semibold text-slate-700">{pendingEventForGifts?.contacts?.first_name}</span>.
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{t('home.setBudgetLimit')}</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                                    {t('home.aiNeedsBudget')} <span className="font-semibold text-slate-700 dark:text-slate-200">{pendingEventForGifts?.contacts?.first_name}</span>.
                                 </p>
                                 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('home.budgetTarget')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">{t('home.budgetTarget')}</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <span className="text-slate-500 font-medium">€</span>
+                                            <span className="text-slate-500 dark:text-slate-400 font-medium">€</span>
                                         </div>
                                         <input
                                             type="number"
@@ -592,7 +592,7 @@ export default function Home() {
                                             value={tempBudget}
                                             onChange={e => setTempBudget(e.target.value)}
                                             placeholder="e.g. 50"
-                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
@@ -601,7 +601,7 @@ export default function Home() {
                                 <button
                                     onClick={() => setBudgetModalOpen(false)}
                                     disabled={savingBudget}
-                                    className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
+                                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-semibold hover:bg-slate-200 dark:bg-slate-600 transition-colors"
                                 >
                                     {t('home.cancel')}
                                 </button>

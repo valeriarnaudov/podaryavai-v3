@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Save, Settings as SettingsIcon, Globe, Zap, RotateCcw, CreditCard, Users } from 'lucide-react';
 import { useSettings, SubscriptionPlan } from '../../lib/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 interface PlatformSetting {
     id: string; // optional for local creation
@@ -62,6 +63,7 @@ export default function AdminSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editableValues, setEditableValues] = useState<Record<string, string>>({});
+    const { t } = useTranslation();
 
     // Manage local editable copies of plans
     const [editablePlans, setEditablePlans] = useState<Record<string, SubscriptionPlan>>({});
@@ -84,7 +86,7 @@ export default function AdminSettings() {
         const { data, error } = await supabase.from('platform_settings').select('*');
 
         if (error) {
-            console.error("Settings error:", error);
+            console.error(t('adminSettings.errLoad'), error);
             setLoading(false);
             return;
         }
@@ -182,15 +184,15 @@ export default function AdminSettings() {
 
             if (allUpdates.length > 0) {
                 await Promise.all(allUpdates);
-                alert('Settings and Plans saved successfully!');
+                alert(t('adminSettings.successSave'));
                 await refreshSettings(); // Update the global context instantly
                 await fetchAndInitializeSettings();
             } else {
-                alert('No changes to save.');
+                alert(t('adminSettings.noChanges'));
             }
         } catch (error) {
             console.error(error);
-            alert('Error saving data.');
+            alert(t('adminSettings.errSave'));
         } finally {
             setSaving(false);
         }
@@ -207,11 +209,11 @@ export default function AdminSettings() {
     );
 
     const renderSettingRow = (setting: PlatformSetting) => (
-        <div key={setting.setting_key} className="p-5 sm:pl-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+        <div key={setting.setting_key} className="p-5 sm:pl-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
             <div className="sm:w-1/2">
                 <label className="flex flex-col">
-                    <span className="font-bold text-slate-800 text-sm tracking-tight">{setting.setting_key.replace(/_/g, ' ')}</span>
-                    <span className="text-xs font-medium text-slate-500 mt-0.5">{setting.description}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-100 text-sm tracking-tight">{setting.setting_key.replace(/_/g, ' ')}</span>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{setting.description}</span>
                 </label>
             </div>
             <div className="sm:w-1/2 flex items-center">
@@ -221,8 +223,8 @@ export default function AdminSettings() {
                         type="text"
                         value={editableValues[setting.setting_key] !== undefined ? editableValues[setting.setting_key] : setting.setting_value}
                         onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
-                        className={`w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border outline-none focus:bg-white transition-colors text-sm font-semibold font-mono
-                            ${editableValues[setting.setting_key] !== setting.setting_value ? 'border-accent/40 bg-accent/5 focus:border-accent text-accent' : 'border-slate-200 focus:border-slate-800 text-slate-700'}
+                        className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 rounded-xl border outline-none focus:bg-white dark:bg-slate-800 transition-colors text-sm font-semibold font-mono
+                            ${editableValues[setting.setting_key] !== setting.setting_value ? 'border-accent/40 bg-accent/5 focus:border-accent text-accent' : 'border-slate-200 dark:border-slate-600 focus:border-slate-800 text-slate-700 dark:text-slate-200'}
                         `}
                     />
                 </div>
@@ -240,23 +242,23 @@ export default function AdminSettings() {
 
     return (
         <div className="space-y-8 max-w-4xl pb-10">
-            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm sticky top-4 z-10">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm sticky top-4 z-10">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
                         <SettingsIcon className="w-5 h-5 text-accent" />
-                        Platform Engine
+                        {t('adminSettings.title')}
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">Configure global parameters, AI limits, and plan capabilities.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('adminSettings.subtitle')}</p>
                 </div>
 
                 <div className="flex space-x-3">
                     <button
                         onClick={fetchAndInitializeSettings}
                         disabled={saving || loading}
-                        className="flex items-center space-x-2 bg-slate-50 text-slate-600 px-4 py-2 rounded-xl font-semibold hover:bg-slate-100 transition-colors disabled:opacity-70"
+                        className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl font-semibold hover:bg-slate-100 dark:bg-slate-700 transition-colors disabled:opacity-70"
                     >
                         <RotateCcw className="w-4 h-4" />
-                        <span className="hidden sm:inline">Refresh</span>
+                        <span className="hidden sm:inline">{t('adminSettings.refresh')}</span>
                     </button>
                     <button
                         onClick={handleSave}
@@ -264,16 +266,16 @@ export default function AdminSettings() {
                         className="flex items-center space-x-2 bg-slate-900 text-white px-6 py-2 rounded-xl font-semibold hover:bg-slate-800 transition-colors disabled:opacity-70 shadow-soft"
                     >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        <span>Save Changes</span>
+                        <span>{t('adminSettings.save')}</span>
                     </button>
                 </div>
             </header>
 
             {/* Global Setting Section */}
-            <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center space-x-2">
+            <section className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center space-x-2">
                     <Globe className="w-5 h-5 text-slate-400" />
-                    <h3 className="font-bold text-slate-700">Global Settings</h3>
+                    <h3 className="font-bold text-slate-700 dark:text-slate-200">{t('adminSettings.globalTitle')}</h3>
                 </div>
                 <div>
                     {globalSettings.map(renderSettingRow)}
@@ -281,22 +283,22 @@ export default function AdminSettings() {
             </section>
 
             {/* Subscription Plans Section */}
-            <section className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center space-x-2">
+            <section className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center space-x-2">
                     <CreditCard className="w-5 h-5 text-indigo-500" />
-                    <h3 className="font-bold text-slate-700">Subscription Plans & Pricing</h3>
+                    <h3 className="font-bold text-slate-700 dark:text-slate-200">{t('adminSettings.plansTitle')}</h3>
                 </div>
                 <div className="p-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {plans.map(plan => {
                         const edited = editablePlans[plan.id] || plan;
                         return (
-                            <div key={plan.id} className={`border border-slate-200 rounded-2xl p-5 flex flex-col space-y-4 relative ${edited.is_active === false ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm'}`}>
-                                {plan.is_popular && <span className="absolute -top-3 -right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm uppercase">Popular</span>}
+                            <div key={plan.id} className={`border border-slate-200 dark:border-slate-600 rounded-2xl p-5 flex flex-col space-y-4 relative ${edited.is_active === false ? 'bg-slate-50 dark:bg-slate-900 opacity-75' : 'bg-white dark:bg-slate-800 shadow-sm'}`}>
+                                {plan.is_popular && <span className="absolute -top-3 -right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm uppercase">{t('adminSettings.popular')}</span>}
 
-                                <div className="flex justify-between items-center bg-slate-100/50 -mx-5 -mt-5 p-4 rounded-t-2xl mb-2 border-b border-slate-100">
+                                <div className="flex justify-between items-center bg-slate-100/50 dark:bg-slate-700/50 -mx-5 -mt-5 p-4 rounded-t-2xl mb-2 border-b border-slate-100 dark:border-slate-700">
                                     <label className="flex items-center space-x-3 cursor-pointer">
                                         <div className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${edited.is_active !== false ? 'bg-green-500' : 'bg-slate-300'}`}>
-                                            <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${edited.is_active !== false ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            <div className={`bg-white dark:bg-slate-800 w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${edited.is_active !== false ? 'translate-x-4' : 'translate-x-0'}`} />
                                         </div>
                                         <input
                                             type="checkbox"
@@ -304,113 +306,113 @@ export default function AdminSettings() {
                                             checked={edited.is_active !== false}
                                             onChange={(e) => handlePlanChange(plan.id, 'is_active', e.target.checked)}
                                         />
-                                        <span className={`text-sm font-bold ${edited.is_active !== false ? 'text-green-700' : 'text-slate-500'}`}>
-                                            {edited.is_active !== false ? 'Plan Active' : 'Plan Hidden'}
+                                        <span className={`text-sm font-bold ${edited.is_active !== false ? 'text-green-700' : 'text-slate-500 dark:text-slate-400'}`}>
+                                            {edited.is_active !== false ? t('adminSettings.planActive') : t('adminSettings.planHidden')}
                                         </span>
                                     </label>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Plan Name ({plan.plan_key})</label>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.planName')} ({plan.plan_key})</label>
                                     <input
                                         type="text"
                                         value={edited.name}
                                         onChange={(e) => handlePlanChange(plan.id, 'name', e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-accent focus:bg-white"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-accent focus:bg-white dark:bg-slate-800"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Price (EUR/Month)</label>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.priceMonthly')}</label>
                                     <input
                                         type="number"
                                         value={edited.price}
                                         onChange={(e) => handlePlanChange(plan.id, 'price', parseFloat(e.target.value))}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-rose-500 outline-none focus:border-accent focus:bg-white"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-bold text-rose-500 outline-none focus:border-accent focus:bg-white dark:bg-slate-800"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Annual Price (EUR/Year)</label>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.priceAnnual')}</label>
                                     <input
                                         type="number"
                                         value={edited.price_annual || 0}
                                         onChange={(e) => handlePlanChange(plan.id, 'price_annual', parseFloat(e.target.value))}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-rose-500 outline-none focus:border-accent focus:bg-white"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-bold text-rose-500 outline-none focus:border-accent focus:bg-white dark:bg-slate-800"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stripe Price ID (Monthly)</label>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.stripeIdMonthly')}</label>
                                     <input
                                         type="text"
                                         value={edited.stripe_price_id || ''}
                                         onChange={(e) => handlePlanChange(plan.id, 'stripe_price_id', e.target.value)}
                                         placeholder="price_..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 outline-none focus:border-accent focus:bg-white"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300 outline-none focus:border-accent focus:bg-white dark:bg-slate-800"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stripe Price ID (Annual)</label>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.stripeIdAnnual')}</label>
                                     <input
                                         type="text"
                                         value={edited.stripe_price_id_annual || ''}
                                         onChange={(e) => handlePlanChange(plan.id, 'stripe_price_id_annual', e.target.value)}
                                         placeholder="price_..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 outline-none focus:border-accent focus:bg-white"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-xs font-mono text-slate-600 dark:text-slate-300 outline-none focus:border-accent focus:bg-white dark:bg-slate-800"
                                     />
                                 </div>
 
                                 {/* Platform Settings for this Plan */}
-                                <div className="pt-4 border-t border-slate-100 space-y-4">
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-blue-600 flex items-center gap-1"><Users className="w-3 h-3"/> Maximum Contacts (-1 = unltd)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-blue-600 flex items-center gap-1"><Users className="w-3 h-3"/> {t('adminSettings.maxContacts')}</label>
                                         <input
                                             type="number"
                                             value={editableValues[`LIMIT_CONTACTS_${plan.plan_key}`] !== undefined ? editableValues[`LIMIT_CONTACTS_${plan.plan_key}`] : ''}
                                             onChange={(e) => handleValueChange(`LIMIT_CONTACTS_${plan.plan_key}`, e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:bg-white"
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:bg-white dark:bg-slate-800"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-amber-600 flex items-center gap-1"><Zap className="w-3 h-3"/> AI Giftinder Limit / Day (-1 = unltd)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-amber-600 flex items-center gap-1"><Zap className="w-3 h-3"/> {t('adminSettings.aiLimit')}</label>
                                         <input
                                             type="number"
                                             value={editableValues[`LIMIT_AI_${plan.plan_key}`] !== undefined ? editableValues[`LIMIT_AI_${plan.plan_key}`] : ''}
                                             onChange={(e) => handleValueChange(`LIMIT_AI_${plan.plan_key}`, e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-amber-500 focus:bg-white"
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500 focus:bg-white dark:bg-slate-800"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-rose-500 flex items-center gap-1">♥️ Karma Per Swipe Right</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-rose-500 flex items-center gap-1">♥️ {t('adminSettings.karmaPerSwipe')}</label>
                                         <input
                                             type="number"
                                             value={editableValues[`KARMA_PER_SWIPE_${plan.plan_key}`] !== undefined ? editableValues[`KARMA_PER_SWIPE_${plan.plan_key}`] : ''}
                                             onChange={(e) => handleValueChange(`KARMA_PER_SWIPE_${plan.plan_key}`, e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 outline-none focus:border-rose-500 focus:bg-white"
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 outline-none focus:border-rose-500 focus:bg-white dark:bg-slate-800"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-purple-600 flex items-center gap-1"><SettingsIcon className="w-3 h-3"/> AI Model Backend</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-purple-600 flex items-center gap-1"><SettingsIcon className="w-3 h-3"/> {t('adminSettings.aiModel')}</label>
                                         <select
                                             value={editableValues[`MODEL_AI_${plan.plan_key}`] !== undefined ? editableValues[`MODEL_AI_${plan.plan_key}`] : 'llama'}
                                             onChange={(e) => handleValueChange(`MODEL_AI_${plan.plan_key}`, e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-purple-500 focus:bg-white"
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-purple-500 focus:bg-white dark:bg-slate-800"
                                         >
-                                            <option value="llama">Llama (Standard)</option>
-                                            <option value="openai">OpenAI (Premium)</option>
-                                            <option value="gemini">Gemini (Google)</option>
+                                            <option value="llama">{t('adminSettings.modelLlama')}</option>
+                                            <option value="openai">{t('adminSettings.modelOpenAI')}</option>
+                                            <option value="gemini">{t('adminSettings.modelGemini')}</option>
                                         </select>
                                     </div>
 
                                     {/* Calendar Profile Gifts Settings */}
-                                    <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center">
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider text-teal-600">Calendar AI Options</span>
+                                    <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-teal-600">{t('adminSettings.calendarAIOptions')}</span>
                                         <label className="flex items-center space-x-2 cursor-pointer">
-                                            <span className="text-xs font-bold text-slate-400">Enabled</span>
+                                            <span className="text-xs font-bold text-slate-400">{t('adminSettings.enabled')}</span>
                                             <div className={`w-8 h-4 flex items-center rounded-full p-0.5 transition-colors duration-300 ${editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true' ? 'bg-teal-500' : 'bg-slate-300'}`}>
-                                                <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-300 ${editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true' ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                <div className={`bg-white dark:bg-slate-800 w-3 h-3 rounded-full shadow-md transform transition-transform duration-300 ${editableValues[`CONTACT_GIFTS_ENABLED_${plan.plan_key}`] === 'true' ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </div>
                                             <input
                                                 type="checkbox"
@@ -424,22 +426,22 @@ export default function AdminSettings() {
                                         <select
                                             value={editableValues[`CONTACT_GIFTS_MODEL_${plan.plan_key}`] !== undefined ? editableValues[`CONTACT_GIFTS_MODEL_${plan.plan_key}`] : 'gemini'}
                                             onChange={(e) => handleValueChange(`CONTACT_GIFTS_MODEL_${plan.plan_key}`, e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-teal-500 focus:bg-white"
+                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-teal-500 focus:bg-white dark:bg-slate-800"
                                         >
-                                            <option value="llama">Llama (Standard)</option>
-                                            <option value="openai">OpenAI (Premium)</option>
-                                            <option value="gemini">Gemini (Google)</option>
+                                            <option value="llama">{t('adminSettings.modelLlama')}</option>
+                                            <option value="openai">{t('adminSettings.modelOpenAI')}</option>
+                                            <option value="gemini">{t('adminSettings.modelGemini')}</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1 flex-1 pt-4 border-t border-slate-100">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Features (1 per line)</label>
+                                <div className="space-y-1 flex-1 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('adminSettings.features')}</label>
                                     <textarea
                                         value={edited.features.join('\n')}
                                         onChange={(e) => handlePlanChange(plan.id, 'features', e.target.value.split('\n').filter(f => f.trim() !== ''))}
                                         rows={4}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-accent focus:bg-white resize-none"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-accent focus:bg-white dark:bg-slate-800 resize-none"
                                     />
                                 </div>
                             </div>

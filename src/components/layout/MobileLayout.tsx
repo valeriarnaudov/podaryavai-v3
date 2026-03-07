@@ -4,13 +4,13 @@ import Sidebar from './Sidebar';
 
 export default function MobileLayout() {
     return (
-        <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
+        <div className="flex h-[100dvh] w-full bg-background dark:bg-slate-900 overflow-hidden">
             {/* Desktop Sidebar */}
             <Sidebar />
 
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 h-[100dvh] w-full relative sm:px-4 md:px-8 sm:py-4">
-                <main className="flex-1 w-full max-w-2xl mx-auto overflow-y-auto pb-20 relative z-0 md:pb-4 md:bg-white/50 md:rounded-3xl md:shadow-soft lg:max-w-4xl">
+                <main className="flex-1 w-full max-w-2xl mx-auto overflow-y-auto pb-20 relative z-0 md:pb-4 md:bg-white dark:bg-slate-800/50 md:rounded-3xl md:shadow-soft lg:max-w-4xl">
                     <Outlet />
                 </main>
 

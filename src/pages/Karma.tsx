@@ -96,23 +96,23 @@ export default function Karma() {
     };
 
     return (
-        <div className="h-full flex flex-col bg-background relative overflow-hidden">
+        <div className="h-full flex flex-col bg-background dark:bg-slate-900 relative overflow-hidden">
             <header className="px-6 pt-10 pb-6 flex justify-between items-center relative z-10">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('karmaStore.title')}</h1>
-                    <p className="text-sm text-slate-500">{t('karmaStore.subtitle')}</p>
+                    <h1 className="text-2xl font-bold text-textMain dark:text-white tracking-tight">{t('karmaStore.title')}</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('karmaStore.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={loadHistory}
-                        className="p-2.5 bg-slate-100 rounded-full text-slate-600 hover:text-accent hover:bg-slate-200 transition-colors"
+                        className="p-2.5 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300 hover:text-accent hover:bg-slate-200 dark:bg-slate-600 transition-colors"
                         title="History"
                     >
                         <History className="w-5 h-5" />
                     </button>
                     <button
                         onClick={signOut}
-                        className="p-2.5 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-soft transition-colors"
+                        className="p-2.5 bg-white dark:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 shadow-soft transition-colors"
                         title="Sign Out"
                     >
                         <LogOut className="w-5 h-5" />
@@ -127,11 +127,11 @@ export default function Karma() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-8 text-white shadow-floating text-center relative overflow-hidden mb-8"
                 >
-                    <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
-                    <div className="absolute bottom-[-20%] left-[-10%] w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                    <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white dark:bg-slate-800/20 rounded-full blur-2xl"></div>
+                    <div className="absolute bottom-[-20%] left-[-10%] w-40 h-40 bg-white dark:bg-slate-800/10 rounded-full blur-2xl"></div>
 
                     <div className="relative z-10">
-                        <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
                             {authLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Sparkles className="w-8 h-8 text-white drop-shadow-md" />}
                         </div>
                         <h2 className="text-6xl font-black mb-1 drop-shadow-md">{karmaPoints}</h2>
@@ -160,12 +160,12 @@ export default function Karma() {
 
                 {/* Rewards List */}
                 <div>
-                    <h3 className="text-lg font-bold text-textMain mb-4">{t('karmaStore.store')}</h3>
+                    <h3 className="text-lg font-bold text-textMain dark:text-white mb-4">{t('karmaStore.store')}</h3>
                     {loading ? (
                         <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-slate-300" /></div>
                     ) : rewards.length === 0 ? (
-                        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-slate-500">{t('karmaStore.noRewards')}</p>
+                        <div className="text-center py-10 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <p className="text-slate-500 dark:text-slate-400">{t('karmaStore.noRewards')}</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -179,8 +179,8 @@ export default function Karma() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
                                         className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${isLocked
-                                            ? 'bg-slate-50 border-slate-100 opacity-70 grayscale hover:grayscale-0'
-                                            : 'bg-white border-amber-100 shadow-soft hover:border-amber-300'
+                                            ? 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 opacity-70 grayscale hover:grayscale-0'
+                                            : 'bg-white dark:bg-slate-800 border-amber-100 shadow-soft hover:border-amber-300'
                                             }`}
                                     >
                                         <div className="flex items-center space-x-4">
@@ -188,11 +188,11 @@ export default function Karma() {
                                                 <Award className="w-6 h-6 text-amber-500" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-textMain">{reward.title}</h4>
+                                                <h4 className="font-bold text-textMain dark:text-white">{reward.title}</h4>
                                                 <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-semibold">
                                                     <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">{t('karmaStore.costPoints', { points: reward.cost_points })}</span>
                                                     
-                                                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
+                                                    <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md">
                                                         {reward.reward_type === 'PLAN_UPGRADE' ? `${t('karmaStore.unlocks')}: ${reward.reward_value}` : 
                                                          reward.reward_type === 'ADD_FREE_DELIVERIES' ? t('karmaStore.deliveries', { amount: reward.reward_metadata?.amount || 1 }) : 
                                                          reward.reward_type.replace(/_/g, ' ')}
@@ -202,7 +202,7 @@ export default function Karma() {
                                                         <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md">{t('karmaStore.days', { days: reward.duration_days })}</span>
                                                     )}
                                                 </div>
-                                                {reward.description && <p className="text-xs text-slate-500 mt-2">{reward.description}</p>}
+                                                {reward.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{reward.description}</p>}
                                             </div>
                                         </div>
 
@@ -227,14 +227,14 @@ export default function Karma() {
                     <motion.div
                         initial={{ opacity: 0, y: 100 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white w-full max-w-md rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden"
+                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden"
                     >
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">{t('karmaStore.historyTitle')}</h3>
-                                <p className="text-xs text-slate-500 mt-1">{t('karmaStore.historySubtitle')}</p>
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('karmaStore.historyTitle')}</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('karmaStore.historySubtitle')}</p>
                             </div>
-                            <button onClick={() => setShowHistory(false)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                            <button onClick={() => setShowHistory(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-full">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -242,20 +242,20 @@ export default function Karma() {
                             {loadingHistory ? (
                                 <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
                             ) : historyLogs.length === 0 ? (
-                                <p className="text-center text-slate-500 py-6">{t('karmaStore.noHistory')}</p>
+                                <p className="text-center text-slate-500 dark:text-slate-400 py-6">{t('karmaStore.noHistory')}</p>
                             ) : (
                                 historyLogs.map(log => (
-                                    <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                                    <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${log.action_type === 'EARNED' ? 'bg-emerald-100' : 'bg-red-100'}`}>
                                                 {log.action_type === 'EARNED' ? <ArrowUpRight className="w-5 h-5 text-emerald-600" /> : <ArrowDownRight className="w-5 h-5 text-red-600" />}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-700">{log.description}</p>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{log.description}</p>
                                                 <p className="text-[10px] text-slate-400 font-medium uppercase mt-0.5">{new Date(log.created_at).toLocaleDateString()} {t('karmaStore.atTime')} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                             </div>
                                         </div>
-                                        <span className={`font-black tracking-tight ${log.action_type === 'EARNED' ? 'text-emerald-500' : 'text-slate-500'}`}>
+                                        <span className={`font-black tracking-tight ${log.action_type === 'EARNED' ? 'text-emerald-500' : 'text-slate-500 dark:text-slate-400'}`}>
                                             {log.action_type === 'EARNED' ? '+' : '-'}{log.points}
                                         </span>
                                     </div>

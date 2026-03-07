@@ -201,13 +201,13 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
         <div className="h-full flex flex-col pt-4 px-6 relative overflow-hidden">
             <header className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('giftinder.title')}</h1>
-                    <p className="text-sm text-slate-500">{t('giftinder.subtitle')}</p>
+                    <h1 className="text-2xl font-bold text-textMain dark:text-white tracking-tight">{t('giftinder.title')}</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('giftinder.subtitle')}</p>
                 </div>
                 <div className="relative">
                     <button 
                         onClick={() => navigate('/wishlist')}
-                        className="relative p-2 bg-white rounded-full text-slate-700 shadow-soft hover:bg-slate-50 transition-colors"
+                        className="relative p-2 bg-white dark:bg-slate-800 rounded-full text-slate-700 dark:text-slate-200 shadow-soft hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                         title="View Wishlist"
                     >
                         <BookmarkCheck className="w-6 h-6" />
@@ -231,12 +231,12 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-center text-slate-500"
+                            className="text-center text-slate-500 dark:text-slate-400"
                         >
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Heart className="w-8 h-8 text-slate-300" />
                             </div>
-                            <h3 className="font-bold text-slate-700 text-lg mb-1">{t('giftinder.allIdeasSeen')}</h3>
+                            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg mb-1">{t('giftinder.allIdeasSeen')}</h3>
                             <p className="text-sm">{t('giftinder.allIdeasDesc')}</p>
 
                             {aiError && (
@@ -264,7 +264,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                             ) : (
                                 <motion.div
                                     key={card.id}
-                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-white rounded-[2rem] shadow-floating overflow-hidden filter brightness-[0.85] border border-slate-100/50"
+                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden filter brightness-[0.85] border border-slate-100/50 dark:border-slate-700/50"
                                     style={{
                                         scale: 1 - diff * 0.05,
                                         top: diff * -12,
@@ -273,7 +273,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                                 >
                                     {/* Abstract background card to look exactly like the front card */}
                                     <div
-                                        className="relative w-full h-[55%] bg-slate-200 shrink-0 overflow-hidden rounded-t-[2rem]"
+                                        className="relative w-full h-[55%] bg-slate-200 dark:bg-slate-600 shrink-0 overflow-hidden rounded-t-[2rem]"
                                         style={{
                                             background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                                         }}
@@ -287,9 +287,9 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                                             }}
                                         />
                                     </div>
-                                     <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white">
+                                     <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white dark:bg-slate-800">
                                          <div className="mb-2">
-                                            <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
+                                            <h2 className="text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2">{card.title}</h2>
                                             <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
                                         </div>
                                     </div>
@@ -305,13 +305,13 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                 <div className="flex justify-center items-center space-x-8 mt-6 mb-8">
                     <button
                         onClick={() => handleSwipe('left', cards[activeIndex].id)}
-                        className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-slate-400 shadow-floating active:scale-95 transition-transform"
+                        className="w-14 h-14 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 shadow-floating active:scale-95 transition-transform"
                     >
                         <X className="w-6 h-6" />
                     </button>
                     <button
                         onClick={() => handleSwipe('right', cards[activeIndex].id)}
-                        className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-floating active:scale-95 transition-transform"
+                        className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-rose-500 shadow-floating active:scale-95 transition-transform"
                     >
                         <Heart className="w-8 h-8 fill-rose-100" />
                     </button>
@@ -364,11 +364,11 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
-            className="absolute w-full h-[60dvh] max-h-[500px] bg-white rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50"
+            className="absolute w-full h-[60dvh] max-h-[500px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50 dark:border-slate-700/50"
         >
             {/* Image Container with Fallback Gradient */}
             <div
-                className="relative w-full h-[55%] bg-slate-200 shrink-0 overflow-hidden rounded-t-[2rem]"
+                className="relative w-full h-[55%] bg-slate-200 dark:bg-slate-600 shrink-0 overflow-hidden rounded-t-[2rem]"
                 style={{
                     background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                 }}
@@ -384,18 +384,18 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
                 />
             </div>
             
-            <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden bg-white">
+            <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden bg-white dark:bg-slate-800">
                 <div className="mb-2">
-                    <h2 className="text-2xl font-bold leading-tight text-slate-800 line-clamp-2">{card.title}</h2>
+                    <h2 className="text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2">{card.title}</h2>
                     <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
                 </div>
-                <p className="text-slate-600 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
+                <p className="text-slate-600 dark:text-slate-300 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
                 <div className="flex items-center space-x-2 mt-4">
-                    <div className="bg-slate-50 p-4 rounded-2xl flex items-center space-x-3 flex-1">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl flex items-center space-x-3 flex-1">
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                             <span className="text-accent text-xs font-bold">AI</span>
                         </div>
-                        <p className="text-xs text-slate-500">{t('giftinder.aiSuggested')}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{t('giftinder.aiSuggested')}</p>
                     </div>
                     {card.isVip && (
                         <div className="bg-gradient-to-r from-amber-400 to-orange-500 p-4 rounded-2xl flex items-center justify-center shadow-md">

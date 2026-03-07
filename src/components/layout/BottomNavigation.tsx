@@ -25,14 +25,14 @@ export default function BottomNavigation() {
     }
 
     return (
-        <div className="md:hidden bg-white/80 backdrop-blur-lg border-t border-slate-200/50 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        <div className="md:hidden bg-white dark:bg-slate-800/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-600/50 pb-safe shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
             <div className="flex justify-around items-center h-16 px-4">
                 {navItems.map(({ path, icon: Icon, label }) => (
                     <NavLink
                         key={path}
                         to={path}
                         className={({ isActive }) =>
-                            `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200 ${isActive ? 'text-accent' : 'text-slate-400'
+                            `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200 ${isActive ? 'text-accent dark:text-indigo-400' : 'text-slate-400'
                             }`
                         }
                     >
@@ -43,7 +43,7 @@ export default function BottomNavigation() {
                                     {isActive && (
                                         <motion.div
                                             layoutId="nav-indicator"
-                                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
+                                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent dark:bg-indigo-400"
                                             initial={false}
                                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                         />

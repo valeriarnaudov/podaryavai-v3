@@ -68,13 +68,13 @@ export default function CheckoutCancel() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 relative pb-20 pt-12 flex flex-col items-center">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 relative pb-20 pt-12 flex flex-col items-center">
             
             {/* Warning / Retention Hero */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-xl w-full bg-white rounded-[2rem] p-8 md:p-12 shadow-xl border border-slate-100 text-center relative overflow-hidden mb-16 mx-6"
+                className="max-w-xl w-full bg-white dark:bg-slate-800 rounded-[2rem] p-8 md:p-12 shadow-xl border border-slate-100 dark:border-slate-700 text-center relative overflow-hidden mb-16 mx-6"
             >
                 {/* Decorative background blob */}
                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-pink-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
@@ -83,38 +83,38 @@ export default function CheckoutCancel() {
                     <AlertTriangle className="w-10 h-10" />
                 </div>
 
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-4 relative z-10">
+                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-4 relative z-10">
                     {t('checkout.cancelTitle')}
                 </h1>
                 
-                <p className="text-slate-500 text-lg mb-8 leading-relaxed relative z-10">
+                <p className="text-slate-500 dark:text-slate-400 text-lg mb-8 leading-relaxed relative z-10">
                     {t('checkout.cancelDesc')}
                 </p>
 
                 {/* Benefits List */}
-                <div className="text-left space-y-4 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100 relative z-10">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center">
+                <div className="text-left space-y-4 mb-8 bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 relative z-10">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center">
                         <Crown className="w-5 h-5 mr-2 text-accent" /> {t('checkout.reconsider')}
                     </h3>
                     <div className="flex items-start">
                         <Sparkles className="w-5 h-5 text-purple-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat1Title')}</p>
-                            <p className="text-xs text-slate-500">{t('checkout.feat1Desc')}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{t('checkout.feat1Title')}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.feat1Desc')}</p>
                         </div>
                     </div>
                     <div className="flex items-start">
                         <InfinityIcon className="w-5 h-5 text-blue-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat2Title')}</p>
-                            <p className="text-xs text-slate-500">{t('checkout.feat2Desc')}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{t('checkout.feat2Title')}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.feat2Desc')}</p>
                         </div>
                     </div>
                     <div className="flex items-start">
                         <Truck className="w-5 h-5 text-green-500 mr-3 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">{t('checkout.feat3Title')}</p>
-                            <p className="text-xs text-slate-500">{t('checkout.feat3Desc')}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{t('checkout.feat3Title')}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.feat3Desc')}</p>
                         </div>
                     </div>
                 </div>
@@ -129,21 +129,21 @@ export default function CheckoutCancel() {
 
             {/* Pricing Grid */}
             <div className="w-full max-w-7xl px-6 flex flex-col items-center">
-                <h2 className="text-2xl font-black text-slate-800 mb-8 text-center">{t('checkout.tryAgain')}</h2>
+                <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-8 text-center">{t('checkout.tryAgain')}</h2>
                 
                 {/* Billing Toggle */}
-                <div className="mb-10 bg-white p-1 rounded-full border border-slate-200 flex items-center shadow-sm">
+                <div className="mb-10 bg-white dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-600 flex items-center shadow-sm">
                     <button 
                         onClick={() => setIsAnnual(false)}
-                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
+                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${!isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 bg-transparent'}`}
                     >
                         {t('upgrade.billedMonthly')}
                     </button>
                     <button 
                         onClick={() => setIsAnnual(true)}
-                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center ${isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent'}`}
+                        className={`px-6 sm:px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center ${isAnnual ? 'bg-accent text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 bg-transparent'}`}
                     >
-                        {t('upgrade. billedAnnually')} <span className={`${isAnnual ? 'bg-white text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>{t('upgrade.pay9get12')}</span>
+                        {t('upgrade. billedAnnually')} <span className={`${isAnnual ? 'bg-white dark:bg-slate-800 text-accent' : 'bg-green-100 text-green-700'} text-[10px] uppercase ml-2 px-2 py-0.5 rounded-full font-black animate-pulse whitespace-nowrap`}>{t('upgrade.pay9get12')}</span>
                     </button>
                 </div>
 
@@ -173,7 +173,7 @@ export default function CheckoutCancel() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.1 * index }}
-                                    className={`relative w-full md:w-80 bg-white rounded-[2rem] p-8 flex flex-col ${isPopular ? 'ring-2 ring-accent shadow-xl shadow-accent/10 transform md:-translate-y-4' : 'border border-slate-100 shadow-sm'}`}
+                                    className={`relative w-full md:w-80 bg-white dark:bg-slate-800 rounded-[2rem] p-8 flex flex-col ${isPopular ? 'ring-2 ring-accent shadow-xl shadow-accent/10 transform md:-translate-y-4' : 'border border-slate-100 dark:border-slate-700 shadow-sm'}`}
                                 >
                                     {isPopular === true && (
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
@@ -181,7 +181,7 @@ export default function CheckoutCancel() {
                                         </div>
                                     )}
 
-                                    <h3 className="text-xl font-bold text-slate-800 mb-2">{plan.name}</h3>
+                                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{plan.name}</h3>
                                     
                                     <div className="flex flex-col mb-6 min-h-[5rem] justify-center">
                                         {isAnnual && plan.price > 0 && standardAnnualPrice > 0 && plan.price_annual > 0 && (
@@ -190,8 +190,8 @@ export default function CheckoutCancel() {
                                             </div>
                                         )}
                                         <div className="flex items-baseline">
-                                            <span className="text-4xl font-black text-slate-900">€{displayPrice}</span>
-                                            {plan.price > 0 && <span className="text-slate-500 ml-2 font-medium">{isAnnual ? t('upgrade.perYear') : t('upgrade.perMonth')}</span>}
+                                            <span className="text-4xl font-black text-slate-900 dark:text-white">€{displayPrice}</span>
+                                            {plan.price > 0 && <span className="text-slate-500 dark:text-slate-400 ml-2 font-medium">{isAnnual ? t('upgrade.perYear') : t('upgrade.perMonth')}</span>}
                                         </div>
                                     </div>
 
@@ -199,7 +199,7 @@ export default function CheckoutCancel() {
                                         onClick={() => handleSelectPlan(plan)}
                                         disabled={isCurrentPlan || checkoutLoading === plan.id}
                                         className={`w-full py-4 rounded-xl flex items-center justify-center font-bold transition-all ${isCurrentPlan
-                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
                                             : 'bg-accent text-white hover:bg-pink-600 shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 disabled:opacity-70'
                                             }`}
                                     >
@@ -215,7 +215,7 @@ export default function CheckoutCancel() {
                                                 <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5 mr-3">
                                                     <Check className="w-3 h-3 text-green-600" />
                                                 </div>
-                                                <span className="text-sm font-medium text-slate-600 leading-tight">{feature}</span>
+                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-tight">{feature}</span>
                                             </div>
                                         ))}
                                     </div>

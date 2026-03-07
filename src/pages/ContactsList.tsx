@@ -66,17 +66,17 @@ export default function ContactsList() {
     };
 
     return (
-        <div className="bg-background min-h-[100dvh] pb-safe sm:h-[90dvh] relative">
-            <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center justify-between border-b border-slate-100 shadow-sm">
+        <div className="bg-background dark:bg-slate-900 min-h-[100dvh] pb-safe sm:h-[90dvh] relative">
+            <header className="bg-white dark:bg-slate-800/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 shadow-sm">
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-600"
+                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div className="flex flex-col items-center">
-                    <h1 className="text-lg font-bold text-textMain">{t('contacts.title')}</h1>
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
+                    <h1 className="text-lg font-bold text-textMain dark:text-white">{t('contacts.title')}</h1>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">
                         {limit === -1 ? t('contacts.added', { count: contacts.length }) : t('contacts.max', { count: contacts.length, limit })}
                     </span>
                 </div>
@@ -90,7 +90,7 @@ export default function ContactsList() {
                     </div>
                 ) : contacts.length === 0 ? (
                     <div className="text-center py-10">
-                        <p className="text-slate-500 mb-4">{t('contacts.empty')}</p>
+                        <p className="text-slate-500 dark:text-slate-400 mb-4">{t('contacts.empty')}</p>
                         <button
                             onClick={handleAddContact}
                             className="px-6 py-3 bg-accent text-white rounded-2xl font-medium shadow-soft active:scale-95 transition-transform"
@@ -106,10 +106,10 @@ export default function ContactsList() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 onClick={() => navigate(`/contacts/${contact.id}/edit`)}
-                                className="bg-white p-4 rounded-2xl shadow-soft border border-slate-100/50 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+                                className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-soft border border-slate-100/50 dark:border-slate-700/50 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:bg-slate-900 transition-colors group"
                             >
                                 <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-lg border border-slate-200 overflow-hidden shadow-sm">
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-400 text-lg border border-slate-200 dark:border-slate-600 overflow-hidden shadow-sm">
                                         {contact.avatar_url ? (
                                             <img src={contact.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -119,8 +119,10 @@ export default function ContactsList() {
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-textMain group-hover:text-accent transition-colors">{contact.first_name} {contact.last_name}</h3>
-                                        <p className="text-xs text-slate-400">{contact.relationship || t('contacts.defaultRelationship')}</p>
+                                        <h3 className="font-semibold text-textMain dark:text-white group-hover:text-accent transition-colors">{contact.first_name} {contact.last_name}</h3>
+                                        <p className="text-xs text-slate-400">
+                                            {contact.relationship ? t(`contactForm.relationships.${contact.relationship.toLowerCase()}`, { defaultValue: contact.relationship }) : t('contacts.defaultRelationship')}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex space-x-2">
@@ -129,7 +131,7 @@ export default function ContactsList() {
                                             e.stopPropagation();
                                             navigate(`/contacts/${contact.id}/edit`);
                                         }}
-                                        className="p-2 text-slate-400 hover:text-accent rounded-full hover:bg-white"
+                                        className="p-2 text-slate-400 hover:text-accent rounded-full hover:bg-white dark:bg-slate-800"
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -138,7 +140,7 @@ export default function ContactsList() {
                                             e.stopPropagation();
                                             deleteContact(contact.id);
                                         }}
-                                        className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-white"
+                                        className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-white dark:bg-slate-800"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>

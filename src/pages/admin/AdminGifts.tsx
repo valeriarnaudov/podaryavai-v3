@@ -102,8 +102,8 @@ export default function AdminGifts() {
         <div className="space-y-6">
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">Giftinder Database</h2>
-                    <p className="text-sm text-slate-500">Manage global gift ideas served by the AI</p>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Giftinder Database</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Manage global gift ideas served by the AI</p>
                 </div>
 
                 <div className="flex space-x-3 w-full sm:w-auto">
@@ -114,7 +114,7 @@ export default function AdminGifts() {
                             placeholder="Search gifts..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-200 outline-none focus:border-slate-800 transition-colors text-sm"
+                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:border-slate-800 transition-colors text-sm"
                         />
                     </div>
                     <button
@@ -135,26 +135,26 @@ export default function AdminGifts() {
                 <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="bg-white p-6 rounded-3xl shadow-soft border border-slate-200 mb-6"
+                    className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-600 mb-6"
                 >
-                    <h3 className="text-lg font-bold text-slate-800 mb-4">{isEditing ? 'Edit Gift Idea' : 'Add New Gift Idea'}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">{isEditing ? 'Edit Gift Idea' : 'Add New Gift Idea'}</h3>
                     <form onSubmit={handleSave} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                <input required type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-800" placeholder="e.g. Sony WH-1000XM5" />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Title</label>
+                                <input required type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:border-slate-800" placeholder="e.g. Sony WH-1000XM5" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Price / Price Range</label>
-                                <input required type="text" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-800" placeholder="e.g. €350" />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Price / Price Range</label>
+                                <input required type="text" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:border-slate-800" placeholder="e.g. €350" />
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                                <textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-800" rows={2} placeholder="Brief description to show on the card"></textarea>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Description</label>
+                                <textarea required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:border-slate-800" rows={2} placeholder="Brief description to show on the card"></textarea>
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
-                                <input required type="url" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-800" placeholder="https://..." />
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Image URL</label>
+                                <input required type="url" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:border-slate-800" placeholder="https://..." />
                             </div>
                             <div className="sm:col-span-2 flex items-center mt-2">
                                 <input
@@ -162,15 +162,15 @@ export default function AdminGifts() {
                                     id="isVip"
                                     checked={formData.is_vip}
                                     onChange={(e) => setFormData({ ...formData, is_vip: e.target.checked })}
-                                    className="w-4 h-4 text-slate-900 border-gray-300 rounded focus:ring-slate-900"
+                                    className="w-4 h-4 text-slate-900 dark:text-white border-gray-300 rounded focus:ring-slate-900"
                                 />
-                                <label htmlFor="isVip" className="ml-2 flex items-center text-sm font-medium text-slate-700">
+                                <label htmlFor="isVip" className="ml-2 flex items-center text-sm font-medium text-slate-700 dark:text-slate-200">
                                     <Lock className="w-4 h-4 mr-1 text-amber-500" /> Mark as VIP / Luxury Item
                                 </label>
                             </div>
                         </div>
-                        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 mt-4">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors">Cancel</button>
+                        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700 mt-4">
+                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-700 rounded-xl font-medium transition-colors">Cancel</button>
                             <button type="submit" className="px-4 py-2 bg-slate-900 text-white rounded-xl font-medium shadow-soft hover:bg-slate-800 transition-colors flex items-center">
                                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Gift'}
                             </button>
@@ -186,7 +186,7 @@ export default function AdminGifts() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredGifts.map((gift) => (
-                        <div key={gift.id} className="bg-white rounded-3xl overflow-hidden shadow-soft border border-slate-100 flex flex-col">
+                        <div key={gift.id} className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col">
                             <div className="h-48 w-full relative">
                                 <img src={gift.image_url} alt={gift.title} className="w-full h-full object-cover" />
                                 {gift.is_vip && (
@@ -197,15 +197,15 @@ export default function AdminGifts() {
                             </div>
                             <div className="p-5 flex-1 flex flex-col">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-slate-800 leading-tight">{gift.title}</h3>
+                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{gift.title}</h3>
                                     <span className="font-semibold text-accent whitespace-nowrap ml-2">{gift.price}</span>
                                 </div>
-                                <p className="text-sm text-slate-500 flex-1">{gift.description}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 flex-1">{gift.description}</p>
 
-                                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-slate-100">
+                                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                     <button
                                         onClick={() => openEditForm(gift)}
-                                        className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                                        className="p-2 text-slate-400 hover:text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:bg-slate-700 rounded-lg transition-colors"
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -221,7 +221,7 @@ export default function AdminGifts() {
                     ))}
 
                     {filteredGifts.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-slate-500 bg-white rounded-3xl border border-dashed border-slate-200">
+                        <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-600">
                             <Heart className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                             <p>No gift ideas found.</p>
                         </div>

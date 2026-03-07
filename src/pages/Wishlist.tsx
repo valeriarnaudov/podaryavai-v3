@@ -160,11 +160,11 @@ export default function Wishlist() {
     };
 
     return (
-        <div className="h-full flex flex-col bg-background relative overflow-hidden">
-            <header className="px-6 pt-10 pb-6 bg-white/80 backdrop-blur-lg sticky top-0 z-10 border-b border-slate-100 shadow-sm flex justify-between items-end">
+        <div className="h-full flex flex-col bg-background dark:bg-slate-900 relative overflow-hidden">
+            <header className="px-6 pt-10 pb-6 bg-white dark:bg-slate-800/80 backdrop-blur-lg sticky top-0 z-10 border-b border-slate-100 dark:border-slate-700 shadow-sm flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-textMain tracking-tight">{t('wishlist.title')}</h1>
-                    <p className="text-sm text-slate-500 mt-1">{t('wishlist.subtitle')}</p>
+                    <h1 className="text-2xl font-bold text-textMain dark:text-white tracking-tight">{t('wishlist.title')}</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('wishlist.subtitle')}</p>
                 </div>
                 <button
                     onClick={handleShare}
@@ -181,14 +181,14 @@ export default function Wishlist() {
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-20">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Plus className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-textMain mb-2">{t('wishlist.emptyTitle')}</h3>
-                        <p className="text-slate-500 text-sm mb-6">{t('wishlist.emptyDesc')}</p>
+                        <h3 className="text-lg font-bold text-textMain dark:text-white mb-2">{t('wishlist.emptyTitle')}</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{t('wishlist.emptyDesc')}</p>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="px-6 py-3 bg-white text-textMain rounded-2xl font-medium shadow-soft active:scale-95 transition-transform border border-slate-200"
+                            className="px-6 py-3 bg-white dark:bg-slate-800 text-textMain dark:text-white rounded-2xl font-medium shadow-soft active:scale-95 transition-transform border border-slate-200 dark:border-slate-600"
                         >
                             {t('wishlist.addCustom')}
                         </button>
@@ -199,8 +199,8 @@ export default function Wishlist() {
                         {items.filter(i => i.is_manual).length > 0 && (
                             <section>
                                 <div className="flex items-center space-x-2 mb-4">
-                                    <h2 className="text-lg font-bold text-slate-800">{t('wishlist.myRequests')}</h2>
-                                    <div className="h-px bg-slate-200 flex-1"></div>
+                                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t('wishlist.myRequests')}</h2>
+                                    <div className="h-px bg-slate-200 dark:bg-slate-600 flex-1"></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     {items.filter(i => i.is_manual).map((item, i) => (
@@ -214,8 +214,8 @@ export default function Wishlist() {
                         {items.filter(i => !i.is_manual).length > 0 && (
                             <section>
                                 <div className="flex items-center space-x-2 mb-4 mt-2">
-                                    <h2 className="text-lg font-bold text-slate-800">{t('wishlist.fromGiftinder')}</h2>
-                                    <div className="h-px bg-slate-200 flex-1"></div>
+                                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t('wishlist.fromGiftinder')}</h2>
+                                    <div className="h-px bg-slate-200 dark:bg-slate-600 flex-1"></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     {items.filter(i => !i.is_manual).map((item, i) => (
@@ -252,15 +252,15 @@ export default function Wishlist() {
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="bg-white rounded-t-3xl pt-2 pb-safe shadow-t-xl relative z-10 pointer-events-auto h-[85vh] flex flex-col"
+                            className="bg-white dark:bg-slate-800 rounded-t-3xl pt-2 pb-safe shadow-t-xl relative z-10 pointer-events-auto h-[85vh] flex flex-col"
                         >
-                            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-3" />
+                            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full mx-auto my-3" />
 
                             <div className="px-6 flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-textMain">{t('wishlist.addToWishlist')}</h2>
+                                <h2 className="text-xl font-bold text-textMain dark:text-white">{t('wishlist.addToWishlist')}</h2>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="p-2 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors"
+                                    className="p-2 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:bg-slate-600 transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -269,7 +269,7 @@ export default function Wishlist() {
                             <div className="flex-1 overflow-y-auto px-6 pb-6">
                                 <form id="add-wishlist-item" onSubmit={handleAddItem} className="space-y-5">
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('wishlist.itemNameLabel')}</label>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('wishlist.itemNameLabel')}</label>
                                         <div className="relative">
                                             <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                             <input
@@ -278,13 +278,13 @@ export default function Wishlist() {
                                                 value={newItemTitle}
                                                 onChange={(e) => setNewItemTitle(e.target.value)}
                                                 placeholder={t('wishlist.itemNamePlaceholder')}
-                                                className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                                className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('wishlist.priceLabel')}</label>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('wishlist.priceLabel')}</label>
                                         <div className="relative">
                                             <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                             <input
@@ -295,13 +295,13 @@ export default function Wishlist() {
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                                 placeholder={t('wishlist.pricePlaceholder')}
-                                                className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                                className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('wishlist.linkLabel')}</label>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('wishlist.linkLabel')}</label>
                                         <div className="relative">
                                             <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                             <input
@@ -309,7 +309,7 @@ export default function Wishlist() {
                                                 value={newItemUrl}
                                                 onChange={handleUrlChange}
                                                 placeholder={t('wishlist.linkPlaceholder')}
-                                                className="w-full pl-12 pr-12 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                                className="w-full pl-12 pr-12 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
                                             {isScraping && (
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -320,17 +320,17 @@ export default function Wishlist() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('wishlist.imageLabel')}</label>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">{t('wishlist.imageLabel')}</label>
                                         <div className="flex space-x-2">
                                             <input
                                                 type="text"
                                                 value={newItemImage}
                                                 onChange={(e) => setNewItemImage(e.target.value)}
                                                 placeholder={t('wishlist.imagePlaceholder')}
-                                                className="flex-1 min-w-0 px-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
+                                                className="flex-1 min-w-0 px-4 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-600 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all"
                                             />
-                                            <label className="flex-shrink-0 flex items-center justify-center px-4 bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-200 transition-colors active:scale-95">
-                                                <span className="text-sm font-semibold text-slate-600">{t('wishlist.uploadFile')}</span>
+                                            <label className="flex-shrink-0 flex items-center justify-center px-4 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl cursor-pointer hover:bg-slate-200 dark:bg-slate-600 transition-colors active:scale-95">
+                                                <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{t('wishlist.uploadFile')}</span>
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -348,7 +348,7 @@ export default function Wishlist() {
                                 </form>
                             </div>
 
-                            <div className="p-6 bg-white border-t border-slate-100">
+                            <div className="p-6 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                                 <button
                                     type="submit"
                                     form="add-wishlist-item"
@@ -373,9 +373,9 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-white rounded-2xl shadow-soft overflow-hidden border border-slate-100/50 flex flex-col"
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft overflow-hidden border border-slate-100/50 dark:border-slate-700/50 flex flex-col"
         >
-            <div className="h-32 bg-slate-100 relative group">
+            <div className="h-32 bg-slate-100 dark:bg-slate-700 relative group">
                 {item.image_url ? (
                     <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
                 ) : (
@@ -383,14 +383,14 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                 )}
                 <button
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-slate-400 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-white dark:bg-slate-800/90 rounded-full text-slate-400 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>
             <div className="p-3 flex-1 flex flex-col justify-between">
                 <div>
-                    <h3 className="font-semibold text-textMain text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
+                    <h3 className="font-semibold text-textMain dark:text-white text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
                     <p className="text-xs font-medium text-accent">{item.price_range || t('wishlist.priceNA')}</p>
                 </div>
                 <div className="mt-3 flex flex-col gap-1.5">
@@ -399,7 +399,7 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                             href={item.source_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center space-x-1 text-xs text-slate-500 bg-slate-50 py-1.5 rounded-lg hover:bg-slate-100 transition-colors shadow-sm"
+                            className="flex items-center justify-center space-x-1 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 py-1.5 rounded-lg hover:bg-slate-100 dark:bg-slate-700 transition-colors shadow-sm"
                         >
                             <span>{t('wishlist.originalLink')}</span>
                             <ExternalLink className="w-3 h-3" />
@@ -409,7 +409,7 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                         href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.title)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center space-x-1 text-xs text-slate-700 bg-slate-100 py-1.5 rounded-lg hover:bg-slate-200 transition-colors shadow-sm font-semibold"
+                        className="flex items-center justify-center space-x-1 text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 py-1.5 rounded-lg hover:bg-slate-200 dark:bg-slate-600 transition-colors shadow-sm font-semibold"
                     >
                         <span>{t('wishlist.searchOnline')}</span>
                     </a>

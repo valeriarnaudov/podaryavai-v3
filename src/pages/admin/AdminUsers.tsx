@@ -157,14 +157,14 @@ export default function AdminUsers() {
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center space-x-3">
-                        <h2 className="text-xl font-bold text-slate-800 tracking-tight">Users Management</h2>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Users Management</h2>
                         {!loading && (
                             <span className="px-3 py-1 bg-accent/10 text-accent text-sm font-bold rounded-full border border-accent/20">
                                 {users.length} Total
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">View and manage all registered accounts</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage all registered accounts</p>
                 </div>
 
                 <div className="relative w-full sm:w-64">
@@ -174,7 +174,7 @@ export default function AdminUsers() {
                         placeholder="Search users..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-200 outline-none focus:border-slate-800 transition-colors text-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:border-slate-800 transition-colors text-sm"
                     />
                 </div>
             </header>
@@ -184,35 +184,35 @@ export default function AdminUsers() {
                     <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
                 </div>
             ) : (
-                <div className="bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-soft border border-slate-100 dark:border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 select-none">
+                            <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-700 select-none">
                                 <tr>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('full_name')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('full_name')}>
                                         <div className="flex items-center space-x-1">
                                             <span>User</span>
                                             <SortIcon columnKey="full_name" />
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('karma_points')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('karma_points')}>
                                         <div className="flex items-center space-x-1">
                                             <span>Karma Points</span>
                                             <SortIcon columnKey="karma_points" />
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group">
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group">
                                         <div className="flex items-center space-x-1">
                                             <span>Subscription</span>
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('is_admin')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('is_admin')}>
                                         <div className="flex items-center space-x-1">
                                             <span>Role</span>
                                             <SortIcon columnKey="is_admin" />
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group" onClick={() => handleSort('last_giftinder_generation')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('last_giftinder_generation')}>
                                         <div className="flex items-center space-x-1">
                                             <span>AI Filter</span>
                                             <SortIcon columnKey="last_giftinder_generation" />
@@ -232,11 +232,11 @@ export default function AdminUsers() {
                                             key={user.id}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className={`hover:bg-slate-50 transition-colors ${user.is_banned ? 'opacity-50' : ''}`}
+                                            className={`hover:bg-slate-50 dark:bg-slate-900 transition-colors ${user.is_banned ? 'opacity-50' : ''}`}
                                         >
                                             <td className="px-6 py-4">
-                                                <div className="font-semibold text-slate-800">{user.full_name || 'Anonymous'}</div>
-                                                <div className="text-xs text-slate-500">{user.email}</div>
+                                                <div className="font-semibold text-slate-800 dark:text-slate-100">{user.full_name || 'Anonymous'}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400">{user.email}</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 {editingKarmaId === user.id ? (
@@ -245,7 +245,7 @@ export default function AdminUsers() {
                                                             type="number"
                                                             value={editKarmaValue}
                                                             onChange={(e) => setEditKarmaValue(Number(e.target.value))}
-                                                            className="w-24 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-amber-400"
+                                                            className="w-24 px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg outline-none focus:border-amber-400"
                                                         />
                                                         <button
                                                             onClick={() => saveKarma(user.id)}
@@ -256,7 +256,7 @@ export default function AdminUsers() {
                                                         </button>
                                                         <button
                                                             onClick={() => setEditingKarmaId(null)}
-                                                            className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                                                            className="p-1.5 text-slate-400 hover:bg-slate-100 dark:bg-slate-700 rounded-lg transition-colors"
                                                             title="Cancel"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -283,7 +283,7 @@ export default function AdminUsers() {
                                                         <select
                                                             value={editSubPlan}
                                                             onChange={(e) => setEditSubPlan(e.target.value)}
-                                                            className="w-full max-w-[150px] px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-accent"
+                                                            className="w-full max-w-[150px] px-2 py-1 text-sm border border-slate-200 dark:border-slate-600 rounded-lg outline-none focus:border-accent"
                                                         >
                                                             <option value="FREE">FREE</option>
                                                             <option value="STANDARD">STANDARD</option>
@@ -296,12 +296,12 @@ export default function AdminUsers() {
                                                                 type="date"
                                                                 value={editSubExpires ? new Date(editSubExpires).toISOString().split('T')[0] : ''}
                                                                 onChange={(e) => setEditSubExpires(e.target.value ? new Date(e.target.value).toISOString() : '')}
-                                                                className="w-full max-w-[120px] px-2 py-1 text-xs border border-slate-200 rounded-lg outline-none focus:border-accent"
+                                                                className="w-full max-w-[120px] px-2 py-1 text-xs border border-slate-200 dark:border-slate-600 rounded-lg outline-none focus:border-accent"
                                                             />
                                                             <button onClick={() => saveSubscription(user.id)} className="p-1 text-green-600 hover:bg-green-50 rounded-lg">
                                                                 <Check className="w-4 h-4" />
                                                             </button>
-                                                            <button onClick={() => setEditingSubId(null)} className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg">
+                                                            <button onClick={() => setEditingSubId(null)} className="p-1 text-slate-400 hover:bg-slate-100 dark:bg-slate-700 rounded-lg">
                                                                 <X className="w-4 h-4" />
                                                             </button>
                                                         </div>
@@ -312,7 +312,7 @@ export default function AdminUsers() {
                                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${
                                                                 user.subscription_plan && user.subscription_plan !== 'FREE' 
                                                                 ? 'bg-purple-100 text-purple-700' 
-                                                                : 'bg-slate-100 text-slate-600'
+                                                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                                                             }`}>
                                                                 {user.subscription_plan || 'FREE'}
                                                             </span>
@@ -342,7 +342,7 @@ export default function AdminUsers() {
                                                 {user.is_admin ? (
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-800 text-white">Admin</span>
                                                 ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">User</span>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">User</span>
                                                 )}
                                                 {user.is_banned && (
                                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-600">Banned</span>
@@ -353,12 +353,12 @@ export default function AdminUsers() {
                                                     {isGeneratedToday ? (
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700">Generated</span>
                                                     ) : (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500">Ready</span>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">Ready</span>
                                                     )}
 
                                                     <button
                                                         onClick={(e) => resetGiftinder(e, user.id)}
-                                                        className="p-1.5 text-slate-400 hover:text-accent bg-white border border-slate-200 hover:border-accent hover:bg-accent/5 rounded-lg transition-all"
+                                                        className="p-1.5 text-slate-400 hover:text-accent bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-accent hover:bg-accent/5 rounded-lg transition-all"
                                                         title="Reset Daily Limit"
                                                     >
                                                         <RefreshCw className="w-3.5 h-3.5" />
@@ -369,7 +369,7 @@ export default function AdminUsers() {
                                                 <div className="flex items-center justify-end space-x-2">
                                                     <button
                                                         onClick={() => toggleAdmin(user.id, user.is_admin)}
-                                                        className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100' : 'text-accent hover:bg-accent/10'}`}
+                                                        className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100 dark:bg-slate-700' : 'text-accent hover:bg-accent/10'}`}
                                                         title={user.is_admin ? "Revoke Admin Role" : "Grant Admin Role"}
                                                     >
                                                         <ShieldAlert className="w-3.5 h-3.5" />
@@ -391,7 +391,7 @@ export default function AdminUsers() {
                         </table>
 
                         {sortedUsers.length === 0 && (
-                            <div className="p-8 text-center text-slate-500">
+                            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
                                 No users found matching "{searchTerm}"
                             </div>
                         )}

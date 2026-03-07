@@ -49,40 +49,40 @@ export default function Checkout() {
     };
 
     return (
-        <div className="bg-background min-h-[100dvh] pb-safe sm:h-[90dvh]">
-            <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center border-b border-slate-100 shadow-sm">
+        <div className="bg-background dark:bg-slate-900 min-h-[100dvh] pb-safe sm:h-[90dvh]">
+            <header className="bg-white dark:bg-slate-800/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center border-b border-slate-100 dark:border-slate-700 shadow-sm">
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-600 mr-4"
+                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 mr-4"
                 >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-lg font-bold text-textMain">{t('checkout.title')}</h1>
+                <h1 className="text-lg font-bold text-textMain dark:text-white">{t('checkout.title')}</h1>
             </header>
 
             <main className="p-6 pb-32">
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-6 rounded-3xl shadow-soft border border-slate-100/50 mb-6"
+                    className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-soft border border-slate-100/50 dark:border-slate-700/50 mb-6"
                 >
-                    <h2 className="font-bold text-textMain mb-4 border-b border-slate-100 pb-4">{t('checkout.orderSummary')}</h2>
+                    <h2 className="font-bold text-textMain dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-4">{t('checkout.orderSummary')}</h2>
 
                     <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">{t('checkout.item')}</span>
-                            <span className="font-medium text-textMain text-right max-w-[60%]">{baseOrderDetails.title}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('checkout.item')}</span>
+                            <span className="font-medium text-textMain dark:text-white text-right max-w-[60%]">{baseOrderDetails.title}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">{t('checkout.price')}</span>
-                            <span className="font-medium text-textMain">€{baseOrderDetails.price.toFixed(2)}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('checkout.price')}</span>
+                            <span className="font-medium text-textMain dark:text-white">€{baseOrderDetails.price.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center group relative">
-                            <span className="text-slate-500 flex items-center">
+                            <span className="text-slate-500 dark:text-slate-400 flex items-center">
                                 {t('checkout.delivery')}
                                 {hasFreeDelivery && <span className="ml-2 text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-wider">{t('checkout.freeKarma')}</span>}
                             </span>
-                            <span className="font-medium text-textMain">
+                            <span className="font-medium text-textMain dark:text-white">
                                 {hasFreeDelivery ? (
                                     <span className="text-green-500 font-bold">€0.00</span>
                                 ) : (
@@ -91,28 +91,28 @@ export default function Checkout() {
                             </span>
                         </div>
 
-                        <div className="pt-3 border-t border-slate-100 flex justify-between items-center mt-4">
-                            <span className="font-bold text-textMain">{t('checkout.total')}</span>
+                        <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center mt-4">
+                            <span className="font-bold text-textMain dark:text-white">{t('checkout.total')}</span>
                             <span className="text-xl font-black text-rose-500">€{total.toFixed(2)}</span>
                         </div>
                     </div>
                 </motion.div>
 
                 <div className="space-y-4">
-                    <h3 className="font-bold text-textMain px-2">{t('checkout.paymentMethod')}</h3>
+                    <h3 className="font-bold text-textMain dark:text-white px-2">{t('checkout.paymentMethod')}</h3>
 
                     <button
                         onClick={handleStripeCheckout}
                         disabled={loading}
-                        className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border-2 border-accent/20 shadow-sm active:scale-98 transition-all hover:border-accent"
+                        className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl border-2 border-accent/20 shadow-sm active:scale-98 transition-all hover:border-accent"
                     >
                         <div className="flex items-center space-x-4">
                             <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-textMain">{t('checkout.payWithCard')}</p>
-                                <p className="text-xs text-slate-500">{t('checkout.secureStripe')}</p>
+                                <p className="font-bold text-textMain dark:text-white">{t('checkout.payWithCard')}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.secureStripe')}</p>
                             </div>
                         </div>
                         <ShieldCheck className="w-5 h-5 text-green-500" />
@@ -120,15 +120,15 @@ export default function Checkout() {
 
                     <button
                         onClick={() => alert(t('checkout.codAlert'))}
-                        className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm active:scale-98 transition-all hover:border-slate-300 opacity-80"
+                        className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-sm active:scale-98 transition-all hover:border-slate-300 dark:border-slate-500 opacity-80"
                     >
                         <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
                                 <Truck className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-textMain">{t('checkout.cod')}</p>
-                                <p className="text-xs text-slate-500">{t('checkout.codDesc')}</p>
+                                <p className="font-bold text-textMain dark:text-white">{t('checkout.cod')}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.codDesc')}</p>
                             </div>
                         </div>
                     </button>

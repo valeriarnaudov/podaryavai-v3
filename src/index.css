@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-textMain font-sans antialiased;
+    @apply bg-background text-textMain font-sans antialiased dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200;
   }
 }
 

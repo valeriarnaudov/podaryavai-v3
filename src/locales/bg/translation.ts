@@ -20,6 +20,7 @@ export const bg = {
       adminDashboard: "Админ Панел",
       daysSmall: { 0: 'Пон', 1: 'Вто', 2: 'Сря', 3: 'Чет', 4: 'Пет', 5: 'Съб', 6: 'Нед' },
       eventsCount: "събития",
+      nameDayTitle: "Имен Ден на {{name}}",
       noEvents: "Няма събития на тази дата.",
       nameDayAI: "ИМЕН ДЕН (AI)",
       deepSearching: "Дълбоко търсене...",
@@ -185,6 +186,7 @@ export const bg = {
     },
     profile: {
       title: "Настройки и Профил",
+      subtitle: "Управление на вашия акаунт и предпочитания",
       personalInfo: "Лична Информация",
       fullName: "Пълно Име",
       preferences: "Предпочитания",
@@ -413,6 +415,8 @@ export const bg = {
     admin: {
       title: "Системен Преглед",
       subtitle: "Основни метрики на Podaryavai",
+      orders: "Поръчки",
+      logs: "Дейности",
       timeRanges: {
         '1d': "1 Ден",
         '7d': "7 Дни",
@@ -436,6 +440,67 @@ export const bg = {
         vsPrev: "спрямо преди"
       }
     },
+    adminEmails: {
+        title: "Email Шаблони",
+        subtitle: "Управление на автоматичните имейли за предстоящи събития.",
+        createNew: "Създай нов",
+        createNewTitle: "Създаване на шаблон",
+        editTemplate: "Редактиране на шаблон",
+        nameInternal: "Име (вътрешно)",
+        daysBefore: "Дни предварително",
+        daysDesc: "Остават X дни до повода (0 = На самия ден)",
+        subject: "Заглавие (Subject)",
+        bodyHtml: "HTML Съдържание (Body)",
+        variables: "Достъпни променливи:",
+        varUserName: "Име на потребителя",
+        varContactName: "Име на приятеля",
+        varEventTitle: "Заглавие на събитието (Рожден ден)",
+        varDaysLeft: "Дни до събитието",
+        isActive: "Активен шаблон (ще се изпраща сутрин)",
+        cancel: "Отказ",
+        save: "Запази шаблона",
+        colName: "Име",
+        colDays: "Дни",
+        colSubject: "Заглавие (Subject)",
+        colStatus: "Статус",
+        colActions: "Действия",
+        noTemplates: "Няма намерени имейл шаблони.",
+        edit: "Редактирай",
+        errLoad: "Грешка при зареждане на шаблоните.",
+        errSave: "Грешка при запис на шаблона.",
+        errToggle: "Грешка при промяна на статуса.",
+        newTemplateName: "Нов шаблон"
+    },
+    adminSettings: {
+        title: "Platform Engine",
+        subtitle: "Конфигуриране на глобални параметри, AI лимити и възможности на плановете.",
+        refresh: "Обновяване",
+        save: "Запази Промените",
+        globalTitle: "Глобални Настройки",
+        plansTitle: "Абонаментни Планове и Цени",
+        popular: "Popular",
+        planActive: "Активен План",
+        planHidden: "Скрит План",
+        planName: "Име на План",
+        priceMonthly: "Цена (EUR/Месец)",
+        priceAnnual: "Годишна Цена (EUR/Година)",
+        stripeIdMonthly: "Stripe Price ID (Месец)",
+        stripeIdAnnual: "Stripe Price ID (Година)",
+        maxContacts: "Максимум Контакти (-1 = Неограничени)",
+        aiLimit: "AI Giftinder Лимит / Ден (-1 = Неограничено)",
+        karmaPerSwipe: "Карма при Swipe Надяснo",
+        aiModel: "AI Model Бекенд",
+        modelLlama: "Llama (Стандартен)",
+        modelOpenAI: "OpenAI (Премиум)",
+        modelGemini: "Gemini (Google)",
+        calendarAIOptions: "Календарни AI Опции",
+        enabled: "Активиран",
+        features: "Характеристики (1 на ред)",
+        successSave: "Настройките и плановете са запазени успешно!",
+        noChanges: "Няма промени за запазване.",
+        errSave: "Грешка при запазване на данните.",
+        errLoad: "Грешка в настройките:"
+    },
     maintenance: {
       title: "Извършва се Системна Актуализация",
       desc: "Podaryavai в момента е в планирана поддръжка, за да ви предложим нови вълнуващи функции.",
@@ -447,7 +512,8 @@ export const bg = {
             loading: "Зареждане...",
             error: "Възникна грешка",
             on: "Вкл.",
-            off: "Изкл."
+            off: "Изкл.",
+            currency: "€"
         }
     }
 };

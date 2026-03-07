@@ -122,19 +122,19 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="text-slate-800 font-sans mt-2">
+        <div className="text-slate-800 dark:text-slate-100 font-sans mt-2">
             <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{t('admin.title')}</h1>
-                    <p className="text-slate-500 mt-1 font-medium">{t('admin.subtitle')}</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">{t('admin.title')}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">{t('admin.subtitle')}</p>
                 </div>
                 
-                <div className="flex bg-slate-100 p-1 rounded-xl w-max overflow-x-auto max-w-full hide-scrollbar">
+                <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl w-max overflow-x-auto max-w-full hide-scrollbar">
                     {(['1d', '7d', '30d', '365d', 'all'] as TimeRange[]).map((range) => (
                         <button
                             key={range}
                             onClick={() => setTimeRange(range)}
-                            className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${timeRange === range ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${timeRange === range ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200'}`}
                         >
                             {t(`admin.timeRanges.${range}`)}
                         </button>
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                     <StatCard 
                         icon={TrendingUp} 
                         label={t('admin.stats.revenue')} 
-                        value={`${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} лв.`} 
+                        value={`${stats.revenue.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('common.currency')}`} 
                         trend={timeRange !== 'all' ? calculateTrend(stats.revenue.current, stats.revenue.prev) : null} 
                         isPositive={isTrendPositive(stats.revenue.current, stats.revenue.prev)}
                         color="bg-emerald-500" 
@@ -188,15 +188,15 @@ function StatCard({ icon: Icon, label, value, trend, isPositive, color, t }: any
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group"
+            className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-600 shadow-sm relative overflow-hidden group"
         >
             <div className={`absolute -right-6 -top-6 w-24 h-24 ${color} opacity-10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500`}></div>
             <div className={`w-12 h-12 rounded-2xl ${color} bg-opacity-10 flex items-center justify-center mb-4`}>
                 <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
             </div>
             <div>
-                <p className="text-slate-500 font-medium text-sm mb-1">{label}</p>
-                <h3 className="text-3xl font-black text-slate-900">{value}</h3>
+                <p className="text-slate-500 dark:text-slate-400 font-medium text-sm mb-1">{label}</p>
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white">{value}</h3>
             </div>
             {trend && (
                 <div className={`mt-4 flex items-center text-sm font-bold w-max px-2 py-1 rounded-md ${isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'}`}>
