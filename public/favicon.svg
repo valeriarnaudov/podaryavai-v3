@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="podaryavaiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" /> <!-- Indigo-600 -->
+      <stop offset="50%" stop-color="#EC4899" /> <!-- Pink-500 -->
+      <stop offset="100%" stop-color="#F43F5E" /> <!-- Rose-500 -->
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#podaryavaiGradient)" filter="url(#shadow)" />
+
+  <!-- Gift Box Base -->
+  <path d="M140 230 V380 C140 400 156 416 176 416 H336 C356 416 372 400 372 380 V230 Z" fill="#ffffff" opacity="0.95" />
+  
+  <!-- Gift Box Lid -->
+  <rect x="120" y="170" width="272" height="60" rx="12" fill="#ffffff" />
+  
+  <!-- Ribbon Vertical -->
+  <rect x="236" y="170" width="40" height="246" fill="#F43F5E" />
+  
+  <!-- Ribbon Horizontal -->
+  <rect x="120" y="180" width="272" height="40" fill="#F43F5E" />
+  
+  <!-- Heart Icon embedded in Ribbon Center -->
+  <path d="M256 220 C 256 220 236 195 210 195 C 185 195 170 215 170 240 C 170 275 256 330 256 330 C 256 330 342 275 342 240 C 342 215 327 195 302 195 C 276 195 256 220 256 220 Z" fill="#ffffff" transform="scale(0.35) translate(470, 390)" />
+
+  <!-- Top Bow Loops -->
+  <path d="M256 170 C256 170 200 90 150 120 C100 150 180 170 256 170 Z" fill="#ffffff" opacity="0.9" />
+  <path d="M256 170 C256 170 312 90 362 120 C412 150 332 170 256 170 Z" fill="#ffffff" opacity="0.9" />
+  
+  <path d="M256 170 C256 170 210 100 170 125 C130 150 190 170 256 170 Z" fill="#F43F5E" opacity="0.8" />
+  <path d="M256 170 C256 170 302 100 342 125 C382 150 322 170 256 170 Z" fill="#F43F5E" opacity="0.8" />
+
+</svg>
