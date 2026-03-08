@@ -19,6 +19,7 @@ export default function AdminEmails() {
     const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
     const [saving, setSaving] = useState(false);
     const [isNew, setIsNew] = useState(false);
+    const [triggering, setTriggering] = useState(false);
     const { t } = useTranslation();
 
     useEffect(() => {
@@ -108,6 +109,28 @@ export default function AdminEmails() {
         setIsNew(true);
     };
 
+    const handleManualTrigger = async () => {
+        if (!confirm(t('adminEmails.triggerConfirm', { defaultValue: 'Сигурни ли сте, че искате да стартирате изпращането на известия ръчно?' }))) return;
+        
+        try {
+            setTriggering(true);
+            
+            const { error } = await supabase.functions.invoke('daily_notifications', {
+                method: 'POST',
+                body: { force_test: true }
+            });
+
+            if (error) throw error;
+            
+            alert(t('adminEmails.triggerSuccess', { defaultValue: 'Имейлите бяха разпратени успешно!' }));
+        } catch (err) {
+            console.error('Error triggering emails:', err);
+            alert(t('adminEmails.triggerError', { defaultValue: 'Възникна грешка при ръчното изпращане.' }));
+        } finally {
+            setTriggering(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center py-12">
@@ -126,13 +149,23 @@ export default function AdminEmails() {
                     </p>
                 </div>
                 {!editingTemplate && (
-                    <button 
-                        onClick={openNewForm}
-                        className="btn-primary flex items-center"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {t('adminEmails.createNew')}
-                    </button>
+                    <div className="flex space-x-3 items-center">
+                        <button 
+                            onClick={handleManualTrigger}
+                            disabled={triggering}
+                            className="flex items-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors px-4 py-2.5 rounded-xl font-medium border border-slate-200 dark:border-slate-700 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                        >
+                            {triggering ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2 text-accent" />}
+                            {t('adminEmails.runManually', { defaultValue: 'Изпрати Ръчно' })}
+                        </button>
+                        <button 
+                            onClick={openNewForm}
+                            className="btn-primary flex items-center py-2.5 text-sm"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {t('adminEmails.createNew')}
+                        </button>
+                    </div>
                 )}
             </div>
 

@@ -119,7 +119,7 @@ export default function ContactsList() {
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-textMain dark:text-white group-hover:text-accent transition-colors">{contact.first_name} {contact.last_name}</h3>
+                                        <h3 className="font-semibold text-textMain dark:text-white group-hover:text-accent dark:group-hover:text-emerald-400 transition-colors">{contact.first_name} {contact.last_name}</h3>
                                         <p className="text-xs text-slate-400">
                                             {contact.relationship ? t(`contactForm.relationships.${contact.relationship.toLowerCase()}`, { defaultValue: contact.relationship }) : t('contacts.defaultRelationship')}
                                         </p>

@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any no-import-prefix no-unused-vars
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { findNameDay } from "./nameDaysBg.ts";
 
@@ -19,7 +20,17 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    console.log("Starting Daily Notifications Job via CRON...");
+    let reqBody: any = {};
+    if (req.headers.get("content-type")?.includes("application/json")) {
+      try {
+        reqBody = await req.json();
+      } catch (e) {
+        console.error("No valid JSON body found, proceeding with empty body");
+      }
+    }
+    const forceTest = !!reqBody.force_test;
+
+    console.log("Starting Daily Notifications Job via CRON...", { forceTest });
 
     const { data: templates, error: templatesError } = await supabase
       .from("email_templates")
@@ -38,18 +49,25 @@ Deno.serve(async (req: Request) => {
     }
 
     let notificationsSent = 0;
+    const debugLogs: string[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // FETCH ALL OPTED-IN USERS FOR ACCOUNT EVENTS
-    const { data: users, error: usersError } = await supabase.rpc('get_users_for_notifications');
+    const { data: users, error: usersError } = await supabase.rpc(
+      "get_users_for_notifications",
+    );
     if (usersError) {
       console.error("Failed to fetch users:", usersError);
     } else if (users && users.length > 0) {
       const yearStr = today.getFullYear().toString();
       const startOfYear = new Date(today.getFullYear(), 0, 1).toISOString();
 
-      const sendAccountEmail = async (user: any, diffDays: number, type: 'ACCOUNT_BIRTHDAY' | 'ACCOUNT_NAME_DAY') => {
+      const sendAccountEmail = async (
+        user: any,
+        diffDays: number,
+        type: "ACCOUNT_BIRTHDAY" | "ACCOUNT_NAME_DAY",
+      ) => {
         // 1. Check if we already logged this exact combination
         const { data: existingLog } = await supabase
           .from("notification_logs")
@@ -62,7 +80,7 @@ Deno.serve(async (req: Request) => {
           .limit(1)
           .maybeSingle();
 
-        if (existingLog) return;
+        if (existingLog && !forceTest) return;
 
         // 2. Draft email content based on type and diffDays
         let subject = "";
@@ -70,26 +88,30 @@ Deno.serve(async (req: Request) => {
         let msg = "";
         const userName = user.first_name || user.full_name || "Приятел";
 
-        if (type === 'ACCOUNT_BIRTHDAY') {
+        if (type === "ACCOUNT_BIRTHDAY") {
           if (diffDays === 0) {
             subject = `Честит Рожден Ден, ${userName}! 🥳🎂`;
             title = `Честит Рожден Ден, ${userName}!`;
-            msg = `Екипът на Podaryavai ти пожелава безброй поводи за усмивки, здраве, късмет и много сбъднати мечти! <br/><br/>
+            msg =
+              `Екипът на Podaryavai ти пожелава безброй поводи за усмивки, здраве, късмет и много сбъднати мечти! <br/><br/>
                    Нека тази година ти донесе най-прекрасните изненади и незабравими моменти с любимите хора.`;
           } else if (diffDays === 3) {
             subject = `Твоят Рожден Ден наближава! 🎈`;
             title = `Остават само 3 дни до празника!`;
-            msg = `Напомняме ти, че след 3 дни имаш рожден ден! Време е да се подготвиш за празненството и да поканиш любимите хора.`;
+            msg =
+              `Напомняме ти, че след 3 дни имаш рожден ден! Време е да се подготвиш за празненството и да поканиш любимите хора.`;
           }
-        } else if (type === 'ACCOUNT_NAME_DAY') {
+        } else if (type === "ACCOUNT_NAME_DAY") {
           if (diffDays === 0) {
             subject = `Честит Имен Ден, ${userName}! ✨`;
             title = `Честит Имен Ден, ${userName}!`;
-            msg = `Екипът на Podaryavai ти пожелава да носиш името си със здраве, чест и гордост! Нека в живота ти има много светлина и сбъднати желания.`;
+            msg =
+              `Екипът на Podaryavai ти пожелава да носиш името си със здраве, чест и гордост! Нека в живота ти има много светлина и сбъднати желания.`;
           } else if (diffDays === 3) {
             subject = `Твоят Имен Ден наближава! 🎊`;
             title = `Остават само 3 дни!`;
-            msg = `Напомняме ти, че след 3 дни е твоят имен ден! Не пропускай да почерпиш приятелите и любимите хора.`;
+            msg =
+              `Напомняме ти, че след 3 дни е твоят имен ден! Не пропускай да почерпиш приятелите и любимите хора.`;
           }
         }
 
@@ -97,14 +119,22 @@ Deno.serve(async (req: Request) => {
 
         const htmlBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
-          <div style="background-color: #f8fafc; padding: 40px 30px; border-radius: 16px; text-align: center; border: 2px solid ${type === 'ACCOUNT_BIRTHDAY' ? '#fbbf24' : '#60a5fa'};">
-            <div style="font-size: 48px; margin-bottom: 20px;">${type === 'ACCOUNT_BIRTHDAY' ? '🎉🎂🎁' : '🎉✨🥂'}</div>
+          <div style="background-color: #f8fafc; padding: 40px 30px; border-radius: 16px; text-align: center; border: 2px solid ${
+          type === "ACCOUNT_BIRTHDAY" ? "#fbbf24" : "#60a5fa"
+        };">
+            <div style="font-size: 48px; margin-bottom: 20px;">${
+          type === "ACCOUNT_BIRTHDAY" ? "🎉🎂🎁" : "🎉✨🥂"
+        }</div>
             <h1 style="color: #0f172a; margin-bottom: 10px;">${title}</h1>
             <p style="font-size: 18px; line-height: 1.6; color: #475569;">
               ${msg}
             </p>
             <div style="text-align: center; margin-top: 30px;">
-              <a href="https://app.podaryavai.com" style="background-color: ${type === 'ACCOUNT_BIRTHDAY' ? '#fbbf24' : '#60a5fa'}; color: ${type === 'ACCOUNT_BIRTHDAY' ? '#0f172a' : '#fff'}; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Отвори Podaryavai</a>
+              <a href="https://app.podaryavai.com" style="background-color: ${
+          type === "ACCOUNT_BIRTHDAY" ? "#fbbf24" : "#60a5fa"
+        }; color: ${
+          type === "ACCOUNT_BIRTHDAY" ? "#0f172a" : "#fff"
+        }; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Отвори Podaryavai</a>
             </div>
           </div>
           <div style="text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8;">
@@ -113,7 +143,9 @@ Deno.serve(async (req: Request) => {
           </div>
         </div>`;
 
-        console.log(`Sending ${type} Greeting to: ${user.email} (diffDays: ${diffDays})`);
+        console.log(
+          `Sending ${type} Greeting to: ${user.email} (diffDays: ${diffDays})`,
+        );
 
         try {
           const resendResponse = await fetch("https://api.resend.com/emails", {
@@ -123,7 +155,7 @@ Deno.serve(async (req: Request) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "Podaryavai <notifications@podaryavai.com>",
+              from: "onboarding@resend.dev",
               to: user.email,
               subject: subject,
               html: htmlBody,
@@ -131,11 +163,16 @@ Deno.serve(async (req: Request) => {
           });
 
           if (!resendResponse.ok) {
-            console.error(`Resend API failed for ${type}:`, await resendResponse.text());
+            console.error(
+              `Resend API failed for ${type}:`,
+              await resendResponse.text(),
+            );
             return;
           }
 
-          const { error: insertError } = await supabase.from("notification_logs").insert({
+          const { error: insertError } = await supabase.from(
+            "notification_logs",
+          ).insert({
             user_id: user.id,
             event_id: user.id, // using user's UUID
             notification_type: type,
@@ -154,30 +191,52 @@ Deno.serve(async (req: Request) => {
       for (const user of users) {
         // BIRTHDAY Check
         if (user.dob) {
-           const parts = user.dob.split('-');
-           if (parts.length === 3) {
-             const bdayDate = new Date(`${yearStr}-${parts[1]}-${parts[2]}T00:00:00`);
-             bdayDate.setFullYear(today.getFullYear()); // Just to be totally safe
-             const diffTime = bdayDate.getTime() - today.getTime();
-             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-             if (diffDays === 0 || diffDays === 3) {
-               await sendAccountEmail(user, diffDays, 'ACCOUNT_BIRTHDAY');
-             }
-           }
+          const parts = user.dob.split("-");
+          if (parts.length === 3) {
+            const bdayDate = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2]),
+            );
+            bdayDate.setHours(0, 0, 0, 0);
+            bdayDate.setFullYear(today.getFullYear());
+
+            if (bdayDate.getTime() < today.getTime()) {
+              bdayDate.setFullYear(today.getFullYear() + 1);
+            }
+
+            const diffTime = bdayDate.getTime() - today.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0 || diffDays === 3) {
+              await sendAccountEmail(user, diffDays, "ACCOUNT_BIRTHDAY");
+            }
+          }
         }
-        
+
         // NAME DAY Check
         if (user.first_name) {
-           const nd = findNameDay(user.first_name);
-           if (nd) {
-             const ndDate = new Date(`${yearStr}-${nd.date}T00:00:00`);
-             ndDate.setFullYear(today.getFullYear());
-             const diffTime = ndDate.getTime() - today.getTime();
-             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-             if (diffDays === 0 || diffDays === 3) {
-               await sendAccountEmail(user, diffDays, 'ACCOUNT_NAME_DAY');
-             }
-           }
+          const nd = findNameDay(user.first_name);
+          if (nd) {
+            const parts = nd.date.split("-");
+            if (parts.length === 2) {
+              const ndDate = new Date(
+                today.getFullYear(),
+                parseInt(parts[0]) - 1,
+                parseInt(parts[1]),
+              );
+              ndDate.setHours(0, 0, 0, 0);
+
+              if (ndDate.getTime() < today.getTime()) {
+                ndDate.setFullYear(today.getFullYear() + 1);
+              }
+
+              const diffTime = ndDate.getTime() - today.getTime();
+              const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+              if (diffDays === 0 || diffDays === 3) {
+                await sendAccountEmail(user, diffDays, "ACCOUNT_NAME_DAY");
+              }
+            }
+          }
         }
       }
     }
@@ -207,22 +266,40 @@ Deno.serve(async (req: Request) => {
 
     const events = data as unknown as JoinedEvent[];
 
-
-
     for (const event of (events || [])) {
       if (!event.event_date) continue;
 
-      const eventDate = new Date(event.event_date);
-      // Ensure we are comparing dates in the current year
+      // event_date format is YYYY-MM-DD
+      const parts = event.event_date.split("-");
+      if (parts.length !== 3) continue;
+
+      const eventDate = new Date(
+        parseInt(parts[0]),
+        parseInt(parts[1]) - 1,
+        parseInt(parts[2]),
+      );
+      eventDate.setHours(0, 0, 0, 0); // ensure midnight local
       eventDate.setFullYear(today.getFullYear());
 
+      // If the event year already passed this year, push it to next year
+      if (eventDate.getTime() < today.getTime()) {
+        eventDate.setFullYear(today.getFullYear() + 1);
+      }
+
       const diffTime = eventDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
       // Find if there's an active template matching the exact days offset
       const matchedTemplate = templates.find((t) =>
         t.trigger_days === diffDays
       );
+
+      const logStr =
+        `[Event Check] Event: ${event.title} | EventDate: ${eventDate.toISOString()} | diffTime: ${diffTime} | diffDays: ${diffDays} | MatchedTemplate: ${
+          matchedTemplate ? matchedTemplate.name : "None"
+        }`;
+      console.log(logStr);
+      debugLogs.push(logStr);
 
       if (matchedTemplate) {
         const startOfYear = new Date(today.getFullYear(), 0, 1).toISOString();
@@ -236,11 +313,13 @@ Deno.serve(async (req: Request) => {
           .limit(1)
           .maybeSingle();
 
-        if (existingLog) continue;
+        if (existingLog && !forceTest) continue;
 
         // Dynamic Variable Replacement
         const userName = event.users.full_name || "Приятел";
-        const contactName = `${event.contacts.first_name || ''} ${event.contacts.last_name || ''}`.trim();
+        const contactName = `${event.contacts.first_name || ""} ${
+          event.contacts.last_name || ""
+        }`.trim();
         const eventTitle = event.title;
 
         const processTemplate = (text: string) => {
@@ -266,7 +345,7 @@ Deno.serve(async (req: Request) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "Podaryavai <notifications@podaryavai.com>",
+              from: "onboarding@resend.dev",
               to: event.users.email,
               subject: finalSubject,
               html: finalHtml,
@@ -275,7 +354,9 @@ Deno.serve(async (req: Request) => {
 
           if (!resendResponse.ok) {
             const errBody = await resendResponse.text();
-            console.error("Resend API dropped the request:", errBody);
+            const errMsg = `Resend API dropped the request: ${errBody}`;
+            console.error(errMsg);
+            debugLogs.push(errMsg);
             continue; // Skip inserting the log if the email strictly failed
           }
 
@@ -293,10 +374,16 @@ Deno.serve(async (req: Request) => {
           if (!insertError) {
             notificationsSent++;
           } else {
-            console.error("Failed to insert log:", insertError);
+            const errMsg = `Failed to insert log: ${
+              JSON.stringify(insertError)
+            }`;
+            console.error(errMsg);
+            debugLogs.push(errMsg);
           }
         } catch (mailErr) {
-          console.error("Network error calling Resend API:", mailErr);
+          const errMsg = `Network error calling Resend API: ${String(mailErr)}`;
+          console.error(errMsg);
+          debugLogs.push(errMsg);
         }
       }
     }
@@ -306,6 +393,7 @@ Deno.serve(async (req: Request) => {
         success: true,
         message:
           `CRON executed successfully. Sent ${notificationsSent} notifications.`,
+        debugLogs,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

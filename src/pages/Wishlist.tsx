@@ -391,7 +391,7 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
             <div className="p-3 flex-1 flex flex-col justify-between">
                 <div>
                     <h3 className="font-semibold text-textMain dark:text-white text-sm line-clamp-2 leading-snug mb-1">{item.title}</h3>
-                    <p className="text-xs font-medium text-accent">{item.price_range || t('wishlist.priceNA')}</p>
+                    <p className="text-xs font-medium text-accent dark:text-emerald-400">{item.price_range || t('wishlist.priceNA')}</p>
                 </div>
                 <div className="mt-3 flex flex-col gap-1.5">
                     {item.source_url && (

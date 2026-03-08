@@ -1,7 +1,6 @@
 // Using the comprehensive open-source bg-name-days library
 // Supported features: over 800+ core names (thousands with variants), and movable Orthodox feasts (Easter, etc)
-// @ts-ignore
-import { getNameDay } from "bg-name-days";
+import { getNameDay } from "npm:bg-name-days@^2.0.0";
 
 export interface NameDay {
     date: string; // format "MM-DD"
