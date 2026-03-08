@@ -13,7 +13,7 @@ interface Event {
     event_date: string;
     event_type: string;
     ai_recommendations?: any;
-    contacts: { id: string; first_name: string; last_name: string; avatar_url: string | null; budget_preference: number | null };
+    contacts?: { id: string; first_name: string; last_name: string; avatar_url: string | null; budget_preference: number | null };
     holiday?: string;
 }
 
@@ -139,6 +139,41 @@ export default function Home() {
                 });
             }
 
+            // Append Account Birthday
+            const userDob = user.user_metadata?.dob;
+            if (userDob) {
+                // dob might be YYYY-MM-DD
+                const parts = userDob.split('-');
+                if (parts.length === 3) {
+                    const month = parts[1];
+                    const day = parts[2];
+                    const virtualBdayStr = `${currentViewYear}-${month}-${day}T00:00:00`;
+                    
+                    parsedEvents.push({
+                        id: `account-bday-${user.id}-${currentViewYear}`,
+                        title: t('home.myBirthday', { defaultValue: 'Моят Рожден Ден' }),
+                        event_date: virtualBdayStr,
+                        event_type: 'ACCOUNT_BIRTHDAY'
+                    });
+                }
+            }
+
+            // Append Account Name Day
+            const userFirstName = user.user_metadata?.first_name || (user.user_metadata?.full_name?.split(' ')[0] || '');
+            if (userFirstName) {
+                const nd = findNameDay(userFirstName);
+                if (nd) {
+                    const virtualNdStr = `${currentViewYear}-${nd.date}T00:00:00`;
+                    parsedEvents.push({
+                        id: `account-nd-${user.id}-${currentViewYear}`,
+                        title: t('home.myNameDay', { defaultValue: 'Моят Имен Ден' }),
+                        event_date: virtualNdStr,
+                        event_type: 'ACCOUNT_NAME_DAY',
+                        holiday: nd.holiday
+                    });
+                }
+            }
+
             setEvents(parsedEvents);
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -178,14 +213,14 @@ export default function Home() {
             const { error: updateError } = await supabase
                 .from('contacts')
                 .update({ budget_preference: budgetNum })
-                .eq('id', pendingEventForGifts.contacts.id);
+                .eq('id', pendingEventForGifts.contacts!.id);
 
             if (updateError) throw updateError;
 
             // Update local state so it doesn't prompt again
             setEvents(prev => prev.map(e => 
-                e.contacts?.id === pendingEventForGifts.contacts.id 
-                    ? { ...e, contacts: { ...e.contacts, budget_preference: budgetNum } }
+                e.contacts?.id === pendingEventForGifts.contacts!.id 
+                    ? { ...e, contacts: { id: e.contacts.id, first_name: e.contacts.first_name, last_name: e.contacts.last_name, avatar_url: e.contacts.avatar_url, budget_preference: budgetNum } }
                     : e
             ));
 
@@ -194,7 +229,7 @@ export default function Home() {
             // 2. Execute Generation
             executeGeneration({
                 ...pendingEventForGifts,
-                contacts: { ...pendingEventForGifts.contacts, budget_preference: budgetNum }
+                contacts: { ...pendingEventForGifts.contacts!, budget_preference: budgetNum }
             });
 
         } catch (err) {
@@ -211,7 +246,7 @@ export default function Home() {
         
         try {
             const { data, error } = await supabase.functions.invoke('generate_contact_gifts', {
-                body: { contact_id: event.contacts.id, event_id: event.id, force_regenerate: forceRegenerate }
+                body: { contact_id: event.contacts!.id, event_id: event.id, force_regenerate: forceRegenerate }
             });
 
             if (error) {
@@ -349,8 +384,10 @@ export default function Home() {
                         const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                         const dayEvents = events.filter(e => e.event_date.startsWith(dateString));
                         const hasEvent = dayEvents.length > 0;
-                        const hasNormal = dayEvents.some(e => e.event_type !== 'AI_NAME_DAY');
+                        const hasNormal = dayEvents.some(e => e.event_type !== 'AI_NAME_DAY' && e.event_type !== 'ACCOUNT_BIRTHDAY' && e.event_type !== 'ACCOUNT_NAME_DAY');
                         const hasAINameDay = dayEvents.some(e => e.event_type === 'AI_NAME_DAY');
+                        const hasAccountBirthday = dayEvents.some(e => e.event_type === 'ACCOUNT_BIRTHDAY');
+                        const hasAccountNameDay = dayEvents.some(e => e.event_type === 'ACCOUNT_NAME_DAY');
 
                         const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
                         const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
@@ -361,7 +398,7 @@ export default function Home() {
                                 onClick={() => setSelectedDate(new Date(year, month, day))}
                                 className={`h-10 w-full rounded-xl flex items-center justify-center relative text-sm font-medium transition-all
                                     ${isSelected ? 'bg-textMain text-white' :
-                                        isToday ? 'bg-accent/10 text-accent' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}
+                                        isToday ? 'bg-accent/10 text-accent' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900'}
                                 `}
                             >
                                 {day}
@@ -369,6 +406,8 @@ export default function Home() {
                                     <div className="absolute bottom-1 flex space-x-0.5 mt-1">
                                         {hasNormal && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-accent dark:bg-emerald-400'}`} />}
                                         {hasAINameDay && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`} />}
+                                        {hasAccountBirthday && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-amber-400 dark:bg-amber-400'}`} />}
+                                        {hasAccountNameDay && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-400 dark:bg-blue-400'}`} />}
                                     </div>
                                 )}
                             </button>
@@ -411,22 +450,24 @@ export default function Home() {
                                 )}
                                 <div className="relative z-10 flex items-center justify-between">
                                     <div>
-                                        <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
-                                            {event.event_type === 'AI_NAME_DAY' ? t('home.nameDayAI') : event.event_type}
+                                        <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'text-blue-500' : 'text-rose-500'}`}>
+                                            {event.event_type === 'AI_NAME_DAY' ? t('home.nameDayAI') : event.event_type === 'ACCOUNT_BIRTHDAY' ? '🎂 ' + t('home.myBirthday', { defaultValue: 'Рожден Ден' }) : event.event_type === 'ACCOUNT_NAME_DAY' ? '✨ ' + t('home.myNameDay', { defaultValue: 'Имен Ден' }) : event.event_type}
                                         </p>
-                                        <h3 className="text-lg font-bold text-textMain dark:text-white">{event.title} - {event.contacts?.first_name} {event.contacts?.last_name}</h3>
+                                        <h3 className="text-lg font-bold text-textMain dark:text-white">
+                                            {event.title} {event.contacts ? `- ${event.contacts.first_name} ${event.contacts.last_name}` : ''}
+                                        </h3>
                                         {event.holiday && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{event.holiday}</p>}
                                     </div>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-100 text-purple-600' : 'bg-rose-100 text-rose-600'}`}>
-                                        {event.contacts?.avatar_url ? (
-                                            <img src={event.contacts.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-100 text-purple-600' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'bg-amber-100 text-amber-600' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}`}>
+                                        {event.contacts?.avatar_url || ((event.event_type === 'ACCOUNT_BIRTHDAY' || event.event_type === 'ACCOUNT_NAME_DAY') && user?.user_metadata?.avatar_url) ? (
+                                            <img src={(event.contacts?.avatar_url || user?.user_metadata?.avatar_url) as string} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
-                                            event.contacts?.first_name?.charAt(0) || '?'
+                                            event.contacts?.first_name?.charAt(0) || user?.user_metadata?.full_name?.charAt(0) || '?'
                                         )}
                                     </div>
                                 </div>
-                                {/* AI Feature is Premium Only */}
-                                {['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE') && (
+                                {/* AI Feature is Premium Only - Do not show for Account Events */}
+                                {['PRO', 'ULTRA', 'BUSINESS'].includes(subscriptionPlan || 'FREE') && event.event_type !== 'ACCOUNT_BIRTHDAY' && event.event_type !== 'ACCOUNT_NAME_DAY' && (
                                     <>
                                         <div className="mt-5 relative z-10">
                                             <button
@@ -532,18 +573,18 @@ export default function Home() {
                                 className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                             >
                                 <div className="flex items-center space-x-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-50 text-purple-600' : 'bg-rose-50 text-rose-500'}`}>
-                                        {event.contacts?.avatar_url ? (
-                                            <img src={event.contacts.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-50 text-purple-600' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'bg-amber-50 text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'}`}>
+                                        {event.contacts?.avatar_url || ((event.event_type === 'ACCOUNT_BIRTHDAY' || event.event_type === 'ACCOUNT_NAME_DAY') && user?.user_metadata?.avatar_url) ? (
+                                            <img src={(event.contacts?.avatar_url || user?.user_metadata?.avatar_url) as string} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
-                                            event.contacts?.first_name?.charAt(0) || '?'
+                                            event.contacts?.first_name?.charAt(0) || user?.user_metadata?.full_name?.charAt(0) || '?'
                                         )}
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-textMain dark:text-white text-sm">
-                                            {event.title} - {event.contacts?.first_name} {event.contacts?.last_name}
+                                            {event.title} {event.contacts ? `- ${event.contacts.first_name} ${event.contacts.last_name}` : ''}
                                         </h4>
-                                        <p className={`text-xs font-medium capitalize ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : 'text-rose-500'}`}>
+                                        <p className={`text-xs font-medium capitalize ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'text-blue-500' : 'text-rose-500'}`}>
                                             {new Date(event.event_date).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>

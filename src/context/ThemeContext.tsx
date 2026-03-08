@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const fetchUserTheme = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase.from('users').select('app_theme').eq('id', user.id).single();
+        const { data } = await supabase.from('users').select('app_theme').eq('id', user.id).single();
         if (data?.app_theme && data.app_theme !== theme) {
           setThemeState(data.app_theme as Theme);
         }

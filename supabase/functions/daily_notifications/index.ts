@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { findNameDay } from "./nameDaysBg.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +37,151 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    let notificationsSent = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // FETCH ALL OPTED-IN USERS FOR ACCOUNT EVENTS
+    const { data: users, error: usersError } = await supabase.rpc('get_users_for_notifications');
+    if (usersError) {
+      console.error("Failed to fetch users:", usersError);
+    } else if (users && users.length > 0) {
+      const yearStr = today.getFullYear().toString();
+      const startOfYear = new Date(today.getFullYear(), 0, 1).toISOString();
+
+      const sendAccountEmail = async (user: any, diffDays: number, type: 'ACCOUNT_BIRTHDAY' | 'ACCOUNT_NAME_DAY') => {
+        // 1. Check if we already logged this exact combination
+        const { data: existingLog } = await supabase
+          .from("notification_logs")
+          .select("id")
+          .eq("event_id", user.id)
+          .eq("user_id", user.id)
+          .eq("trigger_days", diffDays)
+          .eq("notification_type", type)
+          .gte("sent_at", startOfYear)
+          .limit(1)
+          .maybeSingle();
+
+        if (existingLog) return;
+
+        // 2. Draft email content based on type and diffDays
+        let subject = "";
+        let title = "";
+        let msg = "";
+        const userName = user.first_name || user.full_name || "Приятел";
+
+        if (type === 'ACCOUNT_BIRTHDAY') {
+          if (diffDays === 0) {
+            subject = `Честит Рожден Ден, ${userName}! 🥳🎂`;
+            title = `Честит Рожден Ден, ${userName}!`;
+            msg = `Екипът на Podaryavai ти пожелава безброй поводи за усмивки, здраве, късмет и много сбъднати мечти! <br/><br/>
+                   Нека тази година ти донесе най-прекрасните изненади и незабравими моменти с любимите хора.`;
+          } else if (diffDays === 3) {
+            subject = `Твоят Рожден Ден наближава! 🎈`;
+            title = `Остават само 3 дни до празника!`;
+            msg = `Напомняме ти, че след 3 дни имаш рожден ден! Време е да се подготвиш за празненството и да поканиш любимите хора.`;
+          }
+        } else if (type === 'ACCOUNT_NAME_DAY') {
+          if (diffDays === 0) {
+            subject = `Честит Имен Ден, ${userName}! ✨`;
+            title = `Честит Имен Ден, ${userName}!`;
+            msg = `Екипът на Podaryavai ти пожелава да носиш името си със здраве, чест и гордост! Нека в живота ти има много светлина и сбъднати желания.`;
+          } else if (diffDays === 3) {
+            subject = `Твоят Имен Ден наближава! 🎊`;
+            title = `Остават само 3 дни!`;
+            msg = `Напомняме ти, че след 3 дни е твоят имен ден! Не пропускай да почерпиш приятелите и любимите хора.`;
+          }
+        }
+
+        if (!subject) return;
+
+        const htmlBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
+          <div style="background-color: #f8fafc; padding: 40px 30px; border-radius: 16px; text-align: center; border: 2px solid ${type === 'ACCOUNT_BIRTHDAY' ? '#fbbf24' : '#60a5fa'};">
+            <div style="font-size: 48px; margin-bottom: 20px;">${type === 'ACCOUNT_BIRTHDAY' ? '🎉🎂🎁' : '🎉✨🥂'}</div>
+            <h1 style="color: #0f172a; margin-bottom: 10px;">${title}</h1>
+            <p style="font-size: 18px; line-height: 1.6; color: #475569;">
+              ${msg}
+            </p>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="https://app.podaryavai.com" style="background-color: ${type === 'ACCOUNT_BIRTHDAY' ? '#fbbf24' : '#60a5fa'}; color: ${type === 'ACCOUNT_BIRTHDAY' ? '#0f172a' : '#fff'}; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Отвори Podaryavai</a>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8;">
+            <p>Празнувай смело!</p>
+            <p>© 2026 Podaryavai & Social Ecosystem</p>
+          </div>
+        </div>`;
+
+        console.log(`Sending ${type} Greeting to: ${user.email} (diffDays: ${diffDays})`);
+
+        try {
+          const resendResponse = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Podaryavai <notifications@podaryavai.com>",
+              to: user.email,
+              subject: subject,
+              html: htmlBody,
+            }),
+          });
+
+          if (!resendResponse.ok) {
+            console.error(`Resend API failed for ${type}:`, await resendResponse.text());
+            return;
+          }
+
+          const { error: insertError } = await supabase.from("notification_logs").insert({
+            user_id: user.id,
+            event_id: user.id, // using user's UUID
+            notification_type: type,
+            trigger_days: diffDays,
+            status: "SENT",
+          });
+
+          if (!insertError) {
+            notificationsSent++;
+          }
+        } catch (err) {
+          console.error(`Email error for ${type}:`, err);
+        }
+      };
+
+      for (const user of users) {
+        // BIRTHDAY Check
+        if (user.dob) {
+           const parts = user.dob.split('-');
+           if (parts.length === 3) {
+             const bdayDate = new Date(`${yearStr}-${parts[1]}-${parts[2]}T00:00:00`);
+             bdayDate.setFullYear(today.getFullYear()); // Just to be totally safe
+             const diffTime = bdayDate.getTime() - today.getTime();
+             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             if (diffDays === 0 || diffDays === 3) {
+               await sendAccountEmail(user, diffDays, 'ACCOUNT_BIRTHDAY');
+             }
+           }
+        }
+        
+        // NAME DAY Check
+        if (user.first_name) {
+           const nd = findNameDay(user.first_name);
+           if (nd) {
+             const ndDate = new Date(`${yearStr}-${nd.date}T00:00:00`);
+             ndDate.setFullYear(today.getFullYear());
+             const diffTime = ndDate.getTime() - today.getTime();
+             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+             if (diffDays === 0 || diffDays === 3) {
+               await sendAccountEmail(user, diffDays, 'ACCOUNT_NAME_DAY');
+             }
+           }
+        }
+      }
+    }
+
     const { data, error: eventsError } = await supabase
       .from("events")
       .select(`
@@ -61,10 +207,7 @@ Deno.serve(async (req: Request) => {
 
     const events = data as unknown as JoinedEvent[];
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    let notificationsSent = 0;
 
     for (const event of (events || [])) {
       if (!event.event_date) continue;
