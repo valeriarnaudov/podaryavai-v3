@@ -248,12 +248,10 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                         </motion.div>
                     ) : (
                         cards.map((card, index) => {
-                            const diff = activeIndex - index;
-                            // Only render the active card and max 3 cards behind it to prevent visual clutter
-                            if (diff > 3 || diff < 0) return null;
-
                             const isActive = index === activeIndex;
-                            return isActive ? (
+                            if (!isActive) return null; // Only render the top active card
+
+                            return (
                                 <SwipeableCard
                                     key={`active-${card.id}`}
                                     card={card}
@@ -261,39 +259,6 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts', 
                                     // Make sure active card is ALWAYS on top
                                     style={{ zIndex: 100 }}
                                 />
-                            ) : (
-                                <motion.div
-                                    key={card.id}
-                                    className="absolute w-full h-[60dvh] max-h-[500px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden filter brightness-[0.85] border border-slate-100/50 dark:border-slate-700/50"
-                                    style={{
-                                        scale: 1 - diff * 0.05,
-                                        top: diff * -12,
-                                        zIndex: cards.length - diff, // Ensure correct stacking order
-                                    }}
-                                >
-                                    {/* Abstract background card to look exactly like the front card */}
-                                    <div
-                                        className="relative w-full h-[55%] bg-slate-200 dark:bg-slate-600 shrink-0 overflow-hidden rounded-t-[2rem]"
-                                        style={{
-                                            background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
-                                        }}
-                                    >
-                                        <img
-                                            src={card.image}
-                                            alt=""
-                                            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none transition-opacity duration-300 opacity-100"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.opacity = '0';
-                                            }}
-                                        />
-                                    </div>
-                                     <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden opacity-50 bg-white dark:bg-slate-800">
-                                         <div className="mb-2">
-                                            <h2 className="text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2">{card.title}</h2>
-                                            <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
-                                        </div>
-                                    </div>
-                                </motion.div>
                             );
                         })
                     )}
@@ -364,11 +329,11 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
-            className="absolute w-full h-[60dvh] max-h-[500px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50 dark:border-slate-700/50"
+            className="absolute w-full h-[70dvh] max-h-[600px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50 dark:border-slate-700/50 flex flex-col"
         >
             {/* Image Container with Fallback Gradient */}
             <div
-                className="relative w-full h-[55%] bg-slate-200 dark:bg-slate-600 shrink-0 overflow-hidden rounded-t-[2rem]"
+                className="relative w-full h-[50%] shrink-0 bg-slate-200 dark:bg-slate-600 overflow-hidden rounded-t-[2rem]"
                 style={{
                     background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                 }}
@@ -384,13 +349,15 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
                 />
             </div>
             
-            <div className="p-6 h-[45%] flex flex-col justify-between overflow-hidden bg-white dark:bg-slate-800">
-                <div className="mb-2">
-                    <h2 className="text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2">{card.title}</h2>
-                    <p className="text-lg font-bold text-accent mt-1">{card.price}</p>
+            <div className="p-6 h-[50%] flex flex-col justify-start overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-white dark:bg-slate-800">
+                <div className="mb-2 shrink-0">
+                    <h2 className="text-xl md:text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2 md:line-clamp-3 mb-1">{card.title}</h2>
+                    <p className="text-lg font-bold text-accent dark:text-emerald-400">{card.price}</p>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-snug font-medium line-clamp-3 text-sm">"{card.desc}"</p>
-                <div className="flex items-center space-x-2 mt-4">
+                {card.desc && card.desc !== 'No description available.' && (
+                    <p className="text-slate-600 dark:text-slate-300 leading-snug font-medium text-xs md:text-sm mt-1 mb-auto shrink-0 pb-2">"{card.desc}"</p>
+                )}
+                <div className="flex items-center space-x-2 mt-auto pt-2 shrink-0">
                     <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl flex items-center space-x-3 flex-1">
                         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                             <span className="text-accent text-xs font-bold">AI</span>
