@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Loader2, User as UserIcon, Calendar, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, User as UserIcon, Calendar, AlertCircle, Heart, Gift, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Register() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -98,21 +98,117 @@ export default function Register() {
         }
     };
 
-    return (
-        <div className="min-h-[100dvh] flex flex-col justify-center px-6 bg-background dark:bg-slate-900 relative overflow-hidden sm:h-[90dvh] sm:min-h-0 sm:rounded-3xl sm:max-w-md sm:mx-auto sm:mt-[5vh] shadow-2xl">
-            {/* Decorative Blur Orbs */}
-            <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
+    const changeLanguage = (lng: string) => {
+        i18n.changeLanguage(lng);
+    };
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 w-full"
-            >
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold tracking-tight text-textMain dark:text-white">{t('auth.register.title')}</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t('auth.register.subtitle')}</p>
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[100dvh] bg-background dark:bg-slate-900 w-full overflow-hidden">
+            
+            {/* Left Side: Marketing / Branding (Desktop Only) */}
+            <div className="hidden lg:flex flex-col justify-between p-16 bg-slate-900 relative">
+                {/* Abstract Visual Elements */}
+                <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-accent/30 rounded-full blur-[100px] opacity-60 pointer-events-none" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-rose-500/30 rounded-full blur-[100px] opacity-60 pointer-events-none" />
+                
+                <div className="relative z-10 flex items-center space-x-3 mb-10">
+                    <img src="/favicon.svg" alt="Podaryavai Logo" className="w-12 h-12 drop-shadow-lg" />
+                    <span className="text-3xl font-extrabold text-white tracking-tight">Podaryavai</span>
                 </div>
+
+                <div className="relative z-10 my-auto max-w-xl pr-8">
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-5xl font-black text-white leading-[1.1] mb-6"
+                    >
+                        {t('marketing.heroTitle')}
+                    </motion.h1>
+                    <motion.p 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-xl text-slate-300 mb-12 leading-relaxed"
+                    >
+                        {t('marketing.heroSubtitle')}
+                    </motion.p>
+
+                    <div className="space-y-8">
+                        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="flex items-start space-x-4">
+                            <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0 border border-accent/20 shadow-inner">
+                                <Zap className="w-7 h-7 text-accent" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">{t('marketing.feature1Title')}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">{t('marketing.feature1Desc')}</p>
+                            </div>
+                        </motion.div>
+                        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="flex items-start space-x-4">
+                            <div className="w-14 h-14 rounded-2xl bg-rose-500/20 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-inner">
+                                <Gift className="w-7 h-7 text-rose-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">{t('marketing.feature2Title')}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">{t('marketing.feature2Desc')}</p>
+                            </div>
+                        </motion.div>
+                        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="flex items-start space-x-4">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-inner">
+                                <Heart className="w-7 h-7 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">{t('marketing.feature3Title')}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">{t('marketing.feature3Desc')}</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+
+                <div className="relative z-10 text-slate-500 text-sm mt-12">
+                     Podaryavai &copy; {new Date().getFullYear()} Social Ecosystem Software.
+                </div>
+            </div>
+
+            {/* Right Side: Auth Form & Language Switcher */}
+            <div className="flex flex-col px-6 sm:px-12 py-8 bg-background dark:bg-slate-900 min-h-[100dvh] lg:min-h-0 relative">
+                
+                {/* Mobile Orbs */}
+                <div className="lg:hidden absolute top-[-10%] left-[-10%] w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="lg:hidden absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Top Center Language Switcher */}
+                <div className="flex justify-center lg:justify-end items-center mb-12 relative z-20">
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
+                        <button 
+                            onClick={() => changeLanguage('en')}
+                            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${i18n.language === 'en' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow drop-shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                        >
+                            EN
+                        </button>
+                        <button 
+                            onClick={() => changeLanguage('bg')}
+                            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${i18n.language === 'bg' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow drop-shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                        >
+                            БГ
+                        </button>
+                    </div>
+                </div>
+
+                {/* Main Auth Form Container */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative z-10 w-full max-w-sm mx-auto my-auto"
+                >
+                    <div className="text-center mb-10">
+                        {/* Mobile Logo Fallback */}
+                        <div className="lg:hidden w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-floating flex items-center justify-center mx-auto mb-6 p-4">
+                            <img src="/favicon.svg" alt="Podaryavai Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-textMain dark:text-white mb-2">{t('auth.register.title')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400">{t('auth.register.subtitle')}</p>
+                    </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <AnimatePresence>
@@ -124,7 +220,7 @@ export default function Register() {
                                 className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium border border-red-100/50 flex items-start space-x-3"
                             >
                                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
-                                <span>{error}</span>
+                                <span>{String(error)}</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -192,28 +288,28 @@ export default function Register() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 bg-accent text-white rounded-2xl font-semibold shadow-floating shadow-accent/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                        className="w-full py-4 bg-accent text-white rounded-2xl font-bold shadow-floating shadow-accent/20 active:scale-[0.98] hover:bg-accent/90 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4 border border-accent/10"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>{t('auth.register.submit')}</span>}
+                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <span>{t('auth.register.submit')}</span>}
                     </button>
                 </form>
 
-                <div className="mt-6">
+                <div className="mt-8">
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200 dark:border-slate-600"></div>
+                            <div className="w-full border-t border-slate-200 dark:border-slate-600/50"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-background dark:bg-slate-900 text-slate-500 dark:text-slate-400">{t('auth.login.orContinueWith')}</span>
+                            <span className="px-4 bg-background dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-medium">{t('auth.login.orContinueWith')}</span>
                         </div>
                     </div>
 
                     <button
                         onClick={handleGoogleRegister}
                         disabled={loading}
-                        className="mt-6 w-full py-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl font-semibold shadow-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:bg-slate-900 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="mt-8 w-full py-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl font-bold shadow-soft border border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 active:scale-[0.98] transition-all flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -223,13 +319,14 @@ export default function Register() {
                     </button>
                 </div>
 
-                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-8">
+                <p className="text-center text-[15px] text-slate-500 dark:text-slate-400 mt-10 font-medium">
                     {t('auth.register.alreadyHaveAccount')}{' '}
-                    <Link to="/login" className="font-semibold text-accent hover:underline">
+                    <Link to="/login" className="font-bold text-accent hover:text-accent/80 transition-colors">
                         {t('auth.register.signIn')}
                     </Link>
                 </p>
             </motion.div>
+            </div>
         </div>
     );
 }

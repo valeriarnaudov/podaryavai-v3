@@ -12,6 +12,21 @@ export const en = {
             profile: "Profile",
             logOut: "Log out",
         },
+        marketing: {
+            heroTitle: "Gift Smarter, Not Harder.",
+            heroSubtitle:
+                "Podaryavai is your ultimate social ecosystem for wishlists, personalized AI gift ideas, and sharing joyful moments.",
+            feature1Title: "AI Giftinder",
+            feature1Desc:
+                "Discover perfect gifts tailored to your friends' specific interests.",
+            feature2Title: "Shared Wishlists",
+            feature2Desc:
+                "Never buy the wrong gift again. Share and reserve items seamlessly.",
+            feature3Title: "Karma Rewards",
+            feature3Desc:
+                "Earn points for being a great friend and unlock epic rewards.",
+            switchLang: "Language",
+        },
         contactForm: {
             titleEdit: "Edit Contact",
             titleNew: "Add New Contact",
