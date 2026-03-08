@@ -211,7 +211,7 @@ export default function Register() {
                                 <div className="absolute inset-0 bg-white/20 blur-xl" />
                                 <img src="/favicon.svg" alt="Podaryavai Logo" className="w-full h-full object-contain relative z-10 drop-shadow-xl" />
                             </div>
-                            <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-accent to-rose-500 mb-3 tracking-tight">
+                            <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-accent to-rose-500 dark:from-rose-400 dark:to-purple-400 mb-3 tracking-tight">
                                 Podaryavai
                             </h2>
                             <p className="text-sm text-slate-600 dark:text-slate-300 font-medium px-4 leading-relaxed">
