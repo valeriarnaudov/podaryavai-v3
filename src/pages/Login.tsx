@@ -127,9 +127,12 @@ export default function Login() {
             {/* Right Side: Auth Form & Language Switcher */}
             <div className="flex flex-col px-6 sm:px-12 py-8 bg-background dark:bg-slate-900 min-h-[100dvh] lg:min-h-0 relative">
                 
-                {/* Mobile Orbs */}
-                <div className="lg:hidden absolute top-[-10%] left-[-10%] w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="lg:hidden absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+                {/* Mobile Orbs - Upgraded Glassmorphism */}
+                <div className="lg:hidden absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-[-5%] left-[-10%] w-80 h-80 bg-accent/20 rounded-full blur-[80px]" />
+                    <div className="absolute top-[20%] right-[-10%] w-72 h-72 bg-rose-500/20 rounded-full blur-[80px]" />
+                    <div className="absolute bottom-[-10%] left-[10%] w-96 h-96 bg-purple-500/15 rounded-full blur-[100px]" />
+                </div>
 
                 {/* Top Center Language Switcher */}
                 <div className="flex justify-center lg:justify-end items-center mb-12 relative z-20">
@@ -156,10 +159,20 @@ export default function Login() {
                     className="relative z-10 w-full max-w-sm mx-auto my-auto"
                 >
                     <div className="text-center mb-10">
-                        {/* Mobile Logo Fallback */}
-                        <div className="lg:hidden w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-floating flex items-center justify-center mx-auto mb-6 p-4">
-                            <img src="/favicon.svg" alt="Podaryavai Logo" className="w-full h-full object-contain" />
+                        {/* Mobile Premium Welcome */}
+                        <div className="lg:hidden flex flex-col items-center mb-10">
+                            <div className="w-24 h-24 bg-gradient-to-tr from-accent via-rose-500 to-purple-600 rounded-[2rem] shadow-2xl shadow-accent/30 flex items-center justify-center p-5 mb-6 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-white/20 blur-xl" />
+                                <img src="/favicon.svg" alt="Podaryavai Logo" className="w-full h-full object-contain relative z-10 drop-shadow-xl" />
+                            </div>
+                            <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-accent to-rose-500 mb-3 tracking-tight">
+                                Podaryavai
+                            </h2>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 font-medium px-4 leading-relaxed">
+                                {t('marketing.heroTitle')}
+                            </p>
                         </div>
+
                         <h1 className="text-3xl font-extrabold tracking-tight text-textMain dark:text-white mb-2">{t('auth.login.title')}</h1>
                         <p className="text-slate-500 dark:text-slate-400">{t('auth.login.subtitle')}</p>
                     </div>
