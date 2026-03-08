@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { Gift, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { Gift, ExternalLink, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../lib/AuthContext';
 
 interface WishlistItem {
     id: string;
@@ -12,6 +13,8 @@ interface WishlistItem {
     price_range: string;
     image_url: string;
     source_url: string;
+    is_bought?: boolean;
+    buyer_id?: string;
 }
 
 export default function SharedWishlist() {
@@ -22,7 +25,9 @@ export default function SharedWishlist() {
     const [userName, setUserName] = useState<string>('Someone');
     const [userAvatar, setUserAvatar] = useState<string | null>(null);
     const [userHasAura, setUserHasAura] = useState(false);
+    const [markingItemId, setMarkingItemId] = useState<string | null>(null);
     const { t } = useTranslation();
+    const { user, refreshUserData } = useAuth();
 
     useEffect(() => {
         if (userId) {
@@ -59,6 +64,42 @@ export default function SharedWishlist() {
             console.error('Error fetching shared wishlist:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleMarkAsBought = async (giftId: string) => {
+        if (!user) {
+            alert(t('gamification.loginToBuy', { defaultValue: 'Трябва да сте вписани, за да маркирате подарък и да спечелите Карма!' }));
+            navigate(`/register?ref=${userId}`);
+            return;
+        }
+
+        if (user.id === userId) {
+            alert(t('gamification.cantBuyOwn', { defaultValue: 'Не можете да маркирате собствените си подаръци.' }));
+            return;
+        }
+
+        setMarkingItemId(giftId);
+        try {
+            const { data: karmaRes } = await supabase.rpc('mark_gift_as_bought', {
+                gift_id: giftId,
+                buyer: user.id
+            });
+
+            if (karmaRes?.success) {
+                setItems(items.map(item => item.id === giftId ? { ...item, is_bought: true, buyer_id: user.id } : item));
+                
+                if (karmaRes.awarded > 0) {
+                    await refreshUserData();
+                }
+            } else {
+                alert(karmaRes?.message || t('gamification.errorMarking', { defaultValue: 'Грешка при маркирането.' }));
+            }
+        } catch (err) {
+            console.error('Error marking gift as bought:', err);
+            alert(t('gamification.errorMarking', { defaultValue: 'Грешка при маркирането.' }));
+        } finally {
+            setMarkingItemId(null);
         }
     };
 
@@ -142,6 +183,29 @@ export default function SharedWishlist() {
                                             <ExternalLink className="w-3 h-3" />
                                         </a>
                                     )}
+                                    <button
+                                        onClick={() => handleMarkAsBought(item.id)}
+                                        disabled={item.is_bought || markingItemId === item.id}
+                                        className={`mt-2 w-full flex items-center justify-center space-x-1 py-1.5 rounded-lg transition-colors text-xs font-bold ${
+                                            item.is_bought 
+                                            ? 'bg-green-100/50 text-green-600 dark:bg-green-900/30 dark:text-green-400 cursor-not-allowed border border-green-200 dark:border-green-800'
+                                            : 'bg-emerald-500 tracking-wide hover:bg-emerald-600 text-white shadow-soft active:scale-[0.98]'
+                                        }`}
+                                    >
+                                        {markingItemId === item.id ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : item.is_bought ? (
+                                            <>
+                                                <CheckCircle2 className="w-3 h-3" />
+                                                <span>{t('gamification.alreadyBought', { defaultValue: 'Запазен' })}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Gift className="w-3 h-3" />
+                                                <span>{t('gamification.markBought', { defaultValue: 'Маркирай като Купен' })}</span>
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </motion.div>
                         ))}

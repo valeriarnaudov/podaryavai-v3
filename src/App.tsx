@@ -14,6 +14,7 @@ import CheckEmail from './pages/CheckEmail';
 import ContactsList from './pages/ContactsList';
 import NewContact from './pages/NewContact';
 import Checkout from './pages/Checkout';
+import Invite from './pages/Invite';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import EditContact from './pages/EditContact';
@@ -29,6 +30,21 @@ import AdminEmails from './pages/admin/AdminEmails';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import Upgrade from './pages/Upgrade';
 import CheckoutCancel from './pages/CheckoutCancel';
+import DailyStreakModal from './components/DailyStreakModal';
+
+// Modal Wrapper to trigger automatically on load
+const GlobalStreakChecker = () => {
+    const { dailyStreak } = useAuth();
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    React.useEffect(() => {
+        if (dailyStreak?.can_claim) {
+            setIsOpen(true);
+        }
+    }, [dailyStreak]);
+
+    return <DailyStreakModal isOpen={isOpen} onClose={() => setIsOpen(false)} />;
+};
 
 // Component to handle redirecting authenticated users away from auth pages
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
@@ -96,6 +112,10 @@ const router = createBrowserRouter([
                 <CheckEmail />
             </AuthRoute>
         ),
+    },
+    {
+        path: '/invite',
+        element: <Invite />
     },
     {
         path: '/upgrade',
@@ -178,7 +198,12 @@ const AppContent = () => {
         return <MaintenanceScreen />;
     }
 
-    return <RouterProvider router={router} />;
+    return (
+        <>
+            <RouterProvider router={router} />
+            <GlobalStreakChecker />
+        </>
+    );
 };
 
 export default function App() {

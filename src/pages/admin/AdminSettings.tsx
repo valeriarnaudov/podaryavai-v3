@@ -13,8 +13,20 @@ interface PlatformSetting {
 
 const DEFAULT_SETTINGS = [
     { setting_key: 'MAINTENANCE_MODE', setting_value: 'false', description: 'Enable to lock out non-admins ("true" | "false")' },
-    { setting_key: 'REFERRAL_REWARD_BASE', setting_value: '50', description: 'Default Karma points given for a referral' },
-    { setting_key: 'REFERRAL_REWARD_BOOSTED', setting_value: '100', description: 'Karma points given for a referral if referrer has an active boost' },
+    { 
+        setting_key: 'KARMA_REWARDS_CONFIG', 
+        setting_value: JSON.stringify({
+            "REFERRAL_CLICK":   { "FREE": 1,  "STANDARD": 2,  "PRO": 3,  "ULTRA": 4,  "BUSINESS": 5 },
+            "REFERRAL_REGISTER": { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 65, "BUSINESS": 80 },
+            "DAILY_LOGIN_DAY1":  { "FREE": 5,  "STANDARD": 10, "PRO": 15, "ULTRA": 20, "BUSINESS": 25 },
+            "DAILY_LOGIN_DAY3":  { "FREE": 10, "STANDARD": 15, "PRO": 25, "ULTRA": 35, "BUSINESS": 50 },
+            "DAILY_LOGIN_DAY7":  { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 75, "BUSINESS": 100 },
+            "WISHLIST_ADD":      { "FREE": 5,  "STANDARD": 10, "PRO": 15, "ULTRA": 20, "BUSINESS": 25 },
+            "GIFT_BOUGHT":       { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 75, "BUSINESS": 100 },
+            "GIFT_BOUGHT_OWN":   { "FREE": 10, "STANDARD": 15, "PRO": 25, "ULTRA": 35, "BUSINESS": 50 }
+        }), 
+        description: 'JSON object configuring Karma rewards by Event and Plan' 
+    },
 
     // AI Limits per plan (-1 for unlimited)
     { setting_key: 'LIMIT_AI_FREE', setting_value: '1', description: 'Daily AI Giftinder limit for Free plan' },
@@ -133,6 +145,34 @@ export default function AdminSettings() {
         }));
     };
 
+    // Advanced JSON Editor Handler for KARMA_REWARDS_CONFIG
+    const handleKarmaMatrixChange = (eventType: string, planType: string, val: string) => {
+        try {
+            const currentJsonStr = editableValues['KARMA_REWARDS_CONFIG'] || settings.find(s => s.setting_key === 'KARMA_REWARDS_CONFIG')?.setting_value || "{}";
+            const config = JSON.parse(currentJsonStr);
+            
+            if (!config[eventType]) config[eventType] = {};
+            config[eventType][planType] = parseInt(val) || 0;
+
+            setEditableValues(prev => ({
+                ...prev,
+                ['KARMA_REWARDS_CONFIG']: JSON.stringify(config)
+            }));
+        } catch (e) {
+            console.error("Error editing JSON matrix:", e);
+        }
+    };
+
+    const getKarmaValue = (eventType: string, planType: string) => {
+        try {
+            const currentJsonStr = editableValues['KARMA_REWARDS_CONFIG'] || settings.find(s => s.setting_key === 'KARMA_REWARDS_CONFIG')?.setting_value || "{}";
+            const config = JSON.parse(currentJsonStr);
+            return config[eventType]?.[planType] || 0;
+        } catch (e) {
+            return 0;
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -205,8 +245,11 @@ export default function AdminSettings() {
         !s.setting_key.startsWith('CONTACT_GIFTS_ENABLED') && 
         !s.setting_key.startsWith('CONTACT_GIFTS_MODEL') && 
         !s.setting_key.startsWith('LIMIT_CONTACTS') &&
-        !s.setting_key.startsWith('KARMA_PER_SWIPE')
+        !s.setting_key.startsWith('KARMA_PER_SWIPE') &&
+        s.setting_key !== 'KARMA_REWARDS_CONFIG'
     );
+
+    const gamificationSettings = settings.filter(s => s.setting_key === 'KARMA_REWARDS_CONFIG');
 
     const renderSettingRow = (setting: PlatformSetting) => (
         <div key={setting.setting_key} className="p-5 sm:pl-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
@@ -278,7 +321,18 @@ export default function AdminSettings() {
                     <h3 className="font-bold text-slate-700 dark:text-slate-200">{t('adminSettings.globalTitle')}</h3>
                 </div>
                 <div>
-                    {globalSettings.map(renderSettingRow)}
+                    {globalSettings.filter(s => !s.setting_key.startsWith('REFERRAL_REWARD')).map(renderSettingRow)}
+                </div>
+            </section>
+
+            {/* Gamification Settings Section */}
+            <section className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden mt-6">
+                <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center space-x-2">
+                    <Zap className="w-5 h-5 text-amber-500" />
+                    <h3 className="font-bold text-slate-700 dark:text-slate-200">Gamification & Rewards</h3>
+                </div>
+                <div>
+                    {gamificationSettings.map(renderSettingRow)}
                 </div>
             </section>
 
@@ -432,6 +486,33 @@ export default function AdminSettings() {
                                             <option value="openai">{t('adminSettings.modelOpenAI')}</option>
                                             <option value="gemini">{t('adminSettings.modelGemini')}</option>
                                         </select>
+                                    </div>
+
+                                    {/* Per-Plan Gamification Rewards Matrix */}
+                                    <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col space-y-4">
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-green-600 flex items-center gap-1">✨ Advanced Karma Settings</span>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {[
+                                                { label: 'Wishlist Item Add', key: 'WISHLIST_ADD' },
+                                                { label: 'Mark Gift Bought', key: 'GIFT_BOUGHT' },
+                                                { label: 'Archive Own Gift', key: 'GIFT_BOUGHT_OWN' },
+                                                { label: 'Referral Click', key: 'REFERRAL_CLICK' },
+                                                { label: 'Referral Register', key: 'REFERRAL_REGISTER' },
+                                                { label: 'Daily Login (Days 1-2)', key: 'DAILY_LOGIN_DAY1' },
+                                                { label: 'Daily Login (Days 3-6)', key: 'DAILY_LOGIN_DAY3' },
+                                                { label: 'Daily Login (Day 7)', key: 'DAILY_LOGIN_DAY7' }
+                                            ].map((karmaOption) => (
+                                                <div className="space-y-1" key={karmaOption.key}>
+                                                    <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 leading-tight block">{karmaOption.label}</label>
+                                                    <input
+                                                        type="number"
+                                                        value={getKarmaValue(karmaOption.key, plan.plan_key)}
+                                                        onChange={(e) => handleKarmaMatrixChange(karmaOption.key, plan.plan_key, e.target.value)}
+                                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs font-semibold text-green-600 outline-none focus:border-green-500 focus:bg-white dark:bg-slate-800"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 

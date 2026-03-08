@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award, Heart, Globe, Moon, Sun, Monitor } from 'lucide-react';
+import { User, Mail, LogOut, Loader2, Save, Settings, Edit3, Crown, Calendar, Lock, Award, Heart, Globe, Moon, Sun, Monitor, Share2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DailyStreakModal from '../components/DailyStreakModal';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
+import { useSettings } from '../lib/SettingsContext';
 
 export default function Profile() {
     const { user, signOut, hasGoldenAura, subscriptionPlan, activeReward } = useAuth();
+    const { settings } = useSettings();
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -54,6 +57,7 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -156,6 +160,32 @@ export default function Profile() {
         }
     };
 
+    const handleShareProfile = async () => {
+        if (!user) return;
+        const inviteLink = `${window.location.origin}/register?ref=${user.id}`;
+        const points = settings.REFERRAL_REWARD_BASE || '50';
+        const text = t('profile.shareText', { defaultValue: 'Хей! Използвам Podaryavai, за да следя рождените дни и да намирам страхотни подаръци. Добави ме и виж моя Wishlist: ' }) + inviteLink;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Podaryavai Invite',
+                    text: text,
+                    url: inviteLink
+                });
+            } catch (err) {
+                console.log('Share canceled or failed', err);
+            }
+        } else {
+            // Fallback for desktop: Copy to clipboard
+            await navigator.clipboard.writeText(text);
+            alert(t('profile.shareCopiedPoints', { 
+                defaultValue: `Линкът за покана е копиран в клипборда! Ще получиш +{{points}} Карма при регистрация.`,
+                points 
+            }));
+        }
+    };
+
     const handleOpenPortal = async () => {
         if (!user) return;
         setPortalLoading(true);
@@ -230,18 +260,27 @@ export default function Profile() {
                                 </div>
                             )}
                         </div>
-                        <div className="relative">
-                            <div className="flex items-center space-x-3">
-                                <h2 className="text-2xl font-bold text-textMain dark:text-white">{displayFullName || t('profile.unknownUser')}</h2>
-                                <button
-                                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                                    className="p-1.5 text-slate-400 hover:text-accent bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-700 rounded-full transition-colors relative"
-                                    title="App Settings"
-                                >
-                                    <Settings className="w-5 h-5" />
-                                </button>
+                        <div className="relative flex-1">
+                            <div className="flex items-center justify-between w-full">
+                                <h2 className="text-xl sm:text-2xl font-bold text-textMain dark:text-white truncate pr-2">{displayFullName || t('profile.unknownUser')}</h2>
+                                <div className="flex items-center space-x-1 shrink-0">
+                                    <button
+                                        onClick={handleShareProfile}
+                                        className="p-1.5 text-slate-400 hover:text-accent bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-700 rounded-full transition-colors relative"
+                                        title={t('profile.shareProfile', { defaultValue: 'Сподели Профил' })}
+                                    >
+                                        <Share2 className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                                        className="p-1.5 text-slate-400 hover:text-accent bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-700 rounded-full transition-colors relative"
+                                        title="App Settings"
+                                    >
+                                        <Settings className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{email}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1 truncate">{email}</p>
 
                             {/* Settings Dropdown */}
                             <AnimatePresence>
@@ -666,6 +705,32 @@ export default function Profile() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Daily Streak Card */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-soft border border-slate-100/50 dark:border-slate-700/50 relative overflow-hidden flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                        <Zap className="w-6 h-6" fill="currentColor" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100">{t('gamification.streakTitle', { defaultValue: 'Дневен Бонус' })}</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {t('gamification.checkStreak', { defaultValue: 'Проследи своята серия и вземи Карма' })}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => setIsStreakModalOpen(true)}
+                    className="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-all active:scale-95 text-sm"
+                >
+                    {t('gamification.view', { defaultValue: 'Виж' })}
+                </button>
+            </div>
+
+            <DailyStreakModal 
+                isOpen={isStreakModalOpen} 
+                onClose={() => setIsStreakModalOpen(false)} 
+            />
 
             {/* Subscription Plan Card */}
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-3xl shadow-soft text-white relative overflow-hidden flex flex-col gap-6">

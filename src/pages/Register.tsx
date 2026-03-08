@@ -62,6 +62,7 @@ export default function Register() {
                     last_name: lastName.trim(),
                     full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
                     dob: dob,
+                    invited_by: localStorage.getItem('referral_id') || null,
                 },
             },
         });
@@ -82,7 +83,11 @@ export default function Register() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: window.location.origin,
+                queryParams: {
+                    prompt: 'consent',
+                    invited_by: localStorage.getItem('referral_id') || ''
+                }
             }
         });
 

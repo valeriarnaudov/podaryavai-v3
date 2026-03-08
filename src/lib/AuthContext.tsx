@@ -2,6 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
+export interface DailyStreakStatus {
+    can_claim: boolean;
+    current_streak: number;
+    next_streak: number;
+    reward_amount: number;
+    day1_reward: number;
+    day3_reward: number;
+    day7_reward: number;
+}
+
 interface AuthContextType {
     user: User | null;
     session: Session | null;
@@ -16,7 +26,9 @@ interface AuthContextType {
     dailyGenerationsCount: number;
     subscriptionPlan: 'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS';
     activeReward: { title: string; expires_at: string; plan_code: string } | null;
+    dailyStreak: DailyStreakStatus | null;
     refreshUserData: () => Promise<void>;
+    claimDailyStreak: () => Promise<void>;
     signOut: () => Promise<void>;
 }
 
@@ -34,7 +46,9 @@ const AuthContext = createContext<AuthContextType>({
     dailyGenerationsCount: 0,
     subscriptionPlan: 'FREE',
     activeReward: null,
+    dailyStreak: null,
     refreshUserData: async () => { },
+    claimDailyStreak: async () => { },
     signOut: async () => { },
 });
 
@@ -52,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [dailyGenerationsCount, setDailyGenerationsCount] = useState(0);
     const [subscriptionPlan, setSubscriptionPlan] = useState<'FREE' | 'STANDARD' | 'PRO' | 'ULTRA' | 'BUSINESS'>('FREE');
     const [activeReward, setActiveReward] = useState<{ title: string; expires_at: string; plan_code: string } | null>(null);
+    const [dailyStreak, setDailyStreak] = useState<DailyStreakStatus | null>(null);
 
     const checkUserData = async (userId: string, isMounted: boolean = true) => {
         if (!userId) {
@@ -135,6 +150,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const refreshUserData = async () => {
         if (user?.id) {
             await checkUserData(user.id);
+            await checkDailyLoginStatus(user.id);
+        }
+    };
+
+    const checkDailyLoginStatus = async (userId: string) => {
+        try {
+            const { data, error } = await supabase.rpc('get_daily_login_status', { user_id: userId });
+            if (error) {
+                console.error("Error checking daily login status:", error);
+                return;
+            }
+            if (data?.success) {
+                setDailyStreak({
+                    can_claim: data.can_claim,
+                    current_streak: data.current_streak,
+                    next_streak: data.next_streak,
+                    reward_amount: data.reward_amount,
+                    day1_reward: data.day1_reward,
+                    day3_reward: data.day3_reward,
+                    day7_reward: data.day7_reward
+                });
+            }
+        } catch (err) {
+            console.error("Failed to check daily login status", err);
+        }
+    };
+
+    const claimDailyStreak = async () => {
+        if (!user) return;
+        try {
+            const { data, error } = await supabase.rpc('claim_daily_login', { user_id: user.id });
+            if (error) throw error;
+            if (data?.success) {
+                // Refresh local user state + new streak status
+                await checkUserData(user.id, true);
+                await checkDailyLoginStatus(user.id);
+            }
+        } catch (err) {
+            console.error("Failed to claim daily streak:", err);
+            throw err;
         }
     };
 
@@ -151,8 +206,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(session?.user ?? null);
                     if (session?.user) {
                         await checkUserData(session.user.id, mounted);
+                        await checkDailyLoginStatus(session.user.id);
                     } else {
                         await checkUserData('', mounted);
+                        if (mounted) setDailyStreak(null);
                     }
                 }
             } catch (error) {
@@ -172,9 +229,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // Do not 'await' this to prevent Supabase lock deadlocks
                 if (session?.user) {
-                    checkUserData(session.user.id, mounted);
+                    checkUserData(session.user.id, mounted).then(() => {
+                        if (mounted) checkDailyLoginStatus(session.user.id);
+                    });
                 } else {
                     checkUserData('', mounted);
+                    if (mounted) setDailyStreak(null);
                 }
             }
         });
@@ -194,7 +254,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user, session, loading, isAdmin, karmaPoints,
             hasGoldenAura, freeDeliveriesCount, hasVipGiftinder, karmaBoostUntil,
             lastGiftinderGeneration, dailyGenerationsCount, subscriptionPlan,
-            activeReward, refreshUserData, signOut
+            activeReward, refreshUserData, signOut,
+            dailyStreak, claimDailyStreak
         }}>
             {children}
         </AuthContext.Provider>

@@ -3,8 +3,9 @@ import { supabase } from './supabase';
 
 export interface PlatformSettings {
     MAINTENANCE_MODE: string;
-    REFERRAL_REWARD_BASE: string;
-    REFERRAL_REWARD_BOOSTED: string;
+
+    // Advanced JSON object matrix for Karma configs
+    KARMA_REWARDS_CONFIG: string;
 
     LIMIT_AI_FREE: string;
     MODEL_AI_FREE: string;
@@ -33,8 +34,16 @@ export interface PlatformSettings {
 // Default fallback settings in case DB is completely empty and hasn't seeded yet
 const defaultSettings: PlatformSettings = {
     MAINTENANCE_MODE: 'false',
-    REFERRAL_REWARD_BASE: '50',
-    REFERRAL_REWARD_BOOSTED: '100',
+    KARMA_REWARDS_CONFIG: JSON.stringify({
+        "REFERRAL_CLICK":   { "FREE": 1,  "STANDARD": 2,  "PRO": 3,  "ULTRA": 4,  "BUSINESS": 5 },
+        "REFERRAL_REGISTER": { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 65, "BUSINESS": 80 },
+        "DAILY_LOGIN_DAY1":  { "FREE": 5,  "STANDARD": 10, "PRO": 15, "ULTRA": 20, "BUSINESS": 25 },
+        "DAILY_LOGIN_DAY3":  { "FREE": 10, "STANDARD": 15, "PRO": 25, "ULTRA": 35, "BUSINESS": 50 },
+        "DAILY_LOGIN_DAY7":  { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 75, "BUSINESS": 100 },
+        "WISHLIST_ADD":      { "FREE": 5,  "STANDARD": 10, "PRO": 15, "ULTRA": 20, "BUSINESS": 25 },
+        "GIFT_BOUGHT":       { "FREE": 25, "STANDARD": 35, "PRO": 50, "ULTRA": 75, "BUSINESS": 100 },
+        "GIFT_BOUGHT_OWN":   { "FREE": 10, "STANDARD": 15, "PRO": 25, "ULTRA": 35, "BUSINESS": 50 }
+    }),
     LIMIT_AI_FREE: '1',
     MODEL_AI_FREE: 'llama',
     LIMIT_AI_STANDARD: '10',

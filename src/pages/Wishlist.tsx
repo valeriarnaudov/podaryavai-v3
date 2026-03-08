@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { Share2, Plus, Trash2, ExternalLink, Loader2, X, Link as LinkIcon, DollarSign, Gift } from 'lucide-react';
+import { Share2, Plus, Trash2, ExternalLink, Loader2, X, Link as LinkIcon, DollarSign, Gift, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface WishlistItem {
@@ -13,10 +13,11 @@ interface WishlistItem {
     image_url: string;
     source_url: string;
     is_manual?: boolean;
+    is_bought?: boolean;
 }
 
 export default function Wishlist() {
-    const { user } = useAuth();
+    const { user, refreshUserData } = useAuth();
     const { t } = useTranslation();
     const [items, setItems] = useState<WishlistItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -75,6 +76,27 @@ export default function Wishlist() {
     const removeItem = async (id: string) => {
         setItems(items.filter(i => i.id !== id));
         await supabase.from('gift_ideas').delete().eq('id', id);
+    };
+
+    const archiveItem = async (id: string) => {
+        if (!user) return;
+        try {
+            const { data: res } = await supabase.rpc('archive_own_gift', {
+                gift_id: id,
+                owner_id: user.id
+            });
+
+            if (res?.success) {
+                setItems(items.map(item => item.id === id ? { ...item, is_bought: true } : item));
+                if (res.awarded > 0) {
+                    await refreshUserData();
+                }
+            } else {
+                console.error('Failed to archive:', res?.message);
+            }
+        } catch (error) {
+            console.error('Error archiving item:', error);
+        }
     };
 
     const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,6 +167,16 @@ export default function Wishlist() {
             setItems([data as any, ...items]);
             setIsModalOpen(false);
 
+            // Award +5 Karma (up to 3x per day)
+            try {
+                const { data: karmaRes } = await supabase.rpc('award_wishlist_karma', { user_id: user.id });
+                if (karmaRes?.success && karmaRes.awarded > 0) {
+                    await refreshUserData();
+                }
+            } catch (kErr) {
+                console.error('Failed to parse karma reward:', kErr);
+            }
+
             // Reset form
             setNewItemTitle('');
             setNewItemPrice('');
@@ -195,31 +227,49 @@ export default function Wishlist() {
                     </div>
                 ) : (
                     <div className="space-y-8">
-                        {/* Manually Added Items */}
-                        {items.filter(i => i.is_manual).length > 0 && (
+                        {/* Active Manual Items */}
+                        {items.filter(i => i.is_manual && !i.is_bought).length > 0 && (
                             <section>
                                 <div className="flex items-center space-x-2 mb-4">
                                     <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t('wishlist.myRequests')}</h2>
                                     <div className="h-px bg-slate-200 dark:bg-slate-600 flex-1"></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {items.filter(i => i.is_manual).map((item, i) => (
-                                        <WishlistItemCard key={item.id} item={item} i={i} removeItem={removeItem} />
+                                    {items.filter(i => i.is_manual && !i.is_bought).map((item, i) => (
+                                        <WishlistItemCard key={item.id} item={item} i={i} removeItem={removeItem} archiveItem={archiveItem} />
                                     ))}
                                 </div>
                             </section>
                         )}
 
-                        {/* Giftinder Saved Items */}
-                        {items.filter(i => !i.is_manual).length > 0 && (
+                        {/* Active Giftinder Saved Items */}
+                        {items.filter(i => !i.is_manual && !i.is_bought).length > 0 && (
                             <section>
                                 <div className="flex items-center space-x-2 mb-4 mt-2">
                                     <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{t('wishlist.fromGiftinder')}</h2>
                                     <div className="h-px bg-slate-200 dark:bg-slate-600 flex-1"></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {items.filter(i => !i.is_manual).map((item, i) => (
-                                        <WishlistItemCard key={item.id} item={item} i={i} removeItem={removeItem} />
+                                    {items.filter(i => !i.is_manual && !i.is_bought).map((item, i) => (
+                                        <WishlistItemCard key={item.id} item={item} i={i} removeItem={removeItem} archiveItem={archiveItem} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Archived/Bought Items */}
+                        {items.filter(i => i.is_bought).length > 0 && (
+                            <section className="opacity-75">
+                                <div className="flex items-center space-x-2 mb-4 mt-8">
+                                    <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                        <CheckCircle2 className="w-5 h-5" /> 
+                                        Archived (Bought)
+                                    </h2>
+                                    <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 grayscale-[0.3]">
+                                    {items.filter(i => i.is_bought).map((item, i) => (
+                                        <WishlistItemCard key={item.id} item={item} i={i} removeItem={removeItem} archiveItem={archiveItem} />
                                     ))}
                                 </div>
                             </section>
@@ -365,9 +415,16 @@ export default function Wishlist() {
         </div>
     );
 }
-
-function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: number, removeItem: (id: string) => void }) {
+function WishlistItemCard({ item, i, removeItem, archiveItem }: { item: WishlistItem, i: number, removeItem: (id: string) => void, archiveItem: (id: string) => void }) {
     const { t } = useTranslation();
+    const [archiving, setArchiving] = useState(false);
+
+    const handleArchive = async () => {
+        setArchiving(true);
+        await archiveItem(item.id);
+        setArchiving(false);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -405,14 +462,26 @@ function WishlistItemCard({ item, i, removeItem }: { item: WishlistItem, i: numb
                             <ExternalLink className="w-3 h-3" />
                         </a>
                     )}
-                    <a
-                        href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.title)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center space-x-1 text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 py-1.5 rounded-lg hover:bg-slate-200 dark:bg-slate-600 transition-colors shadow-sm font-semibold"
-                    >
-                        <span>{t('wishlist.searchOnline')}</span>
-                    </a>
+                    
+                    {!item.is_bought && (
+                        <>
+                            <a
+                                href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.title)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center space-x-1 text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 py-1.5 rounded-lg hover:bg-slate-200 dark:bg-slate-600 transition-colors shadow-sm font-semibold"
+                            >
+                                <span>{t('wishlist.searchOnline')}</span>
+                            </a>
+                            <button
+                                onClick={handleArchive}
+                                disabled={archiving}
+                                className="flex items-center justify-center space-x-1 text-[10px] text-white bg-green-500 py-1.5 rounded-lg hover:bg-green-600 transition-colors shadow-sm font-bold uppercase tracking-wide disabled:opacity-50 mt-1"
+                            >
+                                {archiving ? <Loader2 className="w-3 h-3 animate-spin"/> : <><CheckCircle2 className="w-3 h-3" /><span>Archive (I got it)</span></>}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </motion.div>
