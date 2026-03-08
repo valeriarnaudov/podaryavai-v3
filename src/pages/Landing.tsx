@@ -132,16 +132,16 @@ export default function Landing() {
                     variants={staggerContainer}
                     className="text-center w-full"
                 >
-                    <motion.div variants={fadeIn} className="inline-flex items-center space-x-2 mb-6 px-4 py-2 bg-gradient-to-r from-accent/10 to-rose-500/10 dark:from-accent/20 dark:to-rose-500/20 border border-accent/20 dark:border-accent/30 rounded-full shadow-sm">
-                        <Sparkles className="w-4 h-4 text-accent" />
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-rose-500">
+                    <motion.div variants={fadeIn} className="inline-flex items-center space-x-2 mb-6 px-4 py-2 bg-gradient-to-r from-accent/10 to-rose-500/10 dark:from-indigo-500/20 dark:to-rose-500/20 border border-accent/20 dark:border-indigo-500/30 rounded-full shadow-sm">
+                        <Sparkles className="w-4 h-4 text-accent dark:text-indigo-400" />
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent to-rose-500 dark:from-indigo-400 dark:to-rose-400">
                             {t('landing.hero.badge')}
                         </span>
                     </motion.div>
 
                     <motion.h1 variants={fadeIn} className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight text-textMain dark:text-white mb-6 leading-[1.15]">
                         {t('landing.hero.title1')} <br className="hidden sm:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-rose-500 to-purple-600 inline-block pl-2">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-rose-500 to-purple-600 dark:from-indigo-400 dark:via-rose-400 dark:to-purple-400 inline-block pl-2">
                             {t('landing.hero.title2')}
                         </span>
                     </motion.h1>
