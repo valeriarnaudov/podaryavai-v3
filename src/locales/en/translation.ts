@@ -286,6 +286,7 @@ export const en = {
             },
             actions: {
                 resetLimit: "Reset Daily Limit",
+                exhaustLimit: "Exhaust Daily Limit",
                 revokeAdmin: "Revoke Admin Role",
                 grantAdmin: "Grant Admin Role",
                 demote: "Demote",

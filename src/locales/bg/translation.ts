@@ -593,6 +593,7 @@ export const bg = {
             },
             actions: {
                 resetLimit: "Нулирай Дневен Лимит",
+                exhaustLimit: "Изчерпай Дневен Лимит",
                 revokeAdmin: "Отнеми Админ Права",
                 grantAdmin: "Дай Админ Права",
                 demote: "Понижи",

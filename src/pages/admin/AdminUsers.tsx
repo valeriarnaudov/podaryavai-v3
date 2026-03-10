@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, Edit2, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, ZapOff, Edit2, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface UserData {
@@ -71,6 +71,18 @@ export default function AdminUsers() {
         const { error } = await supabase.from('users').update({ last_giftinder_generation: null }).eq('id', userId);
         if (error) {
             console.error('Failed to reset counter:', error);
+        } else {
+            fetchUsers();
+        }
+    };
+
+    const exhaustGiftinder = async (e: React.MouseEvent, userId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const { error } = await supabase.from('users').update({ last_giftinder_generation: new Date().toISOString() }).eq('id', userId);
+        if (error) {
+            console.error('Failed to exhaust counter:', error);
         } else {
             fetchUsers();
         }
@@ -364,6 +376,13 @@ export default function AdminUsers() {
                                                         title={t('adminUsers.actions.resetLimit')}
                                                     >
                                                         <RefreshCw className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => exhaustGiftinder(e, user.id)}
+                                                        className="p-1.5 text-slate-400 hover:text-orange-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-orange-500 hover:bg-orange-500/10 rounded-lg transition-all"
+                                                        title={t('adminUsers.actions.exhaustLimit')}
+                                                    >
+                                                        <ZapOff className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </td>
