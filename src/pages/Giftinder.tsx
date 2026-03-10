@@ -93,11 +93,7 @@ if (!currentSession) {
   return;
 }
 
-const { error, data } = await supabase.functions.invoke('generate_daily_gifts', {
-  headers: {
-    Authorization: `Bearer ${session?.access_token}`,
-  },
-});
+const { error, data } = await supabase.functions.invoke('generate_daily_gifts');
 
                     if (error) {
                         const errMsg = error.message || error.toString();
