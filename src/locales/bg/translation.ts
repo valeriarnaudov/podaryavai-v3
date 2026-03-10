@@ -472,6 +472,7 @@ export const bg = {
         },
         admin: {
             title: "Системен Преглед",
+            dashboard: "Табло",
             subtitle: "Основни метрики на Podaryavai",
             orders: "Поръчки",
             logs: "Дейности",

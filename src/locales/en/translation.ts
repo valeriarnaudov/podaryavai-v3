@@ -165,6 +165,7 @@ export const en = {
         },
         admin: {
             title: "Admin Dashboard",
+            dashboard: "Dashboard",
             subtitle: "Global overview of the platform.",
             orders: "Orders",
             logs: "Activity Logs",
