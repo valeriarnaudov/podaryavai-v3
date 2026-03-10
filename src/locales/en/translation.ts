@@ -509,6 +509,7 @@ export const en = {
             shareTitle: "My Podaryavai Wishlist",
             shareText: "Check out my gift ideas!",
             addError: "Failed to add item to wishlist.",
+            archiveFound: "Archive (I got it)",
         },
         giftinder: {
             title: "Giftinder",

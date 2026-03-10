@@ -300,6 +300,7 @@ export const bg = {
             shareTitle: "Моят Podaryavai Уишлист",
             shareText: "Виж моите идеи за подаръци!",
             addError: "Неуспешно добавяне в уишлиста.",
+            archiveFound: "Архивирай (Имам го)",
         },
         giftinder: {
             title: "Giftinder",

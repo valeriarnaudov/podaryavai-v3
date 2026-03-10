@@ -478,7 +478,7 @@ function WishlistItemCard({ item, i, removeItem, archiveItem }: { item: Wishlist
                                 disabled={archiving}
                                 className="flex items-center justify-center space-x-1 text-[10px] text-white bg-green-500 py-1.5 rounded-lg hover:bg-green-600 transition-colors shadow-sm font-bold uppercase tracking-wide disabled:opacity-50 mt-1"
                             >
-                                {archiving ? <Loader2 className="w-3 h-3 animate-spin"/> : <><CheckCircle2 className="w-3 h-3" /><span>Archive (I got it)</span></>}
+                                {archiving ? <Loader2 className="w-3 h-3 animate-spin"/> : <><CheckCircle2 className="w-3 h-3" /><span>{t('wishlist.archiveFound', { defaultValue: 'Archive (I got it)' })}</span></>}
                             </button>
                         </>
                     )}
