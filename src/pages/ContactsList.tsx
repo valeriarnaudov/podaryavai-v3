@@ -83,7 +83,7 @@ export default function ContactsList() {
     };
 
     return (
-        <div className="bg-background dark:bg-slate-900 min-h-[100dvh] pb-safe sm:h-[90dvh] relative">
+        <div className="h-full flex flex-col bg-background dark:bg-slate-900 relative overflow-hidden">
             <header className="bg-white dark:bg-slate-800/80 backdrop-blur-lg sticky top-0 z-10 px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 shadow-sm">
                 <button
                     onClick={() => navigate(-1)}
@@ -100,7 +100,7 @@ export default function ContactsList() {
                 <div className="w-10"></div> {/* Spacer for alignment */}
             </header>
 
-            <div className="px-6 pt-4 pb-2 flex gap-3 overflow-x-auto hide-scrollbar">
+            <div className="px-6 pt-4 pb-2 flex gap-3 overflow-x-auto hide-scrollbar shrink-0">
                 <select 
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value as 'az'|'za'|'dob')}
@@ -125,7 +125,7 @@ export default function ContactsList() {
                 </select>
             </div>
 
-            <main className="px-6 pb-6 pt-2">
+            <main className="flex-1 overflow-y-auto px-6 pb-24 pt-2">
                 {loading ? (
                     <div className="flex justify-center py-10">
                         <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
@@ -201,7 +201,7 @@ export default function ContactsList() {
             {/* Floating Add Button */}
             <button
                 onClick={handleAddContact}
-                className={`fixed bottom-24 lg:bottom-8 right-6 z-40 ${isAtLimit ? 'px-6 h-14 bg-amber-500 rounded-full' : 'w-14 h-14 bg-accent rounded-full'} text-white shadow-floating flex items-center justify-center hover:scale-105 active:scale-95 transition-all outline-none font-bold`}
+                className={`absolute bottom-6 right-6 z-40 ${isAtLimit ? 'px-6 h-14 bg-amber-500 rounded-full' : 'w-14 h-14 bg-accent rounded-full'} text-white shadow-floating flex items-center justify-center hover:scale-105 active:scale-95 transition-all outline-none font-bold`}
             >
                 {isAtLimit ? t('contacts.upgradeToAdd') : <Plus className="w-6 h-6" />}
             </button>
