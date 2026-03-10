@@ -53,10 +53,10 @@
   VITE_SUPABASE_ANON_KEY="<ваш-anon-key>"
   ```
 
-## 4. 🧠 Изкуствен Интелект (OpenAI Edge Functions)
+## 4. 🧠 Изкуствен Интелект (Gemini Edge Functions)
 
-- [ ] Добавете вашия OpenAI API Key като тайна (Secret) в Supabase:
-      `npx supabase secrets set OPENAI_API_KEY="sk-proj-вашият-ключ"`
+- [ ] Добавете вашия Gemini (Google) API Key като тайна (Secret) в Supabase:
+      `npx supabase secrets set GEMINI_API_KEY="AIzaSy-вашият-ключ"`
 - [ ] Deploy-нете главните AI функции в облака:
       `npx supabase functions deploy create_gift_ideas`
       `npx supabase functions deploy generate_contact_gifts`
