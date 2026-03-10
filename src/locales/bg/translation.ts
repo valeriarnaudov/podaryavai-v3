@@ -75,6 +75,8 @@ export const bg = {
             addFirst: "Добави Първи Контакт",
             defaultRelationship: "Контакт",
             upgradeToAdd: "Ъпгрейд за Добавяне",
+            sortAZ: "А-Я",
+            sortZA: "Я-А",
         },
         contactForm: {
             titleEdit: "Редактирай Контакт",

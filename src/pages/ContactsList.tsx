@@ -106,8 +106,8 @@ export default function ContactsList() {
                     onChange={(e) => setSortOption(e.target.value as 'az'|'za'|'dob')}
                     className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-accent/50 cursor-pointer shadow-sm min-w-max"
                 >
-                    <option value="az">A-Z ({t('common.name', { defaultValue: 'Име' })})</option>
-                    <option value="za">Z-A ({t('common.name', { defaultValue: 'Име' })})</option>
+                    <option value="az">{t('contacts.sortAZ', { defaultValue: 'A-Z' })} ({t('common.name', { defaultValue: 'Име' })})</option>
+                    <option value="za">{t('contacts.sortZA', { defaultValue: 'Z-A' })} ({t('common.name', { defaultValue: 'Име' })})</option>
                     <option value="dob">{t('common.birthday', { defaultValue: 'Рожден Ден' })}</option>
                 </select>
 

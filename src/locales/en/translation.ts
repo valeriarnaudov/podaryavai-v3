@@ -303,6 +303,8 @@ export const en = {
             addFirst: "Add First Contact",
             defaultRelationship: "Contact",
             upgradeToAdd: "Upgrade to Add",
+            sortAZ: "A-Z",
+            sortZA: "Z-A",
             titleEdit: "Edit Contact",
             titleNew: "Add New Contact",
             firstName: "First Name",
