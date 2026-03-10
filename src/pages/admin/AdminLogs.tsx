@@ -14,11 +14,7 @@ export default function AdminLogs() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const { data } = await supabase.from('notification_logs').select(`
-                id, notification_type, trigger_days, status, sent_at,
-                users (full_name, email),
-                contacts (first_name, last_name)
-            `).order('sent_at', { ascending: false }).limit(20);
+            const { data } = await supabase.rpc('get_admin_notification_logs');
 
             if (data) {
                 setLogs(data);
@@ -67,7 +63,7 @@ export default function AdminLogs() {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-slate-900 dark:text-white text-sm">
-                                            {log.users?.full_name || log.users?.email} &rarr; {log.contacts ? `${log.contacts.first_name || ''} ${log.contacts.last_name || ''}`.trim() : 'System Account Event'}
+                                            {log.user_full_name || log.user_email} &rarr; {log.contact_name ? log.contact_name : 'System Account Event'} {log.event_title ? `(${log.event_title})` : ''}
                                         </h4>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center space-x-2">
                                             <span className="font-semibold px-2 py-0.5 bg-slate-200 dark:bg-slate-600 rounded-md text-[10px]">{log.notification_type}</span>
