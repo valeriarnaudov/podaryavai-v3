@@ -201,7 +201,7 @@ export default function ContactsList() {
             {/* Floating Add Button */}
             <button
                 onClick={handleAddContact}
-                className={`absolute bottom-6 right-6 ${isAtLimit ? 'px-6 h-14 bg-amber-500 rounded-full' : 'w-14 h-14 bg-accent rounded-full'} text-white shadow-floating flex items-center justify-center hover:scale-105 active:scale-95 transition-all outline-none font-bold`}
+                className={`fixed bottom-24 lg:bottom-8 right-6 z-40 ${isAtLimit ? 'px-6 h-14 bg-amber-500 rounded-full' : 'w-14 h-14 bg-accent rounded-full'} text-white shadow-floating flex items-center justify-center hover:scale-105 active:scale-95 transition-all outline-none font-bold`}
             >
                 {isAtLimit ? t('contacts.upgradeToAdd') : <Plus className="w-6 h-6" />}
             </button>
