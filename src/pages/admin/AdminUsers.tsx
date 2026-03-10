@@ -369,7 +369,7 @@ export default function AdminUsers() {
                                                 <div className="flex items-center justify-end space-x-2">
                                                     <button
                                                         onClick={() => toggleAdmin(user.id, user.is_admin)}
-                                                        className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100 dark:bg-slate-700' : 'text-accent hover:bg-accent/10'}`}
+                                                        className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100 dark:bg-slate-700' : 'text-accent dark:text-blue-400 hover:bg-accent/10 dark:hover:bg-blue-400/20'}`}
                                                         title={user.is_admin ? "Revoke Admin Role" : "Grant Admin Role"}
                                                     >
                                                         <ShieldAlert className="w-3.5 h-3.5" />
