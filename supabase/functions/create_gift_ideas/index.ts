@@ -16,19 +16,23 @@ serve(async (req) => {
   try {
     const { contactId, name, relationship } = await req.json();
 
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Unauthorized");
+    const jwt = authHeader.replace("Bearer ", "");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
+          headers: { Authorization: authHeader },
         },
       },
     );
 
     // Get the user making the request
     const { data: { user }, error: userError } = await supabaseClient.auth
-      .getUser();
+      .getUser(jwt);
     if (userError || !user) throw new Error("Unauthorized");
 
     // Fetch user profile for their plan

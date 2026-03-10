@@ -32,7 +32,9 @@ serve(async (req) => {
     );
 
     // Verify the user making the request explicitly without token param
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      token,
+    );
     if (userError || !user) {
       console.error("Auth Error:", userError);
       throw new Error(

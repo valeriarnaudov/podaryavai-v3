@@ -81,19 +81,20 @@ export default function Giftinder() {
                     const newCount = currentDailyCount + 1;
 
                     let currentSession = session;
-if (!currentSession) {
-  const { data: { session: s } } = await supabase.auth.getSession();
-  currentSession = s;
-}
-if (!currentSession) {
-  const errMsg = 'Auth session missing!';
-  console.error(errMsg);
-  setAiError(errMsg);
-  setLoadingGifts(false);
-  return;
-}
+                    if (!currentSession) {
+                        const { data: { session: s } } = await supabase.auth.getSession();
+                        currentSession = s;
+                    }
 
-const { error, data } = await supabase.functions.invoke('generate_daily_gifts');
+                    if (!currentSession) {
+                        const errMsg = 'Auth session missing!';
+                        console.error(errMsg);
+                        setAiError(errMsg);
+                        setLoadingGifts(false);
+                        return;
+                    }
+
+                    const { error, data } = await supabase.functions.invoke('generate_daily_gifts');
 
                     if (error) {
                         const errMsg = error.message || error.toString();
@@ -288,7 +289,7 @@ const { error, data } = await supabase.functions.invoke('generate_daily_gifts');
                         animate={{ opacity: 1, scale: 1.5, y: -100 }}
                         exit={{ opacity: 0, scale: 1, y: -150 }}
                         transition={{ duration: 1.2, ease: "easeOut" }}
-                        className="absolute inset-0 m-auto flex items-center justify-center z-50 pointer-events-none w-fit h-fit"
+                        className="absolute inset-0 m-auto flex items-center justify-center z-[200] pointer-events-none w-fit h-fit"
                     >
                         <div className="bg-rose-500 border-2 border-white shadow-2xl px-6 py-3 rounded-full flex items-center gap-2 font-black text-white text-xl">
                             <Heart className="w-6 h-6 fill-white" />

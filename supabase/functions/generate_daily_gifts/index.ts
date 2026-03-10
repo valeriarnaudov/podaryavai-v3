@@ -36,8 +36,9 @@ serve(async (req) => {
       },
     );
 
+    const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth
-      .getUser();
+      .getUser(jwt);
     if (userError || !user) {
       throw new Error(
         `Auth Error: ${userError?.message || "No user found"}`,
