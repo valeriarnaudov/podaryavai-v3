@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Search, UserMinus, ShieldAlert, RefreshCw, Edit2, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -17,6 +18,7 @@ interface UserData {
 }
 
 export default function AdminUsers() {
+    const { t } = useTranslation();
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -157,21 +159,21 @@ export default function AdminUsers() {
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center space-x-3">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Users Management</h2>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">{t('adminUsers.title')}</h2>
                         {!loading && (
                             <span className="px-3 py-1 bg-accent/10 text-accent text-sm font-bold rounded-full border border-accent/20">
-                                {users.length} Total
+                                {t('adminUsers.total', { count: users.length })}
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage all registered accounts</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('adminUsers.subtitle')}</p>
                 </div>
 
                 <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder={t('adminUsers.search')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 outline-none focus:border-slate-800 transition-colors text-sm"
@@ -191,34 +193,34 @@ export default function AdminUsers() {
                                 <tr>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('full_name')}>
                                         <div className="flex items-center space-x-1">
-                                            <span>User</span>
+                                            <span>{t('adminUsers.columns.user')}</span>
                                             <SortIcon columnKey="full_name" />
                                         </div>
                                     </th>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('karma_points')}>
                                         <div className="flex items-center space-x-1">
-                                            <span>Karma Points</span>
+                                            <span>{t('adminUsers.columns.karma')}</span>
                                             <SortIcon columnKey="karma_points" />
                                         </div>
                                     </th>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group">
                                         <div className="flex items-center space-x-1">
-                                            <span>Subscription</span>
+                                            <span>{t('adminUsers.columns.subscription')}</span>
                                         </div>
                                     </th>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('is_admin')}>
                                         <div className="flex items-center space-x-1">
-                                            <span>Role</span>
+                                            <span>{t('adminUsers.columns.role')}</span>
                                             <SortIcon columnKey="is_admin" />
                                         </div>
                                     </th>
                                     <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:bg-slate-700 transition-colors group" onClick={() => handleSort('last_giftinder_generation')}>
                                         <div className="flex items-center space-x-1">
-                                            <span>AI Filter</span>
+                                            <span>{t('adminUsers.columns.aiFilter')}</span>
                                             <SortIcon columnKey="last_giftinder_generation" />
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <th className="px-6 py-4 text-right">{t('adminUsers.columns.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -235,7 +237,7 @@ export default function AdminUsers() {
                                             className={`hover:bg-slate-50 dark:bg-slate-900 transition-colors ${user.is_banned ? 'opacity-50' : ''}`}
                                         >
                                             <td className="px-6 py-4">
-                                                <div className="font-semibold text-slate-800 dark:text-slate-100">{user.full_name || 'Anonymous'}</div>
+                                                <div className="font-semibold text-slate-800 dark:text-slate-100">{user.full_name || t('adminUsers.anonymous')}</div>
                                                 <div className="text-xs text-slate-500 dark:text-slate-400">{user.email}</div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -265,12 +267,12 @@ export default function AdminUsers() {
                                                 ) : (
                                                     <div className="flex items-center space-x-2 group">
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">
-                                                            {user.karma_points || 0} pts
+                                                            {user.karma_points || 0} {t('adminUsers.pts')}
                                                         </span>
                                                         <button
                                                             onClick={() => { setEditingKarmaId(user.id); setEditKarmaValue(user.karma_points || 0); }}
                                                             className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-                                                            title="Edit Karma"
+                                                            title={t('adminUsers.actions.editKarma')}
                                                         >
                                                             <Edit2 className="w-3.5 h-3.5" />
                                                         </button>
@@ -319,8 +321,8 @@ export default function AdminUsers() {
                                                             {(user.subscription_plan && user.subscription_plan !== 'FREE') && (
                                                                 <div className="text-[10px] text-slate-400 mt-1 font-medium">
                                                                     {user.subscription_expires_at 
-                                                                        ? `Valid til ${new Date(user.subscription_expires_at).toLocaleDateString()}` 
-                                                                        : 'Lifetime/Active'}
+                                                                        ? t('adminUsers.validTil', { date: new Date(user.subscription_expires_at).toLocaleDateString() })
+                                                                        : t('adminUsers.lifetime')}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -331,7 +333,7 @@ export default function AdminUsers() {
                                                                 setEditSubExpires(user.subscription_expires_at || '');
                                                             }}
                                                             className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                                                            title="Edit Subscription"
+                                                            title={t('adminUsers.actions.editSubscription')}
                                                         >
                                                             <Edit2 className="w-3.5 h-3.5" />
                                                         </button>
@@ -340,26 +342,26 @@ export default function AdminUsers() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 {user.is_admin ? (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-800 text-white">Admin</span>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-800 text-white">{t('adminUsers.roles.admin')}</span>
                                                 ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">User</span>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{t('adminUsers.roles.user')}</span>
                                                 )}
                                                 {user.is_banned && (
-                                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-600">Banned</span>
+                                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-600">{t('adminUsers.roles.banned')}</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center space-x-2">
                                                     {isGeneratedToday ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700">Generated</span>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700">{t('adminUsers.status.generated')}</span>
                                                     ) : (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">Ready</span>
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">{t('adminUsers.status.ready')}</span>
                                                     )}
 
                                                     <button
                                                         onClick={(e) => resetGiftinder(e, user.id)}
                                                         className="p-1.5 text-slate-400 hover:text-accent bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-accent hover:bg-accent/5 rounded-lg transition-all"
-                                                        title="Reset Daily Limit"
+                                                        title={t('adminUsers.actions.resetLimit')}
                                                     >
                                                         <RefreshCw className="w-3.5 h-3.5" />
                                                     </button>
@@ -370,15 +372,15 @@ export default function AdminUsers() {
                                                     <button
                                                         onClick={() => toggleAdmin(user.id, user.is_admin)}
                                                         className={`p-2 rounded-lg transition-colors flex items-center space-x-1 text-xs font-semibold ${user.is_admin ? 'text-slate-400 hover:bg-slate-100 dark:bg-slate-700' : 'text-accent dark:text-blue-400 hover:bg-accent/10 dark:hover:bg-blue-400/20'}`}
-                                                        title={user.is_admin ? "Revoke Admin Role" : "Grant Admin Role"}
+                                                        title={user.is_admin ? t('adminUsers.actions.revokeAdmin') : t('adminUsers.actions.grantAdmin')}
                                                     >
                                                         <ShieldAlert className="w-3.5 h-3.5" />
-                                                        <span>{user.is_admin ? "Demote" : "Make Admin"}</span>
+                                                        <span>{user.is_admin ? t('adminUsers.actions.demote') : t('adminUsers.actions.makeAdmin')}</span>
                                                     </button>
                                                     <button
                                                         onClick={() => toggleBan(user.id, user.is_banned)}
                                                         className={`p-2 rounded-lg transition-colors ${user.is_banned ? 'text-green-600 hover:bg-green-100' : 'text-red-400 hover:bg-red-50 hover:text-red-600'}`}
-                                                        title={user.is_banned ? "Unban User" : "Ban User"}
+                                                        title={user.is_banned ? t('adminUsers.actions.unban') : t('adminUsers.actions.ban')}
                                                     >
                                                         <UserMinus className="w-4 h-4" />
                                                     </button>
@@ -392,7 +394,7 @@ export default function AdminUsers() {
 
                         {sortedUsers.length === 0 && (
                             <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                                No users found matching "{searchTerm}"
+                                {t('adminUsers.noUsers', { term: searchTerm })}
                             </div>
                         )}
                     </div>
