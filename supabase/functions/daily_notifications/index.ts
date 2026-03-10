@@ -32,6 +32,25 @@ Deno.serve(async (req: Request) => {
 
     console.log("Starting Daily Notifications Job via CRON...", { forceTest });
 
+    const debugLogs: string[] = [];
+    let notificationsSent = 0;
+
+    // DOWNGRADE EXPIRED SUBSCRIPTIONS
+    const { data: expiredUsers, error: expireError } = await supabase
+      .from("users")
+      .update({ subscription_plan: "FREE", subscription_expires_at: null })
+      .lt("subscription_expires_at", new Date().toISOString())
+      .neq("subscription_plan", "FREE")
+      .select("id, email");
+
+    if (expireError) {
+      console.error("Failed to downgrade expired subscriptions:", expireError);
+    } else if (expiredUsers && expiredUsers.length > 0) {
+      const msg = `Downgraded ${expiredUsers.length} users to FREE plan.`;
+      console.log(msg);
+      debugLogs.push(msg);
+    }
+
     const { data: templates, error: templatesError } = await supabase
       .from("email_templates")
       .select("*")
@@ -41,15 +60,17 @@ Deno.serve(async (req: Request) => {
 
     // If no templates are active, we can skip processing
     if (!templates || templates.length === 0) {
-      console.log("No active email templates found. Exiting early.");
+      console.log("No active email templates found. Exiting emails early.");
       return new Response(
-        JSON.stringify({ success: true, message: "No active templates." }),
+        JSON.stringify({
+          success: true,
+          message: "No active templates.",
+          debugLogs,
+        }),
         { headers: corsHeaders },
       );
     }
 
-    let notificationsSent = 0;
-    const debugLogs: string[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
