@@ -18,8 +18,8 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing Authorization header in request");
 
-    const jwt = authHeader.replace("Bearer ", "");
-
+    // Suppress unused variable error if jwt was removed
+    // We let supabaseClient handle auth via the Authorization header
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -32,12 +32,10 @@ serve(async (req) => {
 
     // Verify user authentication
     const { data: { user }, error: authError } = await supabaseClient.auth
-      .getUser(jwt);
+      .getUser();
     if (authError || !user) {
       throw new Error(
-        `Unauthorized (Invalid JWT): ${
-          authError?.message || "No User Object Found"
-        } (Token Length: ${jwt.length})`,
+        `Unauthorized: ${authError?.message || "No User Object Found"}`,
       );
     }
 

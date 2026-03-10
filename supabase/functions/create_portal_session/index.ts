@@ -33,9 +33,7 @@ serve(async (req) => {
     );
 
     // Verify the user making the request
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      token,
-    );
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
       throw new Error(
