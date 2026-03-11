@@ -7,6 +7,7 @@ export default function AdminLogs() {
     const [activeTab, setActiveTab] = useState<'notifications' | 'karma'>('notifications');
     const [logs, setLogs] = useState<any[]>([]);
     const [karmaLogs, setKarmaLogs] = useState<any[]>([]);
+    const [karmaTimeFilter, setKarmaTimeFilter] = useState<'30' | '7' | 'today'>('30');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -15,7 +16,7 @@ export default function AdminLogs() {
         } else {
             fetchKarmaLogs();
         }
-    }, [activeTab]);
+    }, [activeTab, karmaTimeFilter]);
 
     const fetchNotifications = async () => {
         setLoading(true);
@@ -32,6 +33,15 @@ export default function AdminLogs() {
     const fetchKarmaLogs = async () => {
         setLoading(true);
         try {
+            let startDate = new Date();
+            if (karmaTimeFilter === '30') {
+                startDate.setDate(startDate.getDate() - 30);
+            } else if (karmaTimeFilter === '7') {
+                startDate.setDate(startDate.getDate() - 7);
+            } else if (karmaTimeFilter === 'today') {
+                startDate.setHours(0, 0, 0, 0);
+            }
+
             const { data, error } = await supabase
                 .from('user_karma_history')
                 .select(`
@@ -42,8 +52,9 @@ export default function AdminLogs() {
                     created_at,
                     users ( full_name, email )
                 `)
+                .gte('created_at', startDate.toISOString())
                 .order('created_at', { ascending: false })
-                .limit(100);
+                .limit(200);
                 
             if (error) throw error;
             if (data) setKarmaLogs(data);
@@ -82,10 +93,24 @@ export default function AdminLogs() {
                         {activeTab === 'karma' && <motion.div layoutId="activetab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />}
                     </button>
                 </div>
-                <button onClick={refreshData} className="text-sm font-semibold text-accent hover:underline flex items-center">
+                <button onClick={refreshData} className="text-sm font-semibold text-accent hover:underline flex items-center shrink-0">
                     Refresh
                 </button>
             </div>
+
+            {activeTab === 'karma' && (
+                <div className="flex space-x-2 mb-6 sm:justify-end">
+                    {(['today', '7', '30'] as const).map(filter => (
+                        <button
+                            key={filter}
+                            onClick={() => setKarmaTimeFilter(filter)}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${karmaTimeFilter === filter ? 'bg-accent text-white shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-700'}`}
+                        >
+                            {filter === 'today' ? 'Днес' : `Последни ${filter} дни`}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-600 shadow-sm min-h-[400px]">
                 {loading ? (

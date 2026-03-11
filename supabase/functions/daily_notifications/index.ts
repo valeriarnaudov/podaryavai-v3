@@ -51,6 +51,25 @@ Deno.serve(async (req: Request) => {
       debugLogs.push(msg);
     }
 
+    // CLEANUP OLD KARMA HISTORY (older than 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { error: cleanupError, count: cleanupCount } = await supabase
+      .from("user_karma_history")
+      .delete({ count: "exact" })
+      .lt("created_at", thirtyDaysAgo.toISOString());
+
+    if (cleanupError) {
+      const msg =
+        `Failed to cleanup old karma history: ${cleanupError.message}`;
+      console.error(msg);
+      debugLogs.push(msg);
+    } else {
+      const msg = `Cleaned up ${cleanupCount || 0} old karma history records.`;
+      console.log(msg);
+      debugLogs.push(msg);
+    }
+
     const { data: templates, error: templatesError } = await supabase
       .from("email_templates")
       .select("*")
@@ -184,10 +203,14 @@ Deno.serve(async (req: Request) => {
           });
 
           if (!resendResponse.ok) {
-            console.error(
-              `Resend API failed for ${type}:`,
-              await resendResponse.text(),
-            );
+            const errBody = await resendResponse.text();
+            let errMsg = `Resend API failed for ${type}: ${errBody}`;
+            if (errBody.includes("verify a domain")) {
+              errMsg +=
+                " -> NOTICE: Free Resend accounts can ONLY send to the registered verified email. Verify a domain in Resend to send to others!";
+            }
+            console.error(errMsg);
+            debugLogs.push(errMsg);
             return;
           }
 
@@ -375,7 +398,11 @@ Deno.serve(async (req: Request) => {
 
           if (!resendResponse.ok) {
             const errBody = await resendResponse.text();
-            const errMsg = `Resend API dropped the request: ${errBody}`;
+            let errMsg = `Resend API dropped the request: ${errBody}`;
+            if (errBody.includes("verify a domain")) {
+              errMsg +=
+                " -> NOTICE: Free Resend accounts can ONLY send to the registered verified email. Verify a domain in Resend to send to others!";
+            }
             console.error(errMsg);
             debugLogs.push(errMsg);
             continue; // Skip inserting the log if the email strictly failed
