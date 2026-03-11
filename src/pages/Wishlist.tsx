@@ -469,16 +469,16 @@ function WishlistItemCard({ item, i, removeItem, archiveItem }: { item: Wishlist
                                 href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.title)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-center space-x-1 text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 py-1.5 rounded-lg hover:bg-slate-200 dark:bg-slate-600 transition-colors shadow-sm font-semibold"
+                                className="flex items-center justify-center space-x-1 text-[10px] sm:text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 py-1.5 px-1 rounded-lg hover:bg-slate-200 dark:bg-slate-600 transition-colors shadow-sm font-semibold truncate"
                             >
-                                <span>{t('wishlist.searchOnline')}</span>
+                                <span className="truncate">{t('wishlist.searchOnline')}</span>
                             </a>
                             <button
                                 onClick={handleArchive}
                                 disabled={archiving}
-                                className="flex items-center justify-center space-x-1 text-[10px] text-white bg-green-500 py-1.5 rounded-lg hover:bg-green-600 transition-colors shadow-sm font-bold uppercase tracking-wide disabled:opacity-50 mt-1"
+                                className="flex items-center justify-center space-x-1 text-[9px] sm:text-[10px] text-white bg-green-500 py-1.5 px-1 rounded-lg hover:bg-green-600 transition-colors shadow-sm font-bold uppercase tracking-normal sm:tracking-wide disabled:opacity-50 mt-1 truncate"
                             >
-                                {archiving ? <Loader2 className="w-3 h-3 animate-spin"/> : <><CheckCircle2 className="w-3 h-3" /><span>{t('wishlist.archiveFound', { defaultValue: 'Archive (I got it)' })}</span></>}
+                                {archiving ? <Loader2 className="w-3 h-3 animate-spin shrink-0"/> : <><CheckCircle2 className="w-3 h-3 shrink-0" /><span className="truncate">{t('wishlist.archiveFound', { defaultValue: 'Archive (I got it)' })}</span></>}
                             </button>
                         </>
                     )}

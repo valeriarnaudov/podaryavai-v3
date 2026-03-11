@@ -217,10 +217,10 @@ export default function Giftinder() {
                 </div>
             </header>
 
-            <div className="relative flex-1 flex items-center justify-center w-full max-w-sm mx-auto">
+            <div className="relative flex-1 flex w-full max-w-sm mx-auto h-full">
                 <AnimatePresence>
                     {loadingGifts ? (
-                        <div className="flex flex-col items-center justify-center text-slate-400">
+                        <div className="flex flex-col items-center justify-center text-slate-400 w-full h-full">
                             <Loader2 className="w-10 h-10 mb-4 animate-spin text-accent" />
                             <p className="font-medium">{t('giftinder.findingGifts')}</p>
                         </div>
@@ -228,7 +228,7 @@ export default function Giftinder() {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-center text-slate-500 dark:text-slate-400"
+                            className="text-center text-slate-500 dark:text-slate-400 w-full flex flex-col justify-center items-center h-full"
                         >
                             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Heart className="w-8 h-8 text-slate-300" />
@@ -249,36 +249,32 @@ export default function Giftinder() {
                             if (!isActive) return null; // Only render the top active card
 
                             return (
-                                <SwipeableCard
-                                    key={`active-${card.id}`}
-                                    card={card}
-                                    onSwipe={(dir) => handleSwipe(dir, card.id)}
-                                    // Make sure active card is ALWAYS on top
-                                    style={{ zIndex: 100 }}
-                                />
+                                <div key={`active-${card.id}`} className="absolute top-0 left-0 w-full h-full pb-4 z-[100]">
+                                    <SwipeableCard
+                                        card={card}
+                                        onSwipe={(dir) => handleSwipe(dir, card.id)}
+                                    />
+                                    {/* Overlay controls for manual tap on top of the card but absolute */}
+                                    <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center space-x-6 z-10 pointer-events-none">
+                                        <button
+                                            onClick={() => handleSwipe('left', card.id)}
+                                            className="w-14 h-14 bg-white/90 backdrop-blur-md dark:bg-slate-800/90 rounded-full flex items-center justify-center text-slate-400 shadow-xl border border-slate-200/50 dark:border-slate-700/50 pointer-events-auto active:scale-90 transition-all hover:scale-105"
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleSwipe('right', card.id)}
+                                            className="w-16 h-16 bg-white/90 backdrop-blur-md dark:bg-slate-800/90 rounded-full flex items-center justify-center text-rose-500 shadow-xl border border-slate-200/50 dark:border-slate-700/50 pointer-events-auto active:scale-90 transition-all hover:scale-105"
+                                        >
+                                            <Heart className="w-8 h-8 fill-rose-100" />
+                                        </button>
+                                    </div>
+                                </div>
                             );
                         })
                     )}
                 </AnimatePresence>
             </div>
-
-            {/* Lower controls for manual tap */}
-            {cards.length > 0 && (
-                <div className="flex justify-center items-center space-x-8 mt-6 mb-8">
-                    <button
-                        onClick={() => handleSwipe('left', cards[activeIndex].id)}
-                        className="w-14 h-14 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 shadow-floating active:scale-95 transition-transform"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                    <button
-                        onClick={() => handleSwipe('right', cards[activeIndex].id)}
-                        className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-rose-500 shadow-floating active:scale-95 transition-transform"
-                    >
-                        <Heart className="w-8 h-8 fill-rose-100" />
-                    </button>
-                </div>
-            )}
 
             {/* Giant Central Floating Karma Animation */}
             <AnimatePresence>
@@ -306,13 +302,17 @@ export default function Giftinder() {
 function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir: 'left' | 'right') => void, style?: any }) {
     const { t } = useTranslation();
     const x = useMotionValue(0);
-    const rotate = useTransform(x, [-200, 200], [-10, 10]);
-    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+    const rotate = useTransform(x, [-250, 250], [-15, 15]);
+    const opacity = useTransform(x, [-250, -150, 0, 150, 250], [0, 1, 1, 1, 0]);
 
     const handleDragEnd = (_: any, info: any) => {
-        if (info.offset.x > 100) {
+        const offset = info.offset.x;
+        const velocity = info.velocity.x;
+        
+        // Require a definite swipe (either far enough or fast enough)
+        if (offset > 120 || velocity > 500) {
             onSwipe('right');
-        } else if (info.offset.x < -100) {
+        } else if (offset < -120 || velocity < -500) {
             onSwipe('left');
         }
     };
@@ -321,16 +321,17 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
         <motion.div
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.8}
             onDragEnd={handleDragEnd}
             style={{ x, rotate, opacity, ...style }}
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
-            className="absolute w-full h-[70dvh] max-h-[600px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50 dark:border-slate-700/50 flex flex-col"
+            className="absolute w-full h-full bg-white dark:bg-slate-800 rounded-3xl shadow-floating overflow-hidden cursor-grab active:cursor-grabbing border border-slate-100/50 dark:border-slate-700/50 flex flex-col pb-20"
         >
             {/* Image Container with Fallback Gradient */}
             <div
-                className="relative w-full h-[50%] shrink-0 bg-slate-200 dark:bg-slate-600 overflow-hidden rounded-t-[2rem]"
+                className="relative w-full h-[55%] shrink-0 bg-slate-200 dark:bg-slate-600 overflow-hidden rounded-t-3xl"
                 style={{
                     background: `linear-gradient(135deg, hsl(${card.title.length * 15 % 360}, 70%, 60%), hsl(${(card.title.length * 15 + 40) % 360}, 70%, 40%))`
                 }}
@@ -346,24 +347,24 @@ function SwipeableCard({ card, onSwipe, style = {} }: { card: any, onSwipe: (dir
                 />
             </div>
             
-            <div className="p-6 h-[50%] flex flex-col justify-start overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-white dark:bg-slate-800">
+            <div className="p-5 h-[45%] flex flex-col justify-start overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-white dark:bg-slate-800">
                 <div className="mb-2 shrink-0">
                     <h2 className="text-xl md:text-2xl font-bold leading-tight text-slate-800 dark:text-slate-100 line-clamp-2 md:line-clamp-3 mb-1">{card.title}</h2>
                     <p className="text-lg font-bold text-accent dark:text-emerald-400">{card.price}</p>
                 </div>
                 {card.desc && card.desc !== 'No description available.' && (
-                    <p className="text-slate-600 dark:text-slate-300 leading-snug font-medium text-xs md:text-sm mt-1 mb-auto shrink-0 pb-2">"{card.desc}"</p>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium text-xs md:text-sm mt-1 mb-auto pb-6">"{card.desc}"</p>
                 )}
-                <div className="flex items-center space-x-2 mt-auto pt-2 shrink-0">
-                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl flex items-center space-x-3 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                            <span className="text-accent text-xs font-bold">AI</span>
+                <div className="flex items-center space-x-2 mt-auto pt-2 shrink-0 pointer-events-none">
+                    <div className="bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-xl flex items-center space-x-2 flex-1">
+                        <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                            <span className="text-accent text-[10px] font-bold">AI</span>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{t('giftinder.aiSuggested')}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">{t('giftinder.aiSuggested')}</p>
                     </div>
                     {card.isVip && (
-                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 p-4 rounded-2xl flex items-center justify-center shadow-md">
-                            <span className="text-white text-xs font-bold tracking-widest uppercase">VIP</span>
+                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 rounded-xl flex items-center justify-center shadow-md">
+                            <span className="text-white text-[10px] font-bold tracking-widest uppercase">VIP</span>
                         </div>
                     )}
                 </div>

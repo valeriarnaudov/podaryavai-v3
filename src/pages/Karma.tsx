@@ -189,17 +189,17 @@ export default function Karma() {
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-textMain dark:text-white">{reward.title}</h4>
-                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-semibold">
-                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">{t('karmaStore.costPoints', { points: reward.cost_points })}</span>
+                                                <div className="flex flex-wrap items-center gap-2 gap-y-1.5 mt-2 text-[10px] sm:text-xs font-semibold">
+                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md whitespace-nowrap">{t('karmaStore.costPoints', { points: reward.cost_points })}</span>
                                                     
-                                                    <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md">
+                                                    <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md whitespace-nowrap">
                                                         {reward.reward_type === 'PLAN_UPGRADE' ? `${t('karmaStore.unlocks')}: ${reward.reward_value}` : 
                                                          reward.reward_type === 'ADD_FREE_DELIVERIES' ? t('karmaStore.deliveries', { amount: reward.reward_metadata?.amount || 1 }) : 
                                                          reward.reward_type.replace(/_/g, ' ')}
                                                     </span>
 
                                                     {reward.duration_days > 0 && (
-                                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md">{t('karmaStore.days', { days: reward.duration_days })}</span>
+                                                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-md whitespace-nowrap">{t('karmaStore.days', { days: reward.duration_days })}</span>
                                                     )}
                                                 </div>
                                                 {reward.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{reward.description}</p>}

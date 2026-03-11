@@ -404,18 +404,18 @@ export default function Profile() {
                 <AnimatePresence mode="wait">
                     {!isEditing ? (
                         <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl">
                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><User className="w-3 h-3 mr-1" /> {t('profile.fullName')}</p>
-                                    <p className="font-semibold text-textMain dark:text-white">{displayFullName || '-'}</p>
+                                    <p className="font-semibold text-textMain dark:text-white break-words">{displayFullName || '-'}</p>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl">
                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> {t('profile.dob')}</p>
-                                    <p className="font-semibold text-textMain dark:text-white">{dob || '-'}</p>
+                                    <p className="font-semibold text-textMain dark:text-white break-words">{dob || '-'}</p>
                                 </div>
-                                <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl col-span-2">
+                                <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl sm:col-span-2">
                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center"><Mail className="w-3 h-3 mr-1" /> {t('profile.emailAddress')}</p>
-                                    <p className="font-semibold text-textMain dark:text-white">{email}</p>
+                                    <p className="font-semibold text-textMain dark:text-white break-words">{email}</p>
                                 </div>
                             </div>
                             
