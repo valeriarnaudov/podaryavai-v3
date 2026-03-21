@@ -308,29 +308,63 @@ Deno.serve(async (req: Request) => {
       contacts: { id: string; first_name: string; last_name: string };
     };
 
-    const events = data as unknown as JoinedEvent[];
+    const rawEvents = data as unknown as JoinedEvent[];
 
-    for (const event of (events || [])) {
-      if (!event.event_date) continue;
-
-      // event_date format is YYYY-MM-DD
+    const parsedEvents = rawEvents.map(event => {
+      if (!event.event_date) return null;
       const parts = event.event_date.split("-");
-      if (parts.length !== 3) continue;
+      if (parts.length !== 3) return null;
 
       const eventDate = new Date(
         parseInt(parts[0]),
         parseInt(parts[1]) - 1,
         parseInt(parts[2]),
       );
-      eventDate.setHours(0, 0, 0, 0); // ensure midnight local
+      eventDate.setHours(0, 0, 0, 0); 
       eventDate.setFullYear(today.getFullYear());
 
-      // If the event year already passed this year, push it to next year
       if (eventDate.getTime() < today.getTime()) {
         eventDate.setFullYear(today.getFullYear() + 1);
       }
+      return { ...event, virtualDate: eventDate };
+    }).filter(Boolean) as (JoinedEvent & { virtualDate: Date })[];
 
-      const diffTime = eventDate.getTime() - today.getTime();
+    const eventsByContact = parsedEvents.reduce((acc, curr) => {
+      const cid = curr.contact_id || `no-contact-${curr.id}`;
+      if (!acc[cid]) acc[cid] = [];
+      acc[cid].push(curr);
+      return acc;
+    }, {} as Record<string, (JoinedEvent & { virtualDate: Date })[]>);
+
+    const mergedEvents: (JoinedEvent & { virtualDate: Date, originalIds: string[] })[] = [];
+
+    for (const cid in eventsByContact) {
+      const cEvents = eventsByContact[cid].sort((a, b) => a.virtualDate.getTime() - b.virtualDate.getTime());
+      
+      let currentGroup: (JoinedEvent & { virtualDate: Date, originalIds: string[] }) | null = null;
+      
+      for (const ev of cEvents) {
+        if (!currentGroup) {
+          currentGroup = { ...ev, originalIds: [ev.id] };
+        } else {
+          const diffDays = Math.abs(ev.virtualDate.getTime() - currentGroup.virtualDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays <= 7) {
+            const cleanTitle = ev.title.replace('Имен Ден на', 'Имен Ден').replace('Рожден Ден на', 'Рожден Ден').trim();
+            if (!currentGroup.title.includes(cleanTitle)) {
+              currentGroup.title = `${currentGroup.title} и ${cleanTitle}`;
+            }
+            currentGroup.originalIds.push(ev.id);
+          } else {
+            mergedEvents.push(currentGroup);
+            currentGroup = { ...ev, originalIds: [ev.id] };
+          }
+        }
+      }
+      if (currentGroup) mergedEvents.push(currentGroup);
+    }
+
+    for (const event of mergedEvents) {
+      const diffTime = event.virtualDate.getTime() - today.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
       // Find if there's an active template matching the exact days offset
@@ -339,7 +373,7 @@ Deno.serve(async (req: Request) => {
       );
 
       const logStr =
-        `[Event Check] Event: ${event.title} | EventDate: ${eventDate.toISOString()} | diffTime: ${diffTime} | diffDays: ${diffDays} | MatchedTemplate: ${
+        `[Event Check] Event(s): ${event.title} | EventDate: ${event.virtualDate.toISOString()} | diffDays: ${diffDays} | MatchedTemplate: ${
           matchedTemplate ? matchedTemplate.name : "None"
         }`;
       console.log(logStr);
@@ -408,21 +442,21 @@ Deno.serve(async (req: Request) => {
             continue; // Skip inserting the log if the email strictly failed
           }
 
-          const { error: insertError } = await supabase.from(
-            "notification_logs",
-          ).insert({
+          const logsToInsert = event.originalIds.map(oId => ({
             user_id: event.user_id,
-            event_id: event.id,
+            event_id: oId,
             contact_id: event.contact_id,
             notification_type: "EMAIL",
             trigger_days: diffDays,
             status: "SENT",
-          });
+          }));
+
+          const { error: insertError } = await supabase.from("notification_logs").insert(logsToInsert);
 
           if (!insertError) {
             notificationsSent++;
           } else {
-            const errMsg = `Failed to insert log: ${
+            const errMsg = `Failed to insert logs: ${
               JSON.stringify(insertError)
             }`;
             console.error(errMsg);

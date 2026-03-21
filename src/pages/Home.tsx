@@ -174,7 +174,74 @@ export default function Home() {
                 }
             }
 
-            setEvents(parsedEvents);
+            // --- EVENT DEDUPLICATION LOGIC ---
+            const finalEvents: Event[] = [];
+            const accountEvents = parsedEvents.filter(e => !e.contacts);
+            const contactEvents = parsedEvents.filter(e => e.contacts);
+
+            // Group by contact id
+            const eventsByContact = contactEvents.reduce((acc, curr) => {
+                const cid = curr.contacts!.id;
+                if (!acc[cid]) acc[cid] = [];
+                acc[cid].push(curr);
+                return acc;
+            }, {} as Record<string, Event[]>);
+
+            for (const cid in eventsByContact) {
+                // Sort chronologically ascending
+                const cEvents = eventsByContact[cid].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
+                
+                let currentGroup: Event | null = null;
+                for (const ev of cEvents) {
+                    if (!currentGroup) {
+                        currentGroup = { ...ev };
+                    } else {
+                        const diffTime = new Date(ev.event_date).getTime() - new Date(currentGroup.event_date).getTime();
+                        const diffDays = Math.abs(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        // If within 7 days, merge into currentGroup
+                        if (diffDays <= 7) {
+                            const cleanTitle = ev.title.replace('Имен Ден на', 'Имен Ден').replace('Рожден Ден на', 'Рожден Ден').trim();
+                            if (!currentGroup.title.includes(cleanTitle)) {
+                                currentGroup.title = `${currentGroup.title} и ${cleanTitle}`;
+                            }
+                            if (ev.holiday && !currentGroup.holiday?.includes(ev.holiday)) {
+                                currentGroup.holiday = currentGroup.holiday ? `${currentGroup.holiday} / ${ev.holiday}` : ev.holiday;
+                            }
+                        } else {
+                            finalEvents.push(currentGroup);
+                            currentGroup = { ...ev };
+                        }
+                    }
+                }
+                if (currentGroup) finalEvents.push(currentGroup);
+            }
+
+            // Do the same for Account events
+            const sortedAccountEvents = accountEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
+            let currentAccGroup: Event | null = null;
+            for (const ev of sortedAccountEvents) {
+                if (!currentAccGroup) {
+                    currentAccGroup = { ...ev };
+                } else {
+                    const diffTime = new Date(ev.event_date).getTime() - new Date(currentAccGroup.event_date).getTime();
+                    const diffDays = Math.abs(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 7) {
+                        if (!currentAccGroup.title.includes(ev.title)) {
+                            currentAccGroup.title = `${currentAccGroup.title} и ${ev.title}`;
+                        }
+                        if (ev.holiday && !currentAccGroup.holiday?.includes(ev.holiday)) {
+                            currentAccGroup.holiday = currentAccGroup.holiday ? `${currentAccGroup.holiday} / ${ev.holiday}` : ev.holiday;
+                        }
+                    } else {
+                        finalEvents.push(currentAccGroup);
+                        currentAccGroup = { ...ev };
+                    }
+                }
+            }
+            if (currentAccGroup) finalEvents.push(currentAccGroup);
+
+            setEvents(finalEvents);
         } catch (error) {
             console.error('Error fetching events:', error);
         } finally {
