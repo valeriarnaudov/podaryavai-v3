@@ -123,18 +123,62 @@ export default function NewContact() {
 
             if (contactError) throw contactError;
 
-            // 2. Create the Birthday Event for this contact
-            const { error: eventError } = await supabase.from('events').insert({
-                user_id: user.id,
-                contact_id: contact.id,
-                title: 'Birthday',
-                event_type: 'BIRTHDAY',
-                event_date: birthday
-            });
+            // 2. Create the automatic Events for this contact
+            const currentYear = new Date().getFullYear();
+            const eventsToInsert = [];
+            
+            if (birthday) {
+                eventsToInsert.push({
+                    user_id: user.id,
+                    contact_id: contact.id,
+                    title: 'Рожден Ден',
+                    event_type: 'BIRTHDAY',
+                    event_date: birthday
+                });
+            }
 
-            if (eventError) {
-                console.error("Birthday event error:", eventError);
-                // Non-fatal, but we should log it.
+            // Gender detection: ends with 'а', 'я', 'a', 'ya', 'ia', 'e'
+            const cleanFirstName = firstName.trim().toLowerCase();
+            const isFemale = /[аяae]$/i.test(cleanFirstName) || cleanFirstName.endsWith('ya') || cleanFirstName.endsWith('ia');
+
+            if (relationship === 'Family' || relationship === 'Partner') {
+                // Christmas
+                eventsToInsert.push({
+                    user_id: user.id,
+                    contact_id: contact.id,
+                    title: t('events.christmas', { defaultValue: 'Коледа' }),
+                    event_type: 'CHRISTMAS',
+                    event_date: `${currentYear}-12-25`
+                });
+
+                // Women's Day (8th March) if female
+                if (isFemale) {
+                    eventsToInsert.push({
+                        user_id: user.id,
+                        contact_id: contact.id,
+                        title: t('events.womensDay', { defaultValue: 'Ден на жената (8ми март)' }),
+                        event_type: 'WOMENS_DAY',
+                        event_date: `${currentYear}-03-08`
+                    });
+                }
+            }
+
+            if (relationship === 'Partner') {
+                // Valentine's Day
+                eventsToInsert.push({
+                    user_id: user.id,
+                    contact_id: contact.id,
+                    title: t('events.valentines', { defaultValue: 'Свети Валентин' }),
+                    event_type: 'VALENTINES_DAY',
+                    event_date: `${currentYear}-02-14`
+                });
+            }
+
+            if (eventsToInsert.length > 0) {
+                const { error: eventError } = await supabase.from('events').insert(eventsToInsert);
+                if (eventError) {
+                    console.error("Events insert error:", eventError);
+                }
             }
 
             // 3. Add Karma points (gamification)

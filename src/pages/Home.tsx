@@ -104,7 +104,7 @@ export default function Home() {
 
             // Map the events to create virtual occurrences for the current year
             const parsedEvents = (data as unknown as Event[]).map((e) => {
-                if (['BIRTHDAY', 'NAME_DAY', 'ANNIVERSARY'].includes(e.event_type)) {
+                if (['BIRTHDAY', 'NAME_DAY', 'ANNIVERSARY', 'CHRISTMAS', 'WOMENS_DAY', 'VALENTINES_DAY'].includes(e.event_type)) {
                     // It's a recurring event, so force it into the currently viewed year
                     const originalDate = new Date(e.event_date);
                     const virtualDate = new Date(currentViewYear, originalDate.getMonth(), originalDate.getDate());
@@ -392,6 +392,58 @@ export default function Home() {
         .sort((a, b) => a.event_date.localeCompare(b.event_date))
         .slice(0, 3);
 
+    const getEventTextColor = (type: string) => {
+        switch(type) {
+            case 'AI_NAME_DAY': return 'text-purple-500';
+            case 'ACCOUNT_BIRTHDAY': return 'text-amber-500';
+            case 'ACCOUNT_NAME_DAY': return 'text-blue-500';
+            case 'CHRISTMAS': return 'text-emerald-500';
+            case 'WOMENS_DAY': return 'text-fuchsia-500';
+            case 'VALENTINES_DAY': return 'text-rose-500';
+            case 'BIRTHDAY': return 'text-rose-500';
+            default: return 'text-rose-500';
+        }
+    };
+
+    const getEventBgColor = (type: string) => {
+        switch(type) {
+            case 'AI_NAME_DAY': return 'bg-purple-100 text-purple-600';
+            case 'ACCOUNT_BIRTHDAY': return 'bg-amber-100 text-amber-600';
+            case 'ACCOUNT_NAME_DAY': return 'bg-blue-100 text-blue-600';
+            case 'CHRISTMAS': return 'bg-emerald-100 text-emerald-600';
+            case 'WOMENS_DAY': return 'bg-fuchsia-100 text-fuchsia-600';
+            case 'VALENTINES_DAY': return 'bg-rose-100 text-rose-600';
+            case 'BIRTHDAY': return 'bg-rose-100 text-rose-600';
+            default: return 'bg-rose-100 text-rose-600';
+        }
+    };
+
+    const getEventSmallBgColor = (type: string) => {
+        switch(type) {
+            case 'AI_NAME_DAY': return 'bg-purple-50 text-purple-600';
+            case 'ACCOUNT_BIRTHDAY': return 'bg-amber-50 text-amber-500';
+            case 'ACCOUNT_NAME_DAY': return 'bg-blue-50 text-blue-500';
+            case 'CHRISTMAS': return 'bg-emerald-50 text-emerald-500';
+            case 'WOMENS_DAY': return 'bg-fuchsia-50 text-fuchsia-500';
+            case 'VALENTINES_DAY': return 'bg-rose-50 text-rose-500';
+            case 'BIRTHDAY': return 'bg-rose-50 text-rose-500';
+            default: return 'bg-rose-50 text-rose-500';
+        }
+    };
+
+    const getEventLabel = (type: string) => {
+        switch(type) {
+            case 'AI_NAME_DAY': return t('home.nameDayAI');
+            case 'ACCOUNT_BIRTHDAY': return '🎂 ' + t('home.myBirthday', { defaultValue: 'Моят Рожден Ден' });
+            case 'ACCOUNT_NAME_DAY': return '✨ ' + t('home.myNameDay', { defaultValue: 'Моят Имен Ден' });
+            case 'CHRISTMAS': return '🎄 ' + t('events.christmas', { defaultValue: 'Коледа' });
+            case 'WOMENS_DAY': return '💐 ' + t('events.womensDay', { defaultValue: 'Ден на жената' });
+            case 'VALENTINES_DAY': return '❤️ ' + t('events.valentines', { defaultValue: 'Свети Валентин' });
+            case 'BIRTHDAY': return '🎂 ' + t('events.birthday', { defaultValue: 'Рожден Ден' });
+            default: return type;
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -517,15 +569,15 @@ export default function Home() {
                                 )}
                                 <div className="relative z-10 flex items-center justify-between">
                                     <div>
-                                        <p className={`text-sm font-semibold mb-1 ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'text-blue-500' : 'text-rose-500'}`}>
-                                            {event.event_type === 'AI_NAME_DAY' ? t('home.nameDayAI') : event.event_type === 'ACCOUNT_BIRTHDAY' ? '🎂 ' + t('home.myBirthday', { defaultValue: 'Рожден Ден' }) : event.event_type === 'ACCOUNT_NAME_DAY' ? '✨ ' + t('home.myNameDay', { defaultValue: 'Имен Ден' }) : event.event_type}
+                                        <p className={`text-sm font-semibold mb-1 ${getEventTextColor(event.event_type)}`}>
+                                            {getEventLabel(event.event_type)}
                                         </p>
                                         <h3 className="text-lg font-bold text-textMain dark:text-white">
                                             {event.title} {event.contacts ? `- ${event.contacts.first_name} ${event.contacts.last_name}` : ''}
                                         </h3>
                                         {event.holiday && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{event.holiday}</p>}
                                     </div>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-100 text-purple-600' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'bg-amber-100 text-amber-600' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg overflow-hidden shadow-sm ${getEventBgColor(event.event_type)}`}>
                                         {event.contacts?.avatar_url || ((event.event_type === 'ACCOUNT_BIRTHDAY' || event.event_type === 'ACCOUNT_NAME_DAY') && user?.user_metadata?.avatar_url) ? (
                                             <img src={(event.contacts?.avatar_url || user?.user_metadata?.avatar_url) as string} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -640,7 +692,7 @@ export default function Home() {
                                 className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                             >
                                 <div className="flex items-center space-x-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${event.event_type === 'AI_NAME_DAY' ? 'bg-purple-50 text-purple-600' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'bg-amber-50 text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 ${getEventSmallBgColor(event.event_type)}`}>
                                         {event.contacts?.avatar_url || ((event.event_type === 'ACCOUNT_BIRTHDAY' || event.event_type === 'ACCOUNT_NAME_DAY') && user?.user_metadata?.avatar_url) ? (
                                             <img src={(event.contacts?.avatar_url || user?.user_metadata?.avatar_url) as string} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
@@ -651,7 +703,7 @@ export default function Home() {
                                         <h4 className="font-semibold text-textMain dark:text-white text-sm">
                                             {event.title} {event.contacts ? `- ${event.contacts.first_name} ${event.contacts.last_name}` : ''}
                                         </h4>
-                                        <p className={`text-xs font-medium capitalize ${event.event_type === 'AI_NAME_DAY' ? 'text-purple-500' : event.event_type === 'ACCOUNT_BIRTHDAY' ? 'text-amber-500' : event.event_type === 'ACCOUNT_NAME_DAY' ? 'text-blue-500' : 'text-rose-500'}`}>
+                                        <p className={`text-xs font-medium capitalize ${getEventTextColor(event.event_type)}`}>
                                             {new Date(event.event_date).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>
