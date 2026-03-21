@@ -84,10 +84,15 @@ export default function Karma() {
         if (historyLogs.length > 0) return; // Prevent over-fetching
 
         setLoadingHistory(true);
+        // We only want to show:
+        // 1) Purchases (SPENT)
+        // 2) Referral Bonuses (description = 'Referral Bonus')
+        // 3) 7-Day Streaks (description = '7-Day Streak Reward')
         const { data } = await supabase
             .from('user_karma_history')
             .select('*')
             .eq('user_id', user?.id)
+            .or('action_type.eq.SPENT,description.eq."Referral Bonus",description.eq."7-Day Streak Reward"')
             .order('created_at', { ascending: false })
             .limit(20);
         
