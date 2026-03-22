@@ -5,6 +5,7 @@ import { useAuth } from '../lib/AuthContext';
 import { useSettings } from '../lib/SettingsContext';
 import { ArrowLeft, Loader2, Camera, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { detectGenderAI } from '../lib/genderDetection';
 
 export default function NewContact() {
     const navigate = useNavigate();
@@ -137,9 +138,8 @@ export default function NewContact() {
                 });
             }
 
-            // Gender detection: ends with 'а', 'я', 'a', 'ya', 'ia', 'e'
-            const cleanFirstName = firstName.trim().toLowerCase();
-            const isFemale = /[аяae]$/i.test(cleanFirstName) || cleanFirstName.endsWith('ya') || cleanFirstName.endsWith('ia');
+            // Gender detection via AI
+            const isFemale = await detectGenderAI(firstName);
 
             if (relationship === 'Family' || relationship === 'Partner') {
                 // Christmas
