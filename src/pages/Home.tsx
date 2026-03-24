@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Shield, CalendarHeart, Users, Sparkles, CalendarPlus } from 'lucide-react';
+import { generateIcalString, downloadIcalFile } from '../lib/icalendar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { findNameDay } from '../lib/nameDaysBg';
@@ -269,6 +270,15 @@ export default function Home() {
         executeGeneration(event, forceRegenerate);
     };
 
+    const handleSyncCalendar = () => {
+        if (!events || events.length === 0) {
+            alert(t('home.noEventsToSync', { defaultValue: 'Няма събития за синхронизиране.' }));
+            return;
+        }
+        const icsString = generateIcalString(events);
+        downloadIcalFile(icsString, 'podaryavai_events.ics');
+    };
+
     const handleSaveBudgetAndGenerate = async () => {
         if (!pendingEventForGifts || !tempBudget) return;
         setSavingBudget(true);
@@ -470,6 +480,13 @@ export default function Home() {
                         className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-soft hover:bg-slate-50 dark:bg-slate-900 transition-colors"
                     >
                         <Users className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={handleSyncCalendar}
+                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-soft hover:bg-slate-50 dark:bg-slate-900 transition-colors"
+                        title={t('home.syncCalendar', { defaultValue: 'Добави в Календара' })}
+                    >
+                        <CalendarPlus className="w-5 h-5 text-accent" />
                     </button>
                 </div>
             </header>
