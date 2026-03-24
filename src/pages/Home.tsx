@@ -483,10 +483,11 @@ export default function Home() {
                     </button>
                     <button
                         onClick={handleSyncCalendar}
-                        className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-soft hover:bg-slate-50 dark:bg-slate-900 transition-colors"
-                        title={t('home.syncCalendar', { defaultValue: 'Добави в Календара' })}
+                        className="h-10 px-4 bg-gradient-to-r from-accent to-purple-500 rounded-full flex items-center justify-center text-white shadow-floating hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
+                        title={t('home.syncCalendar', { defaultValue: 'Синхронизирай с Календар' })}
                     >
-                        <CalendarPlus className="w-5 h-5 text-accent" />
+                        <CalendarPlus className="w-5 h-5 sm:mr-2" />
+                        <span className="text-sm font-bold hidden sm:inline">Синхронизирай</span>
                     </button>
                 </div>
             </header>
